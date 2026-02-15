@@ -12,9 +12,10 @@
                 "Asistencia"
             ],
             "precio": 1200,
+            "moneda": "USD",
             "imagen": "images\/package-caribe.jpg",
             "popular": true,
-            "activo": true
+            "activo": false
         },
         {
             "id": "2",
@@ -28,9 +29,10 @@
                 "Traslados"
             ],
             "precio": 850,
+            "moneda": "USD",
             "imagen": "images\/package-patagonia.jpg",
             "popular": false,
-            "activo": true
+            "activo": false
         },
         {
             "id": "3",
@@ -43,9 +45,10 @@
                 "Tasas portuarias"
             ],
             "precio": 950,
+            "moneda": "USD",
             "imagen": "images\/package-brasil.jpg",
             "popular": false,
-            "activo": true
+            "activo": false
         },
         {
             "id": "4",
@@ -59,22 +62,13 @@
                 "Excursiones"
             ],
             "precio": 2800,
+            "moneda": "USD",
             "imagen": "images\/paquete-4-1769782953.jpg",
             "popular": true,
-            "activo": true
+            "activo": false
         }
     ],
     "ofertas": [
-        {
-            "id": "1",
-            "titulo": "Punta Cana - Enero",
-            "descripcion": "Consultanos por cupos disponibles",
-            "imagen": "images\/oferta-1-1770413280.jpg",
-            "badge": "¡ÚLTIMOS 2 LUGARES!",
-            "badgeColor": "bg-red-500",
-            "tiempo": "48hs",
-            "activa": true
-        },
         {
             "id": "2",
             "titulo": "Río de Janeiro - Carnaval",
@@ -83,7 +77,7 @@
             "badge": "¡SÓLO POR 48HS!",
             "badgeColor": "bg-orange-500",
             "tiempo": "24hs",
-            "activa": true
+            "activa": false
         }
     ],
     "blog": [
@@ -121,31 +115,40 @@
             "id": "4",
             "titulo": "Cómo aprovechar las salas VIP del aeropuerto",
             "extracto": "Descubrí los beneficios de las salas VIP y cómo acceder a ellas sin pagar una fortuna.",
-            "contenido": "<h2>¿Qué ofrecen las salas VIP?<\/h2><p>Las salas VIP ofrecen snacks, bebidas, Wi-Fi rápido y cómodos asientos.<\/p><h2>Formas de acceder<\/h2><h3>Tarjetas de crédito premium<\/h3><p>Muchas tarjetas incluyen acceso gratuito a salas VIP.<\/p><h3>Membresías<\/h3><p>Priority Pass te permite acceder a cientos de salas en todo el mundo.<\/p>",
+            "contenido": "\r\n                                        <h2>¿Qué ofrecen las salas VIP?<\/h2><p>Las salas VIP ofrecen snacks, bebidas, Wi-Fi rápido y cómodos asientos.<\/p><h2>Formas de acceder<\/h2><h3>Tarjetas de crédito premium<\/h3><p>Muchas tarjetas incluyen acceso gratuito a salas VIP.<\/p><h3>Membresías<\/h3><p>Priority Pass te permite acceder a cientos de salas en todo el mundo.<\/p>",
             "imagen": "images\/blog-aeropuerto.jpg",
             "fecha": "28 DIC, 2023",
             "slug": "salas-vip-aeropuerto",
-            "activo": true
+            "seo_titulo": "",
+            "seo_description": "",
+            "seo_keywords": "",
+            "activo": false
         },
         {
             "id": "5",
             "titulo": "¿Por qué necesitás un seguro de viaje?",
             "extracto": "Te explicamos por qué el seguro de viaje es una inversión indispensable para cualquier viajero.",
-            "contenido": "<h2>¿Es obligatorio el seguro de viaje?<\/h2><p>Para muchos destinos, sí. La Unión Europea exige seguro médico para ingresar al espacio Schengen.<\/p><h2>¿Qué cubre?<\/h2><ul><li>Asistencia médica<\/li><li>Cancelación de viaje<\/li><li>Pérdida de equipaje<\/li><li>Vuelo demorado<\/li><li>Repatriación<\/li><\/ul>",
+            "contenido": "\r\n                                        <h2>¿Es obligatorio el seguro de viaje?<\/h2><p>Para muchos destinos, sí. La Unión Europea exige seguro médico para ingresar al espacio Schengen.<\/p><h2>¿Qué cubre?<\/h2><ul><li>Asistencia médica<\/li><li>Cancelación de viaje<\/li><li>Pérdida de equipaje<\/li><li>Vuelo demorado<\/li><li>Repatriación<\/li><\/ul>",
             "imagen": "images\/blog-seguros.jpg",
             "fecha": "20 DIC, 2023",
             "slug": "seguro-viaje-obligatorio",
-            "activo": true
+            "seo_titulo": "",
+            "seo_description": "",
+            "seo_keywords": "",
+            "activo": false
         },
         {
             "id": "6",
             "titulo": "Guía para viajeros solitarios",
             "extracto": "Todo lo que necesitás saber para emprender tu primera aventura en solitario de forma segura.",
-            "contenido": "<h2>¿Por qué viajar solo?<\/h2><p>Viajar solo es una experiencia transformadora. Tenés la libertad de hacer lo que querás.<\/p><h2>Destinos recomendados<\/h2><h3>Europa Occidental<\/h3><p>Países como España e Italia son seguros y tienen buena infraestructura turística.<\/p><h3>Tailandia<\/h3><p>La ruta clásica por Tailandia es perfecta para viajeros solitarios.<\/p>",
+            "contenido": "\r\n                                        <h2>¿Por qué viajar solo?<\/h2><p>Viajar solo es una experiencia transformadora. Tenés la libertad de hacer lo que querás.<\/p><h2>Destinos recomendados<\/h2><h3>Europa Occidental<\/h3><p>Países como España e Italia son seguros y tienen buena infraestructura turística.<\/p><h3>Tailandia<\/h3><p>La ruta clásica por Tailandia es perfecta para viajeros solitarios.<\/p>",
             "imagen": "images\/blog-solo.jpg",
             "fecha": "15 DIC, 2023",
             "slug": "viajar-solo-guia",
-            "activo": true
+            "seo_titulo": "",
+            "seo_description": "",
+            "seo_keywords": "",
+            "activo": false
         }
     ],
     "config": {
@@ -153,9 +156,12 @@
         "email": "info@relaxtours.com.ar",
         "telefono": "+54 11 7079-8079",
         "direccion": "Av. Franscisco Beiro 4219, Villa Devoto, CABA, Bsas",
-        "horario": "Lun-Vie 10-13hs / 14-19hs. Sab 10-13hs",
+        "horario": "Lun-Vie 10-13hs \/ 14-19hs. Sab 10-13hs",
         "instagram": "relaxtours.ar",
         "facebook": "relax_tours",
-        "legajo": "15548"
+        "legajo": "15.548",
+        "analytics_id": "ZV0G9YTSQP",
+        "meta_keywords": "Agencia de viajes, turismo, empresa de viajes y turismo, devoto, villa devoto, beiro, paquetes, viajes, pasajes, aereos, trenes, europa, ofertas, barato",
+        "meta_description": "Agencia de viajes y turismo en villa devoto. "
     }
 }
