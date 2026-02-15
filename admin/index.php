@@ -192,12 +192,14 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 array_unshift($data['blog'], $blog); // Add to beginning (Newest First)
             saveData($data);
             generateBlogPage($blog, $data['config']);
+            updateSitemap($data);
             header('Location: index.php?tab=blog&msg=guardado');
             exit;
 
         case 'delete_blog':
             $data['blog'] = array_values(array_filter($data['blog'], fn($b) => $b['id'] !== $_POST['id']));
             saveData($data);
+            updateSitemap($data);
             header('Location: index.php?tab=blog&msg=eliminado');
             exit;
 
@@ -357,6 +359,69 @@ HTML;
     </html>
     HTML;
     file_put_contents(__DIR__ . '/../blog/' . $post['slug'] . '.html', $html);
+}
+
+function updateSitemap($data)
+{
+    $sitemapFile = __DIR__ . '/../sitemap.xml';
+    $baseUrl = 'https://www.relaxtours.com.ar';
+    $today = date('Y-m-d');
+
+    // Leer el sitemap actual y preservar las URLs estáticas (no blog)
+    $staticUrls = [];
+    if (file_exists($sitemapFile)) {
+        $xml = simplexml_load_file($sitemapFile);
+        if ($xml) {
+            foreach ($xml->url as $urlNode) {
+                $loc = (string) $urlNode->loc;
+                // Preservar todo lo que NO sea un artículo individual del blog
+                // (mantenemos /blog/ índice, pero no /blog/slug-del-post)
+                if (!preg_match('#/blog/[^/]+$#', $loc)) {
+                    $staticUrls[] = [
+                        'loc' => $loc,
+                        'lastmod' => (string) $urlNode->lastmod,
+                        'changefreq' => (string) $urlNode->changefreq,
+                        'priority' => (string) $urlNode->priority
+                    ];
+                }
+            }
+        }
+    }
+
+    // Construir el nuevo XML
+    $xmlContent = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
+    $xmlContent .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"' . "\n";
+    $xmlContent .= '        xmlns:xhtml="http://www.w3.org/1999/xhtml">' . "\n\n";
+
+    // Escribir las URLs estáticas preservadas
+    foreach ($staticUrls as $url) {
+        $xmlContent .= "  <url>\n";
+        $xmlContent .= "    <loc>{$url['loc']}</loc>\n";
+        $xmlContent .= "    <lastmod>{$url['lastmod']}</lastmod>\n";
+        $xmlContent .= "    <changefreq>{$url['changefreq']}</changefreq>\n";
+        $xmlContent .= "    <priority>{$url['priority']}</priority>\n";
+        $xmlContent .= "  </url>\n\n";
+    }
+
+    // Agregar las entradas de blog activas
+    if (!empty($data['blog'])) {
+        $xmlContent .= "  <!-- Artículos del Blog (auto-generado) -->\n";
+        foreach ($data['blog'] as $post) {
+            if (!empty($post['activo']) && !empty($post['slug'])) {
+                $postDate = !empty($post['fecha']) ? $post['fecha'] : $today;
+                $xmlContent .= "  <url>\n";
+                $xmlContent .= "    <loc>{$baseUrl}/blog/{$post['slug']}</loc>\n";
+                $xmlContent .= "    <lastmod>{$today}</lastmod>\n";
+                $xmlContent .= "    <changefreq>monthly</changefreq>\n";
+                $xmlContent .= "    <priority>0.7</priority>\n";
+                $xmlContent .= "  </url>\n\n";
+            }
+        }
+    }
+
+    $xmlContent .= "</urlset>\n";
+
+    file_put_contents($sitemapFile, $xmlContent);
 }
 
 $data = loadData();
