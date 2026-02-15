@@ -1,0 +1,38 @@
+# =============================================
+# RELAX TOURS - robots.txt
+# https://www.relaxtours.com.ar
+# =============================================
+
+# Reglas para todos los bots
+User-agent: *
+
+# Páginas permitidas
+Allow: /
+Allow: /index.php
+Allow: /nosotros.php
+Allow: /paquetes.php
+Allow: /cookies.php
+Allow: /blog/
+
+# Directorios y archivos bloqueados
+Disallow: /admin/
+Disallow: /includes/
+Disallow: /data/
+Disallow: /PHPMailer/
+Disallow: /send-mail.php
+Disallow: /files/
+Disallow: /.htaccess
+Disallow: /.git/
+
+# Permitir acceso a recursos estáticos (CSS, JS, imágenes)
+Allow: /css/
+Allow: /js/
+Allow: /images/
+
+# Reglas para Googlebot (imágenes)
+User-agent: Googlebot-Image
+Allow: /images/
+Disallow: /admin/
+
+# Ubicación del Sitemap
+Sitemap: https://www.relaxtours.com.ar/sitemap.xml
