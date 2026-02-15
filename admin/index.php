@@ -1160,6 +1160,73 @@ if (isset($_GET['edit'])) {
             max-width: 1100px;
         }
 
+        /* ===== EDITOR TABS ===== */
+        .editor-tabs {
+            display: flex;
+            gap: 0;
+            margin-bottom: 0;
+        }
+
+        .editor-tab {
+            padding: 10px 20px;
+            background: #f3f4f6;
+            border: 2px solid #e5e5e5;
+            border-bottom: none;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            color: #6b7280;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .editor-tab:hover {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .editor-tab.active {
+            background: #f9fafb;
+            color: #F97316;
+            border-color: #e5e5e5;
+            position: relative;
+        }
+
+        .editor-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #f9fafb;
+        }
+
+        #html-editor {
+            width: 100%;
+            min-height: 400px;
+            max-height: 600px;
+            padding: 16px;
+            border: 2px solid #e5e5e5;
+            border-radius: 0 0 8px 8px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #1f2937;
+            background: #1e1e2e;
+            color: #cdd6f4;
+            tab-size: 4;
+            resize: vertical;
+            outline: none;
+        }
+
+        #html-editor:focus {
+            border-color: #F97316;
+        }
+
         @media (max-width: 768px) {
             .wysiwyg-editor {
                 min-height: 250px;
@@ -1174,6 +1241,11 @@ if (isset($_GET['edit'])) {
                 min-width: 28px;
                 height: 28px;
                 padding: 4px 6px;
+                font-size: 12px;
+            }
+
+            #html-editor {
+                min-height: 250px;
                 font-size: 12px;
             }
         }
@@ -1541,6 +1613,11 @@ if (isset($_GET['edit'])) {
                                 <!-- WYSIWYG EDITOR -->
                                 <div class="form-group" style="position: relative;">
                                     <label>Contenido del Post</label>
+                                    <div class="editor-tabs">
+                                        <button type="button" class="editor-tab active" id="tab-visual" onclick="switchEditorTab('visual')">✏️ Visual</button>
+                                        <button type="button" class="editor-tab" id="tab-html" onclick="switchEditorTab('html')">🖥️ HTML</button>
+                                    </div>
+                                    <div id="visual-editor-wrap">
                                     <div class="wysiwyg-toolbar" id="editor-toolbar">
                                         <!-- Text formatting -->
                                         <button type="button" onclick="editorCmd('bold')"
@@ -1610,6 +1687,8 @@ if (isset($_GET['edit'])) {
                                     </div>
                                     <div class="wysiwyg-editor" id="editor-area" contenteditable="true">
                                         <?php echo $editItem['contenido'] ?? '<p>Escribí tu contenido aquí...</p>'; ?></div>
+                                    </div><!-- /visual-editor-wrap -->
+                                    <textarea id="html-editor" style="display:none;" placeholder="Pegá tu código HTML, CSS y JavaScript aquí..."></textarea>
                                     <textarea name="contenido" id="editor-hidden" style="display:none;"></textarea>
 
                                     <!-- Image toolbar (contextual) -->
@@ -1963,12 +2042,64 @@ if (isset($_GET['edit'])) {
         }
     });
 
+    // --- Editor Tab Switching ---
+    let currentEditorMode = 'visual';
+    const htmlEditor = document.getElementById('html-editor');
+    const visualWrap = document.getElementById('visual-editor-wrap');
+    const tabVisual = document.getElementById('tab-visual');
+    const tabHtml = document.getElementById('tab-html');
+
+    function switchEditorTab(mode) {
+        if (!editorArea || !htmlEditor || !visualWrap) return;
+        if (mode === currentEditorMode) return;
+
+        if (mode === 'html') {
+            // Visual → HTML: copy WYSIWYG innerHTML to textarea
+            editorArea.querySelectorAll('.img-selected').forEach(img => img.classList.remove('img-selected'));
+            if (imgToolbar) imgToolbar.classList.remove('visible');
+            selectedImg = null;
+            htmlEditor.value = formatHtml(editorArea.innerHTML);
+            visualWrap.style.display = 'none';
+            htmlEditor.style.display = 'block';
+            htmlEditor.focus();
+            tabVisual.classList.remove('active');
+            tabHtml.classList.add('active');
+        } else {
+            // HTML → Visual: copy textarea content back to WYSIWYG
+            editorArea.innerHTML = htmlEditor.value;
+            // Re-attach click handlers for images
+            editorArea.querySelectorAll('img').forEach(img => {
+                img.onclick = function() { selectImg(this); };
+            });
+            htmlEditor.style.display = 'none';
+            visualWrap.style.display = 'block';
+            editorArea.focus();
+            tabHtml.classList.remove('active');
+            tabVisual.classList.add('active');
+        }
+        currentEditorMode = mode;
+    }
+
+    // Simple HTML formatter for readability in the HTML tab
+    function formatHtml(html) {
+        // Light formatting: add newlines after closing block tags
+        return html
+            .replace(/></g, '>\n<')
+            .replace(/\n\s*\n/g, '\n')
+            .trim();
+    }
+
     // --- Sync editor content to hidden textarea on submit ---
     function syncEditor() {
-        if (!editorArea || !editorHidden) return true;
-        // Clean up: remove img-selected class before saving
-        editorArea.querySelectorAll('.img-selected').forEach(img => img.classList.remove('img-selected'));
-        editorHidden.value = editorArea.innerHTML;
+        if (!editorHidden) return true;
+        if (currentEditorMode === 'html' && htmlEditor) {
+            // HTML mode: save the textarea content directly
+            editorHidden.value = htmlEditor.value;
+        } else if (editorArea) {
+            // Visual mode: save the WYSIWYG innerHTML
+            editorArea.querySelectorAll('.img-selected').forEach(img => img.classList.remove('img-selected'));
+            editorHidden.value = editorArea.innerHTML;
+        }
         return true;
     }
 
