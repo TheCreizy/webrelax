@@ -1,0 +1,161 @@
+{
+    "paquetes": [
+        {
+            "id": "1",
+            "nombre": "Caribe All Inclusive",
+            "destino": "Punta Cana \/ Riviera Maya",
+            "duracion": "7 Noches \/ 8 Días",
+            "incluye": [
+                "Aéreos",
+                "Traslados",
+                "All Inclusive",
+                "Asistencia"
+            ],
+            "precio": 1200,
+            "imagen": "images\/package-caribe.jpg",
+            "popular": true,
+            "activo": true
+        },
+        {
+            "id": "2",
+            "nombre": "Patagonia Argentina",
+            "destino": "El Calafate & Chaltén",
+            "duracion": "6 Noches \/ 7 Días",
+            "incluye": [
+                "Vuelos",
+                "Hoteles 4*",
+                "Excursión Glaciar",
+                "Traslados"
+            ],
+            "precio": 850,
+            "imagen": "images\/package-patagonia.jpg",
+            "popular": false,
+            "activo": true
+        },
+        {
+            "id": "3",
+            "nombre": "Crucero por Brasil",
+            "destino": "Río, Buzios e Ilhabela",
+            "duracion": "8 Noches",
+            "incluye": [
+                "Pensión completa",
+                "Entretenimiento",
+                "Tasas portuarias"
+            ],
+            "precio": 950,
+            "imagen": "images\/package-brasil.jpg",
+            "popular": false,
+            "activo": true
+        },
+        {
+            "id": "4",
+            "nombre": "Europa Clásica",
+            "destino": "París, Roma, Barcelona",
+            "duracion": "12 Noches \/ 13 Días",
+            "incluye": [
+                "Aéreos",
+                "Trenes",
+                "Hoteles",
+                "Excursiones"
+            ],
+            "precio": 2800,
+            "imagen": "images\/paquete-4-1769782953.jpg",
+            "popular": true,
+            "activo": true
+        }
+    ],
+    "ofertas": [
+        {
+            "id": "1",
+            "titulo": "Punta Cana - Enero",
+            "descripcion": "Consultanos por cupos disponibles",
+            "imagen": "images\/oferta-1-1770413280.jpg",
+            "badge": "¡ÚLTIMOS 2 LUGARES!",
+            "badgeColor": "bg-red-500",
+            "tiempo": "48hs",
+            "activa": true
+        },
+        {
+            "id": "2",
+            "titulo": "Río de Janeiro - Carnaval",
+            "descripcion": "Consultanos por cupos disponibles",
+            "imagen": "images\/oferta-placeholder.jpg",
+            "badge": "¡SÓLO POR 48HS!",
+            "badgeColor": "bg-orange-500",
+            "tiempo": "24hs",
+            "activa": true
+        }
+    ],
+    "blog": [
+        {
+            "id": "1",
+            "titulo": "5 Tips para armar tu valija de mano",
+            "extracto": "Ahorrá espacio y evitá cargos extra con estos consejos prácticos para viajar ligero y organizado.",
+            "contenido": "<h2>1. Usa bolsas de compresión<\/h2><p>Las bolsas de compresión o packing cubes son esenciales para organizar tu equipaje.<\/p><h2>2. Enrolla la ropa<\/h2><p>En lugar de doblar la ropa, enrollala. Este método ahorra espacio y evita arrugas.<\/p><h2>3. Llevá solo lo necesario<\/h2><p>Planificá tu vestuario antes de viajar. Elegí prendas que se combinen entre sí.<\/p><h2>4. Usa los zapatos como contenedores<\/h2><p>Aprovechá el espacio dentro de los zapatos para guardar calcetines y cargadores.<\/p><h2>5. Llevá una bolsa de lavandería<\/h2><p>Una bolsa plegable para ropa sucia te ayudará a mantener el orden.<\/p>",
+            "imagen": "images\/blog-valija.jpg",
+            "fecha": "15 ENE, 2024",
+            "slug": "tips-valija-mano",
+            "activo": true
+        },
+        {
+            "id": "2",
+            "titulo": "Documentación necesaria para viajar a Europa",
+            "extracto": "Todo lo que tenés que saber sobre el ETIAS y los seguros de viaje obligatorios para este año.",
+            "contenido": "<h2>¿Qué es el ETIAS?<\/h2><p>El ETIAS es un sistema de autorización de viaje electrónico que entrará en vigor en 2025.<\/p><h2>Documentos necesarios<\/h2><ul><li>Passaporte válido<\/li><li>ETIAS aprobado<\/li><li>Seguro de viaje con cobertura mínima de €30.000<\/li><li>Comprobante de alojamiento<\/li><\/ul>",
+            "imagen": "images\/blog-documentos.jpg",
+            "fecha": "10 ENE, 2024",
+            "slug": "documentacion-europa",
+            "activo": true
+        },
+        {
+            "id": "3",
+            "titulo": "Mejores destinos para viajar en otoño",
+            "extracto": "Descubrí por qué viajar en temporada baja es la mejor decisión económica y turística.",
+            "contenido": "<h2>¿Por qué viajar en otoño?<\/h2><p>El otoño es una de las mejores épocas para viajar: los precios son más bajos y hay menos turistas.<\/p><h2>Destinos recomendados<\/h2><h3>Nueva Inglaterra, USA<\/h3><p>Los paisajes de otoño con colores rojos y dorados son espectaculares.<\/p><h3>Toscana, Italia<\/h3><p>La vendimia y los viñedos dorados hacen de la Toscana un destino soñado.<\/p>",
+            "imagen": "images\/blog-otono.jpg",
+            "fecha": "05 ENE, 2024",
+            "slug": "destinos-otono",
+            "activo": true
+        },
+        {
+            "id": "4",
+            "titulo": "Cómo aprovechar las salas VIP del aeropuerto",
+            "extracto": "Descubrí los beneficios de las salas VIP y cómo acceder a ellas sin pagar una fortuna.",
+            "contenido": "<h2>¿Qué ofrecen las salas VIP?<\/h2><p>Las salas VIP ofrecen snacks, bebidas, Wi-Fi rápido y cómodos asientos.<\/p><h2>Formas de acceder<\/h2><h3>Tarjetas de crédito premium<\/h3><p>Muchas tarjetas incluyen acceso gratuito a salas VIP.<\/p><h3>Membresías<\/h3><p>Priority Pass te permite acceder a cientos de salas en todo el mundo.<\/p>",
+            "imagen": "images\/blog-aeropuerto.jpg",
+            "fecha": "28 DIC, 2023",
+            "slug": "salas-vip-aeropuerto",
+            "activo": true
+        },
+        {
+            "id": "5",
+            "titulo": "¿Por qué necesitás un seguro de viaje?",
+            "extracto": "Te explicamos por qué el seguro de viaje es una inversión indispensable para cualquier viajero.",
+            "contenido": "<h2>¿Es obligatorio el seguro de viaje?<\/h2><p>Para muchos destinos, sí. La Unión Europea exige seguro médico para ingresar al espacio Schengen.<\/p><h2>¿Qué cubre?<\/h2><ul><li>Asistencia médica<\/li><li>Cancelación de viaje<\/li><li>Pérdida de equipaje<\/li><li>Vuelo demorado<\/li><li>Repatriación<\/li><\/ul>",
+            "imagen": "images\/blog-seguros.jpg",
+            "fecha": "20 DIC, 2023",
+            "slug": "seguro-viaje-obligatorio",
+            "activo": true
+        },
+        {
+            "id": "6",
+            "titulo": "Guía para viajeros solitarios",
+            "extracto": "Todo lo que necesitás saber para emprender tu primera aventura en solitario de forma segura.",
+            "contenido": "<h2>¿Por qué viajar solo?<\/h2><p>Viajar solo es una experiencia transformadora. Tenés la libertad de hacer lo que querás.<\/p><h2>Destinos recomendados<\/h2><h3>Europa Occidental<\/h3><p>Países como España e Italia son seguros y tienen buena infraestructura turística.<\/p><h3>Tailandia<\/h3><p>La ruta clásica por Tailandia es perfecta para viajeros solitarios.<\/p>",
+            "imagen": "images\/blog-solo.jpg",
+            "fecha": "15 DIC, 2023",
+            "slug": "viajar-solo-guia",
+            "activo": true
+        }
+    ],
+    "config": {
+        "whatsapp": "5491138593924",
+        "email": "info@relaxtours.com.ar",
+        "telefono": "+54 11 7079-8079",
+        "direccion": "Av. Franscisco Beiro 4219, Villa Devoto, CABA, Bsas",
+        "horario": "Lun-Vie 10-13hs / 14-19hs. Sab 10-13hs",
+        "instagram": "relaxtours.ar",
+        "facebook": "relax_tours",
+        "legajo": "15548"
+    }
+}
