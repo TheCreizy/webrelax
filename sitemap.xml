@@ -37,6 +37,13 @@
     <priority>0.3</priority>
   </url>
 
+  <url>
+    <loc>https://www.relaxtours.com.ar/condicionesgenerales.php</loc>
+    <lastmod>2026-02-16</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
   <!-- Artículos del Blog (auto-generado) -->
   <url>
     <loc>https://www.relaxtours.com.ar/blog/escapadas-desde-buenos-aires.html</loc>

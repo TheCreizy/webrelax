@@ -207,7 +207,7 @@ $base_url = isset($base_url) ? $base_url : './';
             </p>
             <div class="footer-bottom-links">
                 <span class="footer-legajo">Leg. 15.548</span>
-                <a href="<?php echo $base_url; ?>files/CondicionesGenerales.pdf" target="_blank">Términos y
+                <a href="<?php echo $base_url; ?>condicionesgenerales.php" target="_blank">Términos y
                     Condiciones</a>
             </div>
         </div>
