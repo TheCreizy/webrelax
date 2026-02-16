@@ -39,6 +39,13 @@
 
   <!-- Artículos del Blog (auto-generado) -->
   <url>
+    <loc>https://www.relaxtours.com.ar/blog/escapadas-desde-buenos-aires.html</loc>
+    <lastmod>2026-02-16</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
     <loc>https://www.relaxtours.com.ar/blog/equipaje-avion.html</loc>
     <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
@@ -54,6 +61,13 @@
 
   <url>
     <loc>https://www.relaxtours.com.ar/blog/documentacion-europa.html</loc>
+    <lastmod>2026-02-16</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://www.relaxtours.com.ar/blog/salas-vip-aeropuerto.html</loc>
     <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
