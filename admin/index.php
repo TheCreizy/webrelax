@@ -292,6 +292,12 @@ function generateBlogPage($post, $config = [])
 HTML;
     }
 
+    // Render the shared footer template with $base_url = '../'
+    $base_url = '../';
+    ob_start();
+    include __DIR__ . '/../includes/footer.php';
+    $footerHtml = ob_get_clean();
+
     $html = <<<HTML
     <!DOCTYPE html>
     <html lang="es-AR">
@@ -302,26 +308,54 @@ HTML;
         <meta name="description" content="{$seoDesc}">
         <meta name="keywords" content="{$seoKeys}">
         {$analyticsScript}
+        <link rel="icon" type="image/svg+xml" href="../images/favicon.svg">
+        <link rel="icon" type="image/png" sizes="96x96" href="../images/favicon-96x96.png">
+        <link rel="shortcut icon" href="../images/favicon.ico">
+        <link rel="apple-touch-icon" href="../images/apple-touch-icon.png">
+        <link rel="manifest" href="../images/site.webmanifest">
+        <meta name="theme-color" content="#F97316">
         <link rel="stylesheet" href="../css/style.css">
-        <link rel="icon" type="image/png" href="../images/logo-relax.png">
+        <link rel="stylesheet" href="../css/cookies.css">
     </head>
     <body>
-        <nav class="navbar scrolled">
+        <nav class="navbar scrolled navbar-secondary">
             <div class="container">
-                <a href="../index.html" class="navbar-logo"><img src="../images/logo-relax.png" alt="Relax Tours"></a>
+                <a href="../index.php" class="navbar-logo"><img src="../images/logo-relax.png" alt="Relax Tours"></a>
                 <ul class="navbar-links">
-                    <li><a href="../index.html#inicio" style="color: var(--color-dark);">Inicio</a></li>
-                    <li><a href="../index.html#paquetes" style="color: var(--color-dark);">Paquetes</a></li>
-                    <li><a href="../index.html#ofertas" style="color: var(--color-dark);">Ofertas</a></li>
-                    <li><a href="../blog/index.html" style="color: var(--color-orange);">Blog</a></li>
-                    <li><a href="../index.html#contacto" style="color: var(--color-dark);">Contacto</a></li>
+                    <li><a href="../index.php#inicio">Inicio</a></li>
+                    <li><a href="../nosotros.php">Nosotros</a></li>
+                    <li><a href="../index.php#paquetes">Paquetes</a></li>
+                    <li><a href="../index.php#ofertas">Ofertas</a></li>
+                    <li><a href="../blog/index.php" class="active">Tips</a></li>
+                    <li><a href="../index.php#contacto">Contacto</a></li>
                 </ul>
+                <a href="../index.php#contacto" class="btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                    </svg>
+                    Consultar
+                </a>
+                <button class="navbar-toggle" aria-label="Menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
             </div>
         </nav>
-        <article class="section" style="padding-top: 150px; background: #fff;">
+        <div class="navbar-mobile-menu" id="mobile-menu">
+            <a href="../index.php#inicio">Inicio</a>
+            <a href="../nosotros.php">Nosotros</a>
+            <a href="../index.php#paquetes">Paquetes</a>
+            <a href="../index.php#ofertas">Ofertas</a>
+            <a href="../blog/index.php" class="active">Tips</a>
+            <a href="../index.php#contacto">Contacto</a>
+            <a href="../index.php#contacto" class="btn-primary">Consultar</a>
+        </div>
+        <div style="height: 80px;"></div>
+        <article class="section" style="padding-top: 70px; background: #fff;">
             <div class="container" style="max-width: 900px;">
                 <div style="margin-bottom: 40px; text-align: center;">
-                    <a href="index.html" style="color: var(--color-orange); display: inline-flex; align-items: center; gap: 8px; margin-bottom: 24px; font-weight: 600; text-transform: uppercase; font-size: 13px; letter-spacing: 1px;">
+                    <a href="index.php" style="color: var(--color-orange); display: inline-flex; align-items: center; gap: 8px; margin-bottom: 24px; font-weight: 600; text-transform: uppercase; font-size: 13px; letter-spacing: 1px;">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
                         Volver al Blog
                     </a>
@@ -349,12 +383,7 @@ HTML;
                 </div>
             </div>
         </article>
-        <footer class="footer">
-            <div class="container" style="padding: 40px 0; border-top: 1px solid #eee; text-align: center;">
-                <p style="color: #9ca3af; font-size: 0.875rem;">© 2024 Relax Tours. Todos los derechos reservados.</p>
-            </div>
-        </footer>
-        <script src="../js/main.js"></script>
+        {$footerHtml}
     </body>
     </html>
     HTML;
