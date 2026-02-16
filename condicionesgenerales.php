@@ -9,7 +9,7 @@ require_once 'includes/header.php';
     <div class="container" style="padding-top: 40px; padding-bottom: 40px;">
         <h1 class="section-title text-center" style="margin-bottom: 30px;">Términos y Condiciones</h1>
         
-        <div id="adobe-dc-view" style="width: 100%; height: 95vh; border: 1px solid #eee;"></div>
+        <div id="adobe-dc-view" style="width: 100%; height: 165vh; border: 1px solid #eee;"></div>
     </div>
 </main>
 
