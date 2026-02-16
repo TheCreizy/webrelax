@@ -786,7 +786,8 @@ button {
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   transform: translateZ(0);
-  -webkit-font-smoothing: subpixel-antialiased;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Restrict hover effects to only active carousel items or normal grid items */
@@ -810,7 +811,7 @@ button {
 /* States */
 .carousel-item.active {
   opacity: 1;
-  transform: translate(-50%, -50%) scale(1.1);
+  transform: translate(-50%, -50%) scale(1);
   z-index: 10;
   pointer-events: auto;
   filter: brightness(1);
@@ -820,7 +821,7 @@ button {
 
 .carousel-item.prev {
   opacity: 1; /* Fully opaque but darkened */
-  transform: translate(-120%, -45%) scale(0.9);
+  transform: translate(-120%, -50%) scale(0.85);
   z-index: 5;
   filter: brightness(0.5); /* Darker instead of blur */
   pointer-events: auto;
@@ -829,7 +830,7 @@ button {
 
 .carousel-item.next {
   opacity: 1; /* Fully opaque but darkened */
-  transform: translate(20%, -45%) scale(0.9);
+  transform: translate(20%, -50%) scale(0.85);
   z-index: 5;
   filter: brightness(0.5); /* Darker instead of blur */
   pointer-events: auto;
@@ -915,6 +916,15 @@ button {
   position: relative;
   box-shadow: var(--shadow-card);
   border: 1px solid rgba(255, 255, 255, 0.5);
+
+  /* Forzar aceleración de hardware y suavizado */
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform: translateZ(0);
+  
+  /* Mejorar renderizado de texto */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Apply generic hover only if NOT in carousel (or specific override later) 
