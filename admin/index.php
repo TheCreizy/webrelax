@@ -191,7 +191,21 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!$found)
                 array_unshift($data['blog'], $blog); // Add to beginning (Newest First)
             saveData($data);
-            generateBlogPage($blog, $data['config']);
+            // Reload data to get the updated blog list (in case a new post was added)
+            $data = loadData();
+            generateBlogPage($blog, $data['config'], $data['blog']);
+            // Regenerate adjacent posts so their prev/next links stay in sync
+            $activePosts = array_values(array_filter($data['blog'], fn($p) => !empty($p['activo'])));
+            $currentIdx = -1;
+            foreach ($activePosts as $idx => $p) {
+                if ($p['id'] === $blog['id']) { $currentIdx = $idx; break; }
+            }
+            if ($currentIdx > 0) {
+                generateBlogPage($activePosts[$currentIdx - 1], $data['config'], $data['blog']);
+            }
+            if ($currentIdx >= 0 && $currentIdx < count($activePosts) - 1) {
+                generateBlogPage($activePosts[$currentIdx + 1], $data['config'], $data['blog']);
+            }
             updateSitemap($data);
             header('Location: index.php?tab=blog&msg=guardado');
             exit;
@@ -270,7 +284,7 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-function generateBlogPage($post, $config = [])
+function generateBlogPage($post, $config = [], $allBlog = [])
 {
     $seoTitle = !empty($post['seo_titulo']) ? $post['seo_titulo'] : $post['titulo'] . ' - Relax Tours Blog';
     $seoDesc = !empty($post['seo_description']) ? $post['seo_description'] : $post['extracto'];
@@ -307,6 +321,65 @@ HTML;
     ob_start();
     include __DIR__ . '/../includes/footer.php';
     $footerHtml = ob_get_clean();
+
+    // Determine previous and next posts
+    $prevPost = null;
+    $nextPost = null;
+    if (!empty($allBlog)) {
+        $activePosts = array_values(array_filter($allBlog, fn($p) => !empty($p['activo'])));
+        $currentIdx = -1;
+        foreach ($activePosts as $idx => $p) {
+            if ($p['id'] === $post['id']) { $currentIdx = $idx; break; }
+        }
+        if ($currentIdx >= 0) {
+            // Array is newest-first, so index+1 = older (anterior), index-1 = newer (próximo)
+            if ($currentIdx < count($activePosts) - 1) {
+                $prevPost = $activePosts[$currentIdx + 1];
+            }
+            if ($currentIdx > 0) {
+                $nextPost = $activePosts[$currentIdx - 1];
+            }
+        }
+    }
+
+    // Build navigation HTML
+    $navHtml = '';
+    if ($prevPost || $nextPost) {
+        $navHtml = '<div class="blog-post-nav">';
+        if ($prevPost) {
+            $prevImg = str_replace('../', '', $prevPost['imagen']);
+            $navHtml .= '
+            <a href="' . $prevPost['slug'] . '.html" class="blog-post-nav-item blog-post-nav-prev">
+                <span class="blog-post-nav-label">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                    Ver Tip anterior
+                </span>
+                <div class="blog-post-nav-card">
+                    <img src="../' . $prevImg . '" alt="' . htmlspecialchars($prevPost['titulo']) . '" class="blog-post-nav-thumb">
+                    <span class="blog-post-nav-title">' . htmlspecialchars($prevPost['titulo']) . '</span>
+                </div>
+            </a>';
+        } else {
+            $navHtml .= '<div class="blog-post-nav-item blog-post-nav-empty"></div>';
+        }
+        if ($nextPost) {
+            $nextImg = str_replace('../', '', $nextPost['imagen']);
+            $navHtml .= '
+            <a href="' . $nextPost['slug'] . '.html" class="blog-post-nav-item blog-post-nav-next">
+                <span class="blog-post-nav-label">
+                    Ver próximo Tip
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                </span>
+                <div class="blog-post-nav-card">
+                    <img src="../' . $nextImg . '" alt="' . htmlspecialchars($nextPost['titulo']) . '" class="blog-post-nav-thumb">
+                    <span class="blog-post-nav-title">' . htmlspecialchars($nextPost['titulo']) . '</span>
+                </div>
+            </a>';
+        } else {
+            $navHtml .= '<div class="blog-post-nav-item blog-post-nav-empty"></div>';
+        }
+        $navHtml .= '</div>';
+    }
 
     $html = <<<HTML
     <!DOCTYPE html>
@@ -390,7 +463,9 @@ HTML;
                 <div class="blog-post-content">
                     {$post['contenido']}
                 </div>
-    
+
+                {$navHtml}
+
                 <div style="margin-top: 60px; padding: 40px; background: #f9f9f9; border-radius: 24px; text-align: center;">
                     <h3 style="margin-bottom: 12px; font-size: 1.5rem;">¿Estás planeando tu próximo viaje?</h3>
                     <p style="color: #6b7280; margin-bottom: 24px;">Dejanos ayudarte a crear la experiencia perfecta. Consultanos sin compromiso.</p>
