@@ -17,7 +17,7 @@ require_once 'includes/header.php';
 <script type="text/javascript">
     document.addEventListener("adobe_dc_view_sdk.ready", function(){ 
         var adobeDCView = new AdobeDC.View({
-            clientId: "9c04ff4b1fb74add95d258a946ac6f23", 
+            clientId: "d3fa0060f8d74d16b0a2bb7881195c45", 
             divId: "adobe-dc-view"
         });
         adobeDCView.previewFile({
