@@ -991,12 +991,12 @@ button {
 }
 
 .paquete-content {
-  padding: 24px;
+  padding: 24px 14px;
 }
 
 .paquete-title {
   color: var(--color-dark);
-  font-size: 1.25rem;
+  font-size: 1.19rem;
   margin-bottom: 16px;
 }
 
