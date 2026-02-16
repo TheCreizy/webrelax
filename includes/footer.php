@@ -39,10 +39,10 @@ $base_url = isset($base_url) ? $base_url : './';
                         <!-- SET 1 -->
                         <!-- 1. ARCA -->
                         <div class="affiliation-item">
-                            <a href="http://qr.afip.gob.ar/?qr=SravPB5DDxoh6n41RvR3kw,," target="_F960AFIPInfo">
+                            
                                 <img src="http://www.afip.gob.ar/images/f960/DATAWEB.jpg" border="0"
                                     alt="ARCA - Data Fiscal">
-                            </a>
+                            
                         </div>
                         <!-- 2. AVIABUE -->
                         <div class="affiliation-item">
@@ -71,10 +71,10 @@ $base_url = isset($base_url) ? $base_url : './';
 
                         <!-- SET 2 (Duplicate for infinite scroll) -->
                         <div class="affiliation-item">
-                            <a href="http://qr.afip.gob.ar/?qr=SravPB5DDxoh6n41RvR3kw,," target="_F960AFIPInfo">
+                            
                                 <img src="http://www.afip.gob.ar/images/f960/DATAWEB.jpg" border="0"
                                     alt="ARCA - Data Fiscal">
-                            </a>
+                            
                         </div>
                         <div class="affiliation-item">
                             <a href="https://www.aviabue.org.ar/" target="_blank">
