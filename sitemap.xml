@@ -2,7 +2,6 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
 
-  <!-- Página Principal -->
   <url>
     <loc>https://www.relaxtours.com.ar/</loc>
     <lastmod>2026-02-15</lastmod>
@@ -10,7 +9,6 @@
     <priority>1.0</priority>
   </url>
 
-  <!-- Nosotros -->
   <url>
     <loc>https://www.relaxtours.com.ar/nosotros.php</loc>
     <lastmod>2026-02-15</lastmod>
@@ -18,7 +16,6 @@
     <priority>0.8</priority>
   </url>
 
-  <!-- Paquetes de Viaje -->
   <url>
     <loc>https://www.relaxtours.com.ar/paquetes.php</loc>
     <lastmod>2026-02-15</lastmod>
@@ -26,7 +23,6 @@
     <priority>0.9</priority>
   </url>
 
-  <!-- Blog / Tips de Viaje -->
   <url>
     <loc>https://www.relaxtours.com.ar/blog/</loc>
     <lastmod>2026-02-15</lastmod>
@@ -34,34 +30,40 @@
     <priority>0.8</priority>
   </url>
 
-  <!-- Artículos del Blog -->
-  <url>
-    <loc>https://www.relaxtours.com.ar/blog/salas-vip-aeropuerto</loc>
-    <lastmod>2026-02-15</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <url>
-    <loc>https://www.relaxtours.com.ar/blog/seguro-viaje-obligatorio</loc>
-    <lastmod>2026-02-15</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <url>
-    <loc>https://www.relaxtours.com.ar/blog/viajar-solo-guia</loc>
-    <lastmod>2026-02-15</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <!-- Política de Cookies -->
   <url>
     <loc>https://www.relaxtours.com.ar/cookies.php</loc>
     <lastmod>2026-02-15</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
+  </url>
+
+  <!-- Artículos del Blog (auto-generado) -->
+  <url>
+    <loc>https://www.relaxtours.com.ar/blog/equipaje-avion</loc>
+    <lastmod>2026-02-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://www.relaxtours.com.ar/blog/tips-valija-mano</loc>
+    <lastmod>2026-02-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://www.relaxtours.com.ar/blog/documentacion-europa</loc>
+    <lastmod>2026-02-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://www.relaxtours.com.ar/blog/destinos-otono</loc>
+    <lastmod>2026-02-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
   </url>
 
 </urlset>

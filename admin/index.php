@@ -8,8 +8,8 @@ session_start();
 
 // Configuración
 define('DATA_FILE', __DIR__ . '/../data/content.json');
-define('ADMIN_USER', 'admin');
-define('ADMIN_PASS', 'relax2024');
+define('ADMIN_USER', 'adminrelax');
+define('ADMIN_PASS', '123RelaxBack456');
 
 function loadData()
 {
@@ -1268,7 +1268,7 @@ if (isset($_GET['edit'])) {
                             placeholder="••••••••" required></div>
                     <button type="submit" class="btn btn-primary btn-block">Ingresar</button>
                 </form>
-                <p style="text-align: center; margin-top: 20px; color: #666; font-size: 14px;">Demo: admin / relax2024</p>
+                <a href="https://relaxtours.com.ar" target="_blank" style="text-align: center; margin-top: 20px; color: #e05d20ff; font-size: 14px;">Ir a la web</a>
             </div>
         </div>
     <?php else: ?>
