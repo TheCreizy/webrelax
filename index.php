@@ -134,8 +134,8 @@ include 'includes/header.php';
         </div>
         <div class="instagram-widget-wrapper">
             <!-- EmbedSocial WIDGET -->
-            <div style="min-height: 800px; display: block; content-visibility: auto;">
-                <div class="embedsocial-hashtag" data-ref="6c0fbe11111c81e6cfc02f8fcbb5f8ca87152b22" data-lazyload="yes">
+            <div style="min-height: 800px; display: block;">
+                <div class="embedsocial-hashtag" data-ref="6c0fbe11111c81e6cfc02f8fcbb5f8ca87152b22" data-lazyload="no">
                 </div>
             </div>
             <script>
