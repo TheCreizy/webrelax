@@ -652,6 +652,10 @@ button {
 }
 
 /* SECCIONES */
+section[id] {
+  scroll-margin-top: 80px;
+}
+
 .section {
   padding: 100px 0;
 }
@@ -1325,6 +1329,7 @@ button {
 .instagram-widget-wrapper {
   margin: 40px 0;
   width: 100%;
+  min-height: 600px;
   border-radius: var(--radius-xl);
   overflow: hidden;
   box-shadow: var(--shadow-card);

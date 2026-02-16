@@ -97,11 +97,10 @@ function initNavbar() {
       
       if (target) {
         e.preventDefault();
-        const offsetTop = target.getBoundingClientRect().top + window.pageYOffset - 80;
-        window.scrollTo({
-          top: offsetTop,
-          behavior: 'smooth'
-        });
+        // Mantener URL limpia sin #
+        // window.history.pushState(null, null, ' '); // Opcional, si queremos borrar el hash
+        
+        target.scrollIntoView({ behavior: 'smooth' });
       }
     });
   });
@@ -586,11 +585,7 @@ document.addEventListener('click', () => {
 function scrollToContact() {
   const contactSection = document.getElementById('contacto');
   if (contactSection) {
-    const offsetTop = contactSection.getBoundingClientRect().top + window.pageYOffset - 80;
-    window.scrollTo({
-      top: offsetTop,
-      behavior: 'smooth'
-    });
+    contactSection.scrollIntoView({ behavior: 'smooth' });
   }
 }
 
