@@ -87,13 +87,22 @@ function initNavbar() {
     navbar.classList.toggle('scrolled', window.scrollY > 50);
   });
   
-  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+  document.querySelectorAll('a[href^="#"], a[href^="./#"]').forEach(anchor => {
     anchor.addEventListener('click', function(e) {
       const href = this.getAttribute('href');
-      if (!href || href === '#') return; // Ignore bare '#' links
-      e.preventDefault();
-      const target = document.querySelector(href);
-      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (!href || href === '#' || href.length <= 1) return;
+      
+      const targetId = href.startsWith('./') ? href.split('#')[1] : href.substring(1);
+      const target = document.getElementById(targetId);
+      
+      if (target) {
+        e.preventDefault();
+        const offsetTop = target.getBoundingClientRect().top + window.pageYOffset - 80;
+        window.scrollTo({
+          top: offsetTop,
+          behavior: 'smooth'
+        });
+      }
     });
   });
 
@@ -576,7 +585,13 @@ document.addEventListener('click', () => {
 
 function scrollToContact() {
   const contactSection = document.getElementById('contacto');
-  if (contactSection) contactSection.scrollIntoView({ behavior: 'smooth' });
+  if (contactSection) {
+    const offsetTop = contactSection.getBoundingClientRect().top + window.pageYOffset - 80;
+    window.scrollTo({
+      top: offsetTop,
+      behavior: 'smooth'
+    });
+  }
 }
 
 async function handleFormSubmit(form, statusId) {
