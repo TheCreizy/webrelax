@@ -454,16 +454,34 @@ function renderBlog() {
   const container = document.getElementById('blog-grid');
   if (!container || !siteData?.blog) return;
   
+  // Mostrar solo los últimos 6 posts activos
   const postsActivos = siteData.blog.filter(p => p.activo).slice(0, 6);
   
+  // Detectar path: Si estamos en root, el link es "blog/slug.html". Si ya estamos en /blog/, es "slug.html"
+  const linkPrefix = window.location.pathname.includes('/blog/') ? '' : 'blog/';
+
   container.innerHTML = postsActivos.map(post => `
-    <article class="blog-card fade-in" onclick="openBlogModal('${post.slug}')" style="cursor: pointer;">
-      <div class="blog-image"><img src="${post.imagen}" alt="${post.titulo}" loading="lazy"></div>
+    <article class="blog-card fade-in">
+      <a href="${linkPrefix}${post.slug}.html" class="blog-image-link" style="display:block; overflow:hidden;">
+        <div class="blog-image">
+            <img src="${post.imagen}" alt="${post.titulo}" loading="lazy">
+        </div>
+      </a>
       <div class="blog-content">
-        <div class="blog-date"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${post.fecha}</div>
-        <h3 class="blog-title">${post.titulo}</h3>
+        <div class="blog-date">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            ${post.fecha}
+        </div>
+        <h3 class="blog-title">
+            <a href="${linkPrefix}${post.slug}.html" style="text-decoration:none; color:inherit;">
+                ${post.titulo}
+            </a>
+        </h3>
         <p class="blog-excerpt">${post.extracto}</p>
-        <a href="blog/post.php?slug=${post.slug}" class="blog-link" onclick="event.stopPropagation();">Leer tip de ${post.destino || 'viaje'}<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
+        <a href="${linkPrefix}${post.slug}.html" class="blog-link">
+            Leer tip de ${post.destino || 'viaje'}
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </a>
       </div>
     </article>
   `).join('');

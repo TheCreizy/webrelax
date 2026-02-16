@@ -2937,9 +2937,9 @@ button {
    ========================================================================== */
 
 .blog-post-content {
-  max-width: 780px;
+  max-width: 855px;
   margin: 0 auto;
-  padding: 48px 24px;
+  padding: 48px 0px;
   line-height: 1.9;
   color: #374151;
   font-size: 1.1rem;

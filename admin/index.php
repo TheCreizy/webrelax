@@ -410,7 +410,7 @@ function updateSitemap($data)
             if (!empty($post['activo']) && !empty($post['slug'])) {
                 $postDate = !empty($post['fecha']) ? $post['fecha'] : $today;
                 $xmlContent .= "  <url>\n";
-                $xmlContent .= "    <loc>{$baseUrl}/blog/{$post['slug']}</loc>\n";
+                $xmlContent .= "    <loc>{$baseUrl}/blog/{$post['slug']}.html</loc>\n";
                 $xmlContent .= "    <lastmod>{$today}</lastmod>\n";
                 $xmlContent .= "    <changefreq>monthly</changefreq>\n";
                 $xmlContent .= "    <priority>0.7</priority>\n";

@@ -51,13 +51,19 @@ include '../includes/header.php';
         const postsActivos = siteData.blog.filter(p => p.activo);
 
         container.innerHTML = postsActivos.map(post => {
-            // Normalizar la ruta de imagen: quitar '../' si ya lo tiene
+            // Normalizar ruta de imagen (quitar '../' si viene del JSON para que se vea bien en esta vista)
             const imgPath = post.imagen.startsWith('../') ? post.imagen.substring(3) : post.imagen;
+            
+            // Link directo al archivo HTML generado por el backend (estamos en la misma carpeta)
+            const postLink = `${post.slug}.html`;
+
             return `
-            <article class="blog-card fade-in" onclick="openBlogModal('${post.slug}')" style="cursor: pointer;">
-                <div class="blog-image">
-                    <img src="../${imgPath}" alt="${post.titulo}" loading="lazy">
-                </div>
+            <article class="blog-card fade-in">
+                <a href="${postLink}" class="blog-image-link" style="display:block; overflow:hidden;">
+                    <div class="blog-image">
+                        <img src="../${imgPath}" alt="${post.titulo}" loading="lazy">
+                    </div>
+                </a>
                 <div class="blog-content">
                     <div class="blog-date">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -68,9 +74,11 @@ include '../includes/header.php';
                         </svg>
                         ${post.fecha}
                     </div>
-                    <h3 class="blog-title">${post.titulo}</h3>
+                    <h3 class="blog-title">
+                        <a href="${postLink}" style="text-decoration:none; color:inherit;">${post.titulo}</a>
+                    </h3>
                     <p class="blog-excerpt">${post.extracto}</p>
-                    <a href="#" class="blog-link" onclick="event.stopPropagation(); openBlogModal('${post.slug}'); return false;">
+                    <a href="${postLink}" class="blog-link">
                         Leer más
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <line x1="5" y1="12" x2="19" y2="12"/>
@@ -81,7 +89,6 @@ include '../includes/header.php';
             </article>`;
         }).join('');
 
-        // Activar animaciones de scroll para las tarjetas recién renderizadas
         if (window.scrollObserver) {
             container.querySelectorAll('.fade-in').forEach(el => window.scrollObserver.observe(el));
         }
