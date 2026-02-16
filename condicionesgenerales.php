@@ -26,17 +26,19 @@ require_once 'includes/header.php';
             },
             metaData: { fileName: "Condiciones Generales - Relax Tours.pdf" }
         }, {
-            /* CAMBIO CLAVE: FULL_WINDOW permite el scroll natural entre páginas */
             embedMode: "FULL_WINDOW", 
             defaultViewMode: "CONTINUOUS_PAGES",
+            /* ESTOS SON LOS AJUSTES NUEVOS */
+            showPageControls: true, 
+            dockPageControls: false, // Al ponerlo en FALSE, la barra de páginas se queda fija abajo (más fácil de ver)
             showDownloadPDF: true,
             showPrintPDF: true,
             showAnnotationTools: false,
             showLeftHandPanel: false,
-            showPageControls: true,
-            dockPageControls: true
+            enableLinearization: true,
+            /* Esto ayuda a que el visor entienda que quieres ver los bordes de hoja */
+            contentView: "FIT_PAGE" 
         });
-    });
 </script>
 
 <?php require_once 'includes/footer.php'; ?>
