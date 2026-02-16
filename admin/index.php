@@ -11,6 +11,15 @@ define('DATA_FILE', __DIR__ . '/../data/content.json');
 define('ADMIN_USER', 'adminrelax');
 define('ADMIN_PASS', '123RelaxBack456');
 
+// PHPMailer initialization
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+use PHPMailer\PHPMailer\SMTP;
+
+require __DIR__ . '/../PHPMailer/PHPMailer-master/src/Exception.php';
+require __DIR__ . '/../PHPMailer/PHPMailer-master/src/PHPMailer.php';
+require __DIR__ . '/../PHPMailer/PHPMailer-master/src/SMTP.php';
+
 function loadData()
 {
     if (!file_exists(DATA_FILE)) {
@@ -95,7 +104,9 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 'moneda' => $_POST['moneda'] ?? 'USD',
                 'imagen' => $_POST['imagen'],
                 'popular' => isset($_POST['popular']),
-                'activo' => isset($_POST['activo'])
+                'activo' => isset($_POST['activo']),
+                'operador' => !empty($_POST['operador']) ? $_POST['operador'] : 'Sin información',
+                'comentarios' => !empty($_POST['comentarios']) ? $_POST['comentarios'] : 'Sin información'
             ];
             if (!empty($_FILES['imagen_file']['tmp_name'])) {
                 $filename = 'paquete-' . $paquete['id'] . '-' . time() . '.jpg';
@@ -133,6 +144,7 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
 
         case 'save_oferta':
+            $isNew = empty($_POST['id']);
             $oferta = [
                 'id' => $_POST['id'] ?: generateId(),
                 'titulo' => $_POST['titulo'],
@@ -141,7 +153,9 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 'badge' => $_POST['badge'],
                 'badgeColor' => $_POST['badgeColor'],
                 'tiempo' => $_POST['tiempo'],
-                'activa' => isset($_POST['activa'])
+                'activa' => isset($_POST['activa']),
+                'operador' => !empty($_POST['operador']) ? $_POST['operador'] : 'Sin información',
+                'comentarios' => !empty($_POST['comentarios']) ? $_POST['comentarios'] : 'Sin información'
             ];
             if (!empty($_FILES['imagen_file']['tmp_name'])) {
                 $filename = 'oferta-' . $oferta['id'] . '-' . time() . '.jpg';
@@ -160,7 +174,54 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!$found)
                 array_unshift($data['ofertas'], $oferta); // Add to beginning (Newest First)
             saveData($data);
-            header('Location: index.php?tab=ofertas&msg=guardado');
+
+            // Send Email if New Offer
+            $mailMsg = 'guardado';
+            $errorMsg = '';
+            
+            if ($isNew) {
+                $mail = new PHPMailer(true);
+                try {
+                    // --- CONFIGURACIÓN DEL SERVIDOR SMTP (Hostinger) ---
+                    $mail->isSMTP();
+                    $mail->Host = 'smtp.hostinger.com';
+                    $mail->SMTPAuth = true;
+                    $mail->Username = 'noreply@relaxtours.com.ar';
+                    $mail->Password = '86V&CVVdFvi*!F=';
+                    $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+                    $mail->Port = 465;
+                    $mail->CharSet = 'UTF-8';
+
+                    $mail->setFrom('noreply@relaxtours.com.ar', 'Relax Tours Intranet');
+                    $mail->addAddress('ventas1@relaxtours.com.ar');
+
+                    $mail->Subject = "Promo Relax + " . $oferta['titulo'];
+
+                    // Embed Image
+                    $cid = '';
+                    if (!empty($oferta['imagen']) && file_exists(__DIR__ . '/../' . $oferta['imagen'])) {
+                        $mail->addEmbeddedImage(__DIR__ . '/../' . $oferta['imagen'], 'promo_image');
+                        $cid = '<br><img src="cid:promo_image" style="max-width:100%; height:auto; border-radius:8px; margin-top:20px;"><br>';
+                    }
+
+                    $body = "<h2>Nueva Promoción Creada: {$oferta['titulo']}</h2>";
+                    $body .= "<p><strong>Operador:</strong> {$oferta['operador']}</p>";
+                    $body .= "<p><strong>Comentarios:</strong> {$oferta['comentarios']}</p>";
+                    $body .= $cid;
+                    $body .= "<hr><p><small>Este es un mensaje automático del sistema interno.</small></p>";
+
+                    $mail->isHTML(true);
+                    $mail->Body = $body;
+
+                    $mail->send();
+                    $mailMsg = 'guardado_email';
+                } catch (Exception $e) {
+                    $mailMsg = 'guardado_error_email';
+                    $errorMsg = $mail->ErrorInfo;
+                }
+            }
+
+            header('Location: index.php?tab=ofertas&msg=' . $mailMsg . '&err=' . urlencode($errorMsg));
             exit;
 
         case 'delete_oferta':
@@ -325,7 +386,7 @@ function generateBlogPage($post, $config = [], $allBlog = [])
 
     $ogImage = 'https://www.relaxtours.com.ar/' . $cleanImage;
 
-    $ogUrl = 'https://www.relaxtours.com.ar/blog/' . $post['slug'] . '.html';
+    $ogUrl = 'https://www.relaxtours.com.ar/blog/' . $post['slug'];
 
     // Analytics
     $analyticsScript = '';
@@ -376,7 +437,7 @@ HTML;
         if ($prevPost) {
             $prevImg = str_replace('../', '', $prevPost['imagen']);
             $navHtml .= '
-            <a href="' . $prevPost['slug'] . '.html" class="blog-post-nav-item blog-post-nav-prev">
+            <a href="' . $prevPost['slug'] . '" class="blog-post-nav-item blog-post-nav-prev">
                 <span class="blog-post-nav-label">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
                     Ver Tip anterior
@@ -392,7 +453,7 @@ HTML;
         if ($nextPost) {
             $nextImg = str_replace('../', '', $nextPost['imagen']);
             $navHtml .= '
-            <a href="' . $nextPost['slug'] . '.html" class="blog-post-nav-item blog-post-nav-next">
+            <a href="' . $nextPost['slug'] . '" class="blog-post-nav-item blog-post-nav-next">
                 <span class="blog-post-nav-label">
                     Ver próximo Tip
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
@@ -438,16 +499,16 @@ HTML;
     <body>
         <nav class="navbar scrolled navbar-secondary">
             <div class="container">
-                <a href="../index.php" class="navbar-logo"><img src="../images/logo-relax.png" alt="Relax Tours"></a>
+                <a href="../index" class="navbar-logo"><img src="../images/logo-relax.png" alt="Relax Tours"></a>
                 <ul class="navbar-links">
-                    <li><a href="../index.php#inicio">Inicio</a></li>
-                    <li><a href="../nosotros.php">Nosotros</a></li>
-                    <li><a href="../index.php#paquetes">Paquetes</a></li>
-                    <li><a href="../index.php#ofertas">Ofertas</a></li>
-                    <li><a href="../blog/index.php" class="active">Tips</a></li>
-                    <li><a href="../index.php#contacto">Contacto</a></li>
+                    <li><a href="../index#inicio">Inicio</a></li>
+                    <li><a href="../nosotros">Nosotros</a></li>
+                    <li><a href="../index#paquetes">Paquetes</a></li>
+                    <li><a href="../index#ofertas">Ofertas</a></li>
+                    <li><a href="../blog/" class="active">Tips</a></li>
+                    <li><a href="../index#contacto">Contacto</a></li>
                 </ul>
-                <a href="../index.php#contacto" class="btn-primary">
+                <a href="../index#contacto" class="btn-primary">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
                     </svg>
@@ -461,19 +522,19 @@ HTML;
             </div>
         </nav>
         <div class="navbar-mobile-menu" id="mobile-menu">
-            <a href="../index.php#inicio">Inicio</a>
-            <a href="../nosotros.php">Nosotros</a>
-            <a href="../index.php#paquetes">Paquetes</a>
-            <a href="../index.php#ofertas">Ofertas</a>
-            <a href="../blog/index.php" class="active">Tips</a>
-            <a href="../index.php#contacto">Contacto</a>
-            <a href="../index.php#contacto" class="btn-primary">Consultar</a>
+            <a href="../index#inicio">Inicio</a>
+            <a href="../nosotros">Nosotros</a>
+            <a href="../index#paquetes">Paquetes</a>
+            <a href="../index#ofertas">Ofertas</a>
+            <a href="../blog/" class="active">Tips</a>
+            <a href="../index#contacto">Contacto</a>
+            <a href="../index#contacto" class="btn-primary">Consultar</a>
         </div>
         <div style="height: 80px;"></div>
         <article class="section" style="padding-top: 70px; background: #fff;">
             <div class="container" style="max-width: 900px;">
                 <div style="margin-bottom: 40px; text-align: center;">
-                    <a href="index.php" style="color: var(--color-orange); display: inline-flex; align-items: center; gap: 8px; margin-bottom: 24px; font-weight: 600; text-transform: uppercase; font-size: 13px; letter-spacing: 1px;">
+                    <a href="../blog/" style="color: var(--color-orange); display: inline-flex; align-items: center; gap: 8px; margin-bottom: 24px; font-weight: 600; text-transform: uppercase; font-size: 13px; letter-spacing: 1px;">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
                         Volver al Blog
                     </a>
@@ -559,7 +620,7 @@ function updateSitemap($data)
             if (!empty($post['activo']) && !empty($post['slug'])) {
                 $postDate = !empty($post['fecha']) ? $post['fecha'] : $today;
                 $xmlContent .= "  <url>\n";
-                $xmlContent .= "    <loc>{$baseUrl}/blog/{$post['slug']}.html</loc>\n";
+                $xmlContent .= "    <loc>{$baseUrl}/blog/{$post['slug']}</loc>\n";
                 $xmlContent .= "    <lastmod>{$today}</lastmod>\n";
                 $xmlContent .= "    <changefreq>monthly</changefreq>\n";
                 $xmlContent .= "    <priority>0.7</priority>\n";
@@ -1441,6 +1502,10 @@ if (isset($_GET['edit'])) {
         <main class="admin-content">
             <?php if ($message === 'guardado'): ?>
                 <div class="alert alert-success">✅ Guardado correctamente</div>
+            <?php elseif ($message === 'guardado_email'): ?>
+                <div class="alert alert-success">✅ Oferta guardada y correo enviado correctamente</div>
+            <?php elseif ($message === 'guardado_error_email'): ?>
+                <div class="alert alert-error">⚠️ Oferta guardada, pero hubo un error al enviar el correo: <?php echo htmlspecialchars($_GET['err'] ?? ''); ?></div>
             <?php elseif ($message === 'eliminado'): ?>
                 <div class="alert alert-success">✅ Eliminado correctamente</div><?php endif; ?>
 
@@ -1546,6 +1611,12 @@ if (isset($_GET['edit'])) {
                                             <option value="ARS" <?php echo ($editItem['moneda'] ?? '') === 'ARS' ? 'selected' : ''; ?>>Pesos (ARS)</option>
                                         </select></div>
                                 </div>
+                                <div class="form-row" style="background: #f0fdf4; padding: 15px; border-radius: 8px; border: 1px solid #bbf7d0;">
+                                    <div class="form-group"><label>Operador (Interno)</label><input type="text" name="operador"
+                                            value="<?php echo $editItem['operador'] ?? 'Sin información'; ?>" placeholder="Nombre del operador"></div>
+                                    <div class="form-group"><label>Comentarios (Interno)</label><input type="text" name="comentarios"
+                                            value="<?php echo $editItem['comentarios'] ?? 'Sin información'; ?>" placeholder="Comentarios adicionales"></div>
+                                </div>
                                 <div class="form-group"><label>Incluye (separado por comas)</label><input type="text"
                                         name="incluye"
                                         value="<?php echo isset($editItem['incluye']) ? implode(', ', $editItem['incluye']) : ''; ?>"
@@ -1632,13 +1703,19 @@ if (isset($_GET['edit'])) {
                                 onclick="window.location.href='?tab=ofertas'">&times;</button>
                         </div>
                         <div class="modal-body">
-                            <form method="POST" enctype="multipart/form-data">
+                            <form method="POST" enctype="multipart/form-data" onsubmit="this.querySelector('button[type=submit]').innerHTML='⏳ Guardando y Enviando...'; this.querySelector('button[type=submit]').disabled=true;">
                                 <input type="hidden" name="action" value="save_oferta">
                                 <input type="hidden" name="id" value="<?php echo $editItem['id'] ?? ''; ?>">
                                 <div class="form-group"><label>Título</label><input type="text" name="titulo"
                                         value="<?php echo $editItem['titulo'] ?? ''; ?>" required></div>
                                 <div class="form-group"><label>Descripción</label><input type="text" name="descripcion"
                                         value="<?php echo $editItem['descripcion'] ?? ''; ?>" required></div>
+                                <div class="form-row" style="background: #f0fdf4; padding: 15px; border-radius: 8px; border: 1px solid #bbf7d0;">
+                                    <div class="form-group"><label>Operador (Interno)</label><input type="text" name="operador"
+                                            value="<?php echo $editItem['operador'] ?? 'Sin información'; ?>" placeholder="Nombre del operador"></div>
+                                    <div class="form-group"><label>Comentarios (Interno)</label><input type="text" name="comentarios"
+                                            value="<?php echo $editItem['comentarios'] ?? 'Sin información'; ?>" placeholder="Comentarios adicionales"></div>
+                                </div>
                                 <div class="form-row">
                                     <div class="form-group"><label>Texto del Badge</label><input type="text" name="badge"
                                             value="<?php echo $editItem['badge'] ?? '¡OFERTA ESPECIAL!'; ?>"></div>

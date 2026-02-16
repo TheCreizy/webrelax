@@ -104,12 +104,12 @@ $base_url = isset($base_url) ? $base_url : './';
             <div class="footer-links-col">
                 <h4 class="footer-title">Acceso Rápido</h4>
                 <ul class="footer-links" style="margin-bottom: 0;">
-                    <li><a href="<?php echo $base_url; ?>index.php#inicio">Inicio</a></li>
-                    <li><a href="<?php echo $base_url; ?>nosotros.php">Nosotros</a></li>
-                    <li><a href="<?php echo $base_url; ?>index.php#paquetes">Paquetes</a></li>
-                    <li><a href="<?php echo $base_url; ?>index.php#ofertas">Ofertas Flash</a></li>
-                    <li><a href="<?php echo $base_url; ?>blog/index.php">Tips</a></li>
-                    <li><a href="<?php echo $base_url; ?>index.php#contacto">Contacto</a></li>
+                    <li><a href="<?php echo $base_url; ?>index#inicio">Inicio</a></li>
+                    <li><a href="<?php echo $base_url; ?>nosotros">Nosotros</a></li>
+                    <li><a href="<?php echo $base_url; ?>index#paquetes">Paquetes</a></li>
+                    <li><a href="<?php echo $base_url; ?>index#ofertas">Ofertas Flash</a></li>
+                    <li><a href="<?php echo $base_url; ?>blog/">Tips</a></li>
+                    <li><a href="<?php echo $base_url; ?>index#contacto">Contacto</a></li>
                 </ul>
             </div>
 
@@ -151,7 +151,7 @@ $base_url = isset($base_url) ? $base_url : './';
                     <ul class="footer-links-special">
                         <li><a href="<?php echo $base_url; ?>files/Local-virtual-certificado.pdf"
                                 target="_blank">Certificado de Habilitación</a></li>
-                        <li><a href="<?php echo $base_url; ?>cookies.php">Política de Cookies</a></li>
+                        <li><a href="<?php echo $base_url; ?>cookies">Política de Cookies</a></li>
                         <li><a href="#" onclick="openArrepentimientoModal(); return false;">Botón de Arrepentimiento</a>
                         </li>
                         <li><a href="https://tramitesadistancia.gob.ar/tramitesadistancia/detalle-tipo?id=624"
@@ -207,7 +207,7 @@ $base_url = isset($base_url) ? $base_url : './';
             </p>
             <div class="footer-bottom-links">
                 <span class="footer-legajo">Leg. 15.548</span>
-                <a href="<?php echo $base_url; ?>condicionesgenerales.php" target="_blank">Términos y
+                <a href="<?php echo $base_url; ?>condicionesgenerales" target="_blank">Términos y
                     Condiciones</a>
             </div>
         </div>
@@ -322,7 +322,7 @@ $base_url = isset($base_url) ? $base_url : './';
             <h4>🍪 Política de Cookies</h4>
             <p>Utilizamos cookies propias y de terceros para mejorar tu experiencia y nuestros servicios. Si continuás
                 navegando, consideramos que aceptás su uso. Podés obtener más información en nuestra <a
-                    href="<?php echo $base_url; ?>cookies.php">Política de Cookies</a>.</p>
+                    href="<?php echo $base_url; ?>cookies">Política de Cookies</a>.</p>
         </div>
         <div class="cookie-buttons">
             <button id="cookie-accept" class="btn-cookie-accept">Aceptar</button>

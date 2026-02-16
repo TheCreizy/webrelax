@@ -92,7 +92,7 @@ include 'includes/header.php';
                 </button>
             </div>
 
-            <a href="paquetes.php" class="btn-primary" style="margin-top: 40px;">Ver Todos los Paquetes</a>
+            <a href="paquetes" class="btn-primary" style="margin-top: 40px;">Ver Todos los Paquetes</a>
         </div>
     </div>
 </section>
