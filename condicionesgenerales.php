@@ -28,17 +28,16 @@ require_once 'includes/header.php';
         }, {
             embedMode: "FULL_WINDOW", 
             defaultViewMode: "CONTINUOUS_PAGES",
-            /* ESTOS SON LOS AJUSTES NUEVOS */
             showPageControls: true, 
-            dockPageControls: false, // Al ponerlo en FALSE, la barra de páginas se queda fija abajo (más fácil de ver)
+            dockPageControls: false, 
             showDownloadPDF: true,
             showPrintPDF: true,
             showAnnotationTools: false,
             showLeftHandPanel: false,
             enableLinearization: true,
-            /* Esto ayuda a que el visor entienda que quieres ver los bordes de hoja */
             contentView: "FIT_PAGE" 
         });
+    }); // <--- Faltaba esta llave y paréntesis de cierre
 </script>
 
 <?php require_once 'includes/footer.php'; ?>
