@@ -99,8 +99,8 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
             ];
             if (!empty($_FILES['imagen_file']['tmp_name'])) {
                 $filename = 'paquete-' . $paquete['id'] . '-' . time() . '.jpg';
-                if (move_uploaded_file($_FILES['imagen_file']['tmp_name'], __DIR__ . '/../images/' . $filename)) {
-                    $paquete['imagen'] = 'images/' . $filename;
+                if (move_uploaded_file($_FILES['imagen_file']['tmp_name'], __DIR__ . '/../images/paquetes-images/' . $filename)) {
+                    $paquete['imagen'] = 'images/paquetes-images/' . $filename;
                 }
             }
             $found = false;
@@ -136,8 +136,8 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
             ];
             if (!empty($_FILES['imagen_file']['tmp_name'])) {
                 $filename = 'oferta-' . $oferta['id'] . '-' . time() . '.jpg';
-                if (move_uploaded_file($_FILES['imagen_file']['tmp_name'], __DIR__ . '/../images/' . $filename)) {
-                    $oferta['imagen'] = 'images/' . $filename;
+                if (move_uploaded_file($_FILES['imagen_file']['tmp_name'], __DIR__ . '/../images/ofertas-images/' . $filename)) {
+                    $oferta['imagen'] = 'images/ofertas-images/' . $filename;
                 }
             }
             $found = false;
@@ -176,8 +176,8 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
             ];
             if (!empty($_FILES['imagen_file']['tmp_name'])) {
                 $filename = 'blog-' . $blog['id'] . '-' . time() . '.jpg';
-                if (move_uploaded_file($_FILES['imagen_file']['tmp_name'], __DIR__ . '/../images/' . $filename)) {
-                    $blog['imagen'] = 'images/' . $filename;
+                if (move_uploaded_file($_FILES['imagen_file']['tmp_name'], __DIR__ . '/../images/blog-images/' . $filename)) {
+                    $blog['imagen'] = 'images/blog-images/' . $filename;
                 }
             }
             $found = false;
