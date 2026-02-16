@@ -1,5 +1,5 @@
 <?php
-$page_title = 'Términos y Condiciones | Relax Tours';
+$page_title = 'Términos y Condiciones - Relax Tours';
 $page_description = 'Lee nuestros términos y condiciones generales para la contratación de servicios turísticos.';
 $active_page = 'condiciones';
 require_once 'includes/header.php';
@@ -9,7 +9,7 @@ require_once 'includes/header.php';
     <div class="container" style="padding-top: 40px; padding-bottom: 40px;">
         <h1 class="section-title text-center" style="margin-bottom: 30px;">Términos y Condiciones</h1>
         
-        <div id="adobe-dc-view" style="width: 100%; height: 165vh; border: 1px solid #eee;"></div>
+        <div id="adobe-dc-view" style="width: 100%; height: 90vh; border: 1px solid #eee;"></div>
     </div>
 </main>
 
@@ -26,7 +26,8 @@ require_once 'includes/header.php';
             },
             metaData: { fileName: "Condiciones Generales - Relax Tours.pdf" }
         }, {
-            embedMode: "SIZED_CONTAINER", 
+            /* CAMBIO CLAVE: FULL_WINDOW permite el scroll natural entre páginas */
+            embedMode: "FULL_WINDOW", 
             defaultViewMode: "CONTINUOUS_PAGES",
             showDownloadPDF: true,
             showPrintPDF: true,
