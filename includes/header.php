@@ -117,7 +117,7 @@ if (file_exists($dataFile)) {
                         class="<?php echo ($active_page === 'nosotros') ? 'active' : ''; ?>">Nosotros</a></li>
                 <li><a href="<?php echo $base_url; ?>#paquetes">Paquetes</a></li>
                 <li><a href="<?php echo $base_url; ?>#ofertas">Ofertas</a></li>
-                <li><a href="<?php echo $base_url; ?>blog/"
+                <li><a href="<?php echo $base_url; ?>#blog"
                         class="<?php echo ($active_page === 'blog') ? 'active' : ''; ?>">Tips</a></li>
                 <li><a href="<?php echo $base_url; ?>#contacto">Contacto</a></li>
             </ul>
@@ -146,7 +146,7 @@ if (file_exists($dataFile)) {
             class="<?php echo ($active_page === 'nosotros') ? 'active' : ''; ?>">Nosotros</a>
         <a href="<?php echo $base_url; ?>#paquetes">Paquetes</a>
         <a href="<?php echo $base_url; ?>#ofertas">Ofertas</a>
-        <a href="<?php echo $base_url; ?>blog/"
+        <a href="<?php echo $base_url; ?>#blog"
             class="<?php echo ($active_page === 'blog') ? 'active' : ''; ?>">Tips</a>
         <a href="<?php echo $base_url; ?>#contacto">Contacto</a>
         <a href="<?php echo $base_url; ?>#contacto" class="btn-primary">Consultar</a>

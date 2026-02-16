@@ -505,7 +505,7 @@ HTML;
                     <li><a href="../nosotros">Nosotros</a></li>
                     <li><a href="../index#paquetes">Paquetes</a></li>
                     <li><a href="../index#ofertas">Ofertas</a></li>
-                    <li><a href="../blog/" class="active">Tips</a></li>
+                    <li><a href="../index#blog" class="active">Tips</a></li>
                     <li><a href="../index#contacto">Contacto</a></li>
                 </ul>
                 <a href="../index#contacto" class="btn-primary">
@@ -526,7 +526,7 @@ HTML;
             <a href="../nosotros">Nosotros</a>
             <a href="../index#paquetes">Paquetes</a>
             <a href="../index#ofertas">Ofertas</a>
-            <a href="../blog/" class="active">Tips</a>
+            <a href="../index#blog" class="active">Tips</a>
             <a href="../index#contacto">Contacto</a>
             <a href="../index#contacto" class="btn-primary">Consultar</a>
         </div>
@@ -534,7 +534,7 @@ HTML;
         <article class="section" style="padding-top: 70px; background: #fff;">
             <div class="container" style="max-width: 900px;">
                 <div style="margin-bottom: 40px; text-align: center;">
-                    <a href="../blog/" style="color: var(--color-orange); display: inline-flex; align-items: center; gap: 8px; margin-bottom: 24px; font-weight: 600; text-transform: uppercase; font-size: 13px; letter-spacing: 1px;">
+                    <a href="../index#blog" style="color: var(--color-orange); display: inline-flex; align-items: center; gap: 8px; margin-bottom: 24px; font-weight: 600; text-transform: uppercase; font-size: 13px; letter-spacing: 1px;">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
                         Volver al Blog
                     </a>
