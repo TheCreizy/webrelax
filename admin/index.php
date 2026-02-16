@@ -275,7 +275,17 @@ function generateBlogPage($post, $config = [])
     $seoTitle = !empty($post['seo_titulo']) ? $post['seo_titulo'] : $post['titulo'] . ' - Relax Tours Blog';
     $seoDesc = !empty($post['seo_description']) ? $post['seo_description'] : $post['extracto'];
     $seoKeys = !empty($post['seo_keywords']) ? $post['seo_keywords'] : '';
-    
+
+    // Preparar URLs absolutas para Redes Sociales (Open Graph)
+
+    // Nos aseguramos de que la imagen no tenga '../' al principio si es que lo tiene guardado así
+
+    $cleanImage = str_replace('../', '', $post['imagen']); 
+
+    $ogImage = 'https://www.relaxtours.com.ar/' . $cleanImage;
+
+    $ogUrl = 'https://www.relaxtours.com.ar/blog/' . $post['slug'] . '.html';
+
     // Analytics
     $analyticsScript = '';
     if (!empty($config['analytics_id'])) {
@@ -307,6 +317,14 @@ HTML;
         <title>{$seoTitle}</title>
         <meta name="description" content="{$seoDesc}">
         <meta name="keywords" content="{$seoKeys}">
+        
+        <meta property="og:type" content="article">
+        <meta property="og:title" content="{$seoTitle}">
+        <meta property="og:description" content="{$seoDesc}">
+        <meta property="og:image" content="{$ogImage}">
+        <meta property="og:url" content="{$ogUrl}">
+
+
         {$analyticsScript}
         <link rel="icon" type="image/svg+xml" href="../images/favicon.svg">
         <link rel="icon" type="image/png" sizes="96x96" href="../images/favicon-96x96.png">
