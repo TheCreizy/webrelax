@@ -27,6 +27,7 @@ require_once 'includes/header.php';
             metaData: { fileName: "Condiciones Generales - Relax Tours.pdf" }
         }, {
             embedMode: "SIZED_CONTAINER", 
+            defaultViewMode: "CONTINUOUS_PAGES",
             showDownloadPDF: true,
             showPrintPDF: true,
             showAnnotationTools: false,
