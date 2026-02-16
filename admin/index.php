@@ -118,6 +118,15 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
 
         case 'delete_paquete':
+            foreach ($data['paquetes'] as $p) {
+                if ($p['id'] === $_POST['id'] && !empty($p['imagen'])) {
+                    $imgFile = __DIR__ . '/../' . $p['imagen'];
+                    if (file_exists($imgFile) && strpos($p['imagen'], 'paquetes-images/') !== false) {
+                        unlink($imgFile);
+                    }
+                    break;
+                }
+            }
             $data['paquetes'] = array_values(array_filter($data['paquetes'], fn($p) => $p['id'] !== $_POST['id']));
             saveData($data);
             header('Location: index.php?tab=paquetes&msg=eliminado');
@@ -155,6 +164,15 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
 
         case 'delete_oferta':
+            foreach ($data['ofertas'] as $o) {
+                if ($o['id'] === $_POST['id'] && !empty($o['imagen'])) {
+                    $imgFile = __DIR__ . '/../' . $o['imagen'];
+                    if (file_exists($imgFile) && strpos($o['imagen'], 'ofertas-images/') !== false) {
+                        unlink($imgFile);
+                    }
+                    break;
+                }
+            }
             $data['ofertas'] = array_values(array_filter($data['ofertas'], fn($o) => $o['id'] !== $_POST['id']));
             saveData($data);
             header('Location: index.php?tab=ofertas&msg=eliminado');
@@ -211,6 +229,15 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
 
         case 'delete_blog':
+            foreach ($data['blog'] as $b) {
+                if ($b['id'] === $_POST['id'] && !empty($b['imagen'])) {
+                    $imgFile = __DIR__ . '/../' . $b['imagen'];
+                    if (file_exists($imgFile) && strpos($b['imagen'], 'blog-images/') !== false) {
+                        unlink($imgFile);
+                    }
+                    break;
+                }
+            }
             $data['blog'] = array_values(array_filter($data['blog'], fn($b) => $b['id'] !== $_POST['id']));
             saveData($data);
             updateSitemap($data);
