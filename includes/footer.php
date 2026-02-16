@@ -104,12 +104,12 @@ $base_url = isset($base_url) ? $base_url : './';
             <div class="footer-links-col">
                 <h4 class="footer-title">Acceso Rápido</h4>
                 <ul class="footer-links" style="margin-bottom: 0;">
-                    <li><a href="<?php echo $base_url; ?>index#inicio">Inicio</a></li>
+                    <li><a href="<?php echo $base_url; ?>#inicio">Inicio</a></li>
                     <li><a href="<?php echo $base_url; ?>nosotros">Nosotros</a></li>
-                    <li><a href="<?php echo $base_url; ?>index#paquetes">Paquetes</a></li>
-                    <li><a href="<?php echo $base_url; ?>index#ofertas">Ofertas Flash</a></li>
+                    <li><a href="<?php echo $base_url; ?>#paquetes">Paquetes</a></li>
+                    <li><a href="<?php echo $base_url; ?>#ofertas">Ofertas Flash</a></li>
                     <li><a href="<?php echo $base_url; ?>blog/">Tips</a></li>
-                    <li><a href="<?php echo $base_url; ?>index#contacto">Contacto</a></li>
+                    <li><a href="<?php echo $base_url; ?>#contacto">Contacto</a></li>
                 </ul>
             </div>
 

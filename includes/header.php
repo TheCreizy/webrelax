@@ -111,18 +111,18 @@ if (file_exists($dataFile)) {
                 <img src="<?php echo $base_url; ?>images/logo-relax.png" alt="Relax Tours">
             </a>
             <ul class="navbar-links">
-                <li><a href="<?php echo $base_url; ?>index#inicio"
+                <li><a href="<?php echo $base_url; ?>#inicio"
                         class="<?php echo ($active_page === 'inicio') ? 'active' : ''; ?>">Inicio</a></li>
                 <li><a href="<?php echo $base_url; ?><?php echo ($active_page === 'nosotros') ? 'nosotros' : 'nosotros'; ?>"
                         class="<?php echo ($active_page === 'nosotros') ? 'active' : ''; ?>">Nosotros</a></li>
-                <li><a href="<?php echo $base_url; ?>index#paquetes">Paquetes</a></li>
-                <li><a href="<?php echo $base_url; ?>index#ofertas">Ofertas</a></li>
+                <li><a href="<?php echo $base_url; ?>#paquetes">Paquetes</a></li>
+                <li><a href="<?php echo $base_url; ?>#ofertas">Ofertas</a></li>
                 <li><a href="<?php echo $base_url; ?>blog/"
                         class="<?php echo ($active_page === 'blog') ? 'active' : ''; ?>">Tips</a></li>
-                <li><a href="<?php echo $base_url; ?>index#contacto">Contacto</a></li>
+                <li><a href="<?php echo $base_url; ?>#contacto">Contacto</a></li>
             </ul>
 
-            <a href="<?php echo $base_url; ?>index#contacto" class="btn-primary">
+            <a href="<?php echo $base_url; ?>#contacto" class="btn-primary">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2">
                     <path
@@ -140,16 +140,16 @@ if (file_exists($dataFile)) {
 
     <!-- MOBILE MENU -->
     <div class="navbar-mobile-menu" id="mobile-menu">
-        <a href="<?php echo $base_url; ?>index#inicio"
+        <a href="<?php echo $base_url; ?>#inicio"
             class="<?php echo ($active_page === 'inicio') ? 'active' : ''; ?>">Inicio</a>
         <a href="<?php echo $base_url; ?>nosotros"
             class="<?php echo ($active_page === 'nosotros') ? 'active' : ''; ?>">Nosotros</a>
-        <a href="<?php echo $base_url; ?>index#paquetes">Paquetes</a>
-        <a href="<?php echo $base_url; ?>index#ofertas">Ofertas</a>
+        <a href="<?php echo $base_url; ?>#paquetes">Paquetes</a>
+        <a href="<?php echo $base_url; ?>#ofertas">Ofertas</a>
         <a href="<?php echo $base_url; ?>blog/"
             class="<?php echo ($active_page === 'blog') ? 'active' : ''; ?>">Tips</a>
-        <a href="<?php echo $base_url; ?>index#contacto">Contacto</a>
-        <a href="<?php echo $base_url; ?>index#contacto" class="btn-primary">Consultar</a>
+        <a href="<?php echo $base_url; ?>#contacto">Contacto</a>
+        <a href="<?php echo $base_url; ?>#contacto" class="btn-primary">Consultar</a>
     </div>
 
     <?php if ($active_page !== 'inicio'): ?>
