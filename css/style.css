@@ -27,6 +27,13 @@
   --shadow-button: 0 4px 16px rgba(249, 115, 22, 0.3);
   --shadow-whatsapp: 0 4px 20px rgba(37, 211, 102, 0.3);
 
+  /* Soft UI Evolution — Neumorphic dual-shadow tokens */
+  --color-soft-bg: #ecf0f3;
+  --shadow-soft: 10px 10px 20px #d1d9e6, -10px -10px 20px #ffffff;
+  --shadow-soft-hover: 14px 14px 28px #c8d0d9, -14px -14px 28px #ffffff;
+  --shadow-soft-sm: 6px 6px 12px #d1d9e6, -6px -6px 12px #ffffff;
+  --shadow-soft-inset: inset 6px 6px 12px #d1d9e6, inset -6px -6px 12px #ffffff;
+
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
@@ -210,14 +217,14 @@ button {
     background-color 0.3s ease,
     transform 0.3s ease,
     box-shadow 0.3s ease;
-  box-shadow: var(--shadow-button);
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.2);
   touch-action: manipulation;
 }
 
 .btn-primary:hover {
   background: var(--color-orange-dark);
   transform: translateY(-2px);
-  box-shadow: 0 6px 24px rgba(249, 115, 22, 0.5);
+  box-shadow: 0 8px 24px rgba(249, 115, 22, 0.3);
 }
 
 .btn-outline {
@@ -701,7 +708,7 @@ section[id] {
 
 /* PAQUETES */
 .section-paquetes {
-  background: var(--color-white);
+  background: var(--color-soft-bg);
   position: relative;
 }
 
@@ -798,16 +805,16 @@ section[id] {
 /* Restrict hover effects to only active carousel items or normal grid items */
 .paquetes-grid .paquete-card:hover,
 .carousel-item.active .paquete-card:hover {
-  transform: translateY(-12px) scale(1.02);
-  box-shadow: var(--shadow-card-hover);
-  border-color: rgba(249, 115, 22, 0.2);
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: var(--shadow-soft-hover);
+  border-color: rgba(249, 115, 22, 0.15);
 }
 
 /* Disable hover effects on non-active carousel items */
 .carousel-item:not(.active) .paquete-card:hover {
   transform: none;
-  box-shadow: var(--shadow-card);
-  border-color: rgba(255, 255, 255, 0.5);
+  box-shadow: var(--shadow-soft);
+  border-color: rgba(255, 255, 255, 0.6);
 }
 .carousel-item:not(.active) .paquete-card:hover .paquete-image img {
   transform: none;
@@ -912,15 +919,15 @@ section[id] {
 }
 
 .paquete-card {
-  background: rgba(255, 255, 255, 0.7);
+  background: var(--color-soft-bg);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border-radius: var(--radius-xl);
   overflow: hidden;
   transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
-  box-shadow: var(--shadow-card);
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: var(--shadow-soft);
+  border: 1px solid rgba(255, 255, 255, 0.6);
 
   /* Forzar aceleración de hardware y suavizado */
   backface-visibility: hidden;
@@ -1347,7 +1354,7 @@ section[id] {
 
 /* BLOG */
 .section-blog {
-  background: #dae7ff; /* Gris clarito */
+  background: var(--color-soft-bg);
 }
 
 .blog-grid {
@@ -1357,17 +1364,18 @@ section[id] {
 }
 
 .blog-card {
-  background: var(--color-white);
+  background: var(--color-soft-bg);
   border-radius: var(--radius-xl);
   overflow: hidden;
-  box-shadow: var(--shadow-card);
-  transition: all 0.4s ease;
+  box-shadow: var(--shadow-soft);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  transition: all 0.3s ease;
   cursor: pointer;
 }
 
 .blog-card:hover {
   transform: translateY(-4px);
-  box-shadow: var(--shadow-card-hover);
+  box-shadow: var(--shadow-soft-hover);
 }
 
 .blog-image {
@@ -2058,7 +2066,7 @@ section[id] {
 
 /* BLOG SECTION BACKGROUND */
 .section-blog {
-  background-color: var(--color-blog-bg);
+  background-color: var(--color-soft-bg);
 }
 
 /* ANIMACIONES */
@@ -2610,7 +2618,7 @@ section[id] {
    ========================================================================== */
 
 .section-nosotros {
-  background: var(--color-gray-light);
+  background: var(--color-soft-bg);
   overflow: hidden;
   position: relative;
   padding: 100px 0;
@@ -2640,13 +2648,14 @@ section[id] {
 
 .bento-item {
   position: relative;
-  background: rgba(255, 255, 255, 0.4);
+  background: var(--color-soft-bg);
   backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);
   border-radius: 32px;
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.5);
   padding: 40px;
   overflow: hidden;
+  box-shadow: var(--shadow-soft);
   transition:
     transform 0.8s cubic-bezier(0.2, 0, 0.2, 1),
     box-shadow 0.6s ease;
@@ -2660,8 +2669,8 @@ section[id] {
 }
 
 .bento-item:hover {
-  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.08);
-  border-color: rgba(249, 115, 22, 0.3);
+  box-shadow: var(--shadow-soft-hover);
+  border-color: rgba(249, 115, 22, 0.2);
 }
 
 /* Glassmorphism Grain Overlay */
