@@ -13,8 +13,8 @@ include 'includes/header.php';
             <span class="section-tag">Nuestra Familia</span>
             <h2 class="section-title">Quiénes <span class="text-gradient">Somos</span></h2>
             <p class="section-subtitle"><strong>RELAX TOURS</strong> es una Empresa de Viajes y Turismo (Legajo 15.548) con sede en
-                Buenos Aires Argentina, emisiva, receptiva y multidestino.<br>Somos una Empresa familiar, cuyos integrantes
-                estan al frente de la atención de cada viaje, para que nuestros pasajeros viajen seguros y relajados.<br>
+                Buenos Aires Argentina, emisiva, receptiva y multidestino. Somos una Empresa familiar, cuyos integrantes
+                estan al frente de la atención de cada viaje, para que nuestros pasajeros viajen seguros y relajados.
                 Desde hace 23 años nos dedicamos con esmero a interpretar las necesidades y los gustos de ellos, los
                 cuales hemos ido conociendo cada vez mas a lo largo de los sucesivos viajes.</p>
         </div>

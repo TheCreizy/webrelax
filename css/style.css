@@ -694,7 +694,7 @@ section[id] {
 .section-subtitle {
   font-size: 1.125rem;
   color: var(--color-gray);
-  max-width: 655px;
+  max-width: 800px;
   margin: 0 auto;
 }
 
@@ -2623,6 +2623,9 @@ section[id] {
   position: relative;
   padding: 100px 0;
   text-align: center;
+  /* Pull section up to cover the 80px navbar spacer */
+  margin-top: -80px;
+  padding-top: 180px; /* 100px original + 80px to compensate for negative margin */
 }
 
 /* Centrar Header */
