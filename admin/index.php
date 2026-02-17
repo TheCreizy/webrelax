@@ -42,6 +42,57 @@ function slugify($text)
     return trim(preg_replace('/[^a-z0-9]+/', '-', strtolower($text)), '-');
 }
 
+function processAndConvertWebP($sourcePath, $destinationPath, $maxWidth = 1200, $quality = 80) {
+    // Validar si la librería GD está instalada
+    if (!function_exists('gd_info')) {
+        return "Error: La librería GD no está activada en el servidor.";
+    }
+    $info = getimagesize($sourcePath);
+    if (!$info) return "Error: No es una imagen válida.";
+
+    $mime = $info['mime'];
+    $width = $info[0];
+    $height = $info[1];
+
+    // Calcular proporciones
+    if ($width > $maxWidth) {
+        $ratio = $maxWidth / $width;
+        $newWidth = $maxWidth;
+        $newHeight = (int)($height * $ratio);
+    } else {
+        $newWidth = $width;
+        $newHeight = $height;
+    }
+
+    // Crear recurso de imagen según el original
+    switch ($mime) {
+        case 'image/jpeg': $src = imagecreatefromjpeg($sourcePath); break;
+        case 'image/png': 
+            $src = imagecreatefrompng($sourcePath); 
+            imagepalettetotruecolor($src);
+            imagealphablending($src, true);
+            imagesavealpha($src, true);
+            break;
+        case 'image/gif': $src = imagecreatefromgif($sourcePath); break;
+        case 'image/webp': $src = imagecreatefromwebp($sourcePath); break;
+        default: return "Error: El formato $mime no es compatible.";
+    }
+
+    // Redimensionar
+    $tmp = imagecreatetruecolor($newWidth, $newHeight);
+    imagealphablending($tmp, false);
+    imagesavealpha($tmp, true);
+    imagecopyresampled($tmp, $src, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+
+    // Guardar como WebP
+    $success = imagewebp($tmp, $destinationPath, $quality);
+    
+    imagedestroy($src);
+    imagedestroy($tmp);
+
+    return $success ? true : "Error al convertir a WebP.";
+}
+
 // Login
 if (isset($_POST['action']) && $_POST['action'] === 'login') {
     if ($_POST['username'] === ADMIN_USER && $_POST['password'] === ADMIN_PASS) {
@@ -69,17 +120,13 @@ if ($isLoggedIn && isset($_GET['ajax']) && $_GET['ajax'] === 'upload_blog_image'
     if (!is_dir($uploadDir))
         mkdir($uploadDir, 0755, true);
     if (!empty($_FILES['image']['tmp_name'])) {
-        $ext = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
-        $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-        if (in_array($ext, $allowed)) {
-            $filename = 'blog-img-' . uniqid() . '-' . time() . '.' . $ext;
-            if (move_uploaded_file($_FILES['image']['tmp_name'], $uploadDir . $filename)) {
-                echo json_encode(['success' => true, 'url' => 'images/blog-content/' . $filename]);
-            } else {
-                echo json_encode(['success' => false, 'error' => 'Error al mover archivo']);
-            }
+        $filename = 'blog-img-' . uniqid() . '-' . time() . '.webp';
+        $targetPath = $uploadDir . $filename;
+        $result = processAndConvertWebP($_FILES['image']['tmp_name'], $targetPath, 1000);
+        if ($result === true) {
+            echo json_encode(['success' => true, 'url' => 'images/blog-content/' . $filename]);
         } else {
-            echo json_encode(['success' => false, 'error' => 'Formato no permitido']);
+            echo json_encode(['success' => false, 'error' => $result]);
         }
     } else {
         echo json_encode(['success' => false, 'error' => 'No se recibió imagen']);
@@ -109,8 +156,10 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 'comentarios' => !empty($_POST['comentarios']) ? $_POST['comentarios'] : 'Sin información'
             ];
             if (!empty($_FILES['imagen_file']['tmp_name'])) {
-                $filename = 'paquete-' . $paquete['id'] . '-' . time() . '.jpg';
-                if (move_uploaded_file($_FILES['imagen_file']['tmp_name'], __DIR__ . '/../images/paquetes-images/' . $filename)) {
+                $filename = 'paquete-' . $paquete['id'] . '-' . time() . '.webp';
+                $dest = __DIR__ . '/../images/paquetes-images/' . $filename;
+                $res = processAndConvertWebP($_FILES['imagen_file']['tmp_name'], $dest, 800);
+                if ($res === true) {
                     $paquete['imagen'] = 'images/paquetes-images/' . $filename;
                 }
             }
@@ -158,8 +207,10 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 'comentarios' => !empty($_POST['comentarios']) ? $_POST['comentarios'] : 'Sin información'
             ];
             if (!empty($_FILES['imagen_file']['tmp_name'])) {
-                $filename = 'oferta-' . $oferta['id'] . '-' . time() . '.jpg';
-                if (move_uploaded_file($_FILES['imagen_file']['tmp_name'], __DIR__ . '/../images/ofertas-images/' . $filename)) {
+                $filename = 'oferta-' . $oferta['id'] . '-' . time() . '.webp';
+                $dest = __DIR__ . '/../images/ofertas-images/' . $filename;
+                $res = processAndConvertWebP($_FILES['imagen_file']['tmp_name'], $dest, 800);
+                if ($res === true) {
                     $oferta['imagen'] = 'images/ofertas-images/' . $filename;
                 }
             }
@@ -254,8 +305,10 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 'activo' => isset($_POST['activo'])
             ];
             if (!empty($_FILES['imagen_file']['tmp_name'])) {
-                $filename = 'blog-' . $blog['id'] . '-' . time() . '.jpg';
-                if (move_uploaded_file($_FILES['imagen_file']['tmp_name'], __DIR__ . '/../images/blog-images/' . $filename)) {
+                $filename = 'blog-' . $blog['id'] . '-' . time() . '.webp';
+                $dest = __DIR__ . '/../images/blog-images/' . $filename;
+                $res = processAndConvertWebP($_FILES['imagen_file']['tmp_name'], $dest, 1200);
+                if ($res === true) {
                     $blog['imagen'] = 'images/blog-images/' . $filename;
                 }
             }
