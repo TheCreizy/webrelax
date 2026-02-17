@@ -90,7 +90,7 @@ if (file_exists($dataFile)) {
     <nav class="navbar <?php echo ($active_page !== 'inicio') ? 'scrolled navbar-secondary' : ''; ?>">
         <div class="container">
             <a href="<?php echo $base_url; ?>index" class="navbar-logo">
-                <img src="<?php echo $base_url; ?>images/logo-relax.png" alt="Relax Tours">
+                <img src="<?php echo $base_url; ?>images/logo-relax.webp" alt="Relax Tours">
             </a>
             <ul class="navbar-links">
                 <li><a href="<?php echo $base_url; ?>#inicio"

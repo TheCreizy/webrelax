@@ -57,56 +57,6 @@
             "activo": true,
             "operador": "Amichi",
             "comentarios": "Sacado de la web"
-        },
-        {
-            "id": "1",
-            "nombre": "Caribe All Inclusive",
-            "destino": "Punta Cana \/ Riviera Maya",
-            "duracion": "7 Noches \/ 8 Días",
-            "incluye": [
-                "Aéreos",
-                "Traslados",
-                "All Inclusive",
-                "Asistencia"
-            ],
-            "precio": 1200,
-            "moneda": "USD",
-            "imagen": "images\/paquetes-images\/paquete-1-1771255510.jpg",
-            "popular": true,
-            "activo": false
-        },
-        {
-            "id": "2",
-            "nombre": "Patagonia Argentina",
-            "destino": "El Calafate & Chaltén",
-            "duracion": "6 Noches \/ 7 Días",
-            "incluye": [
-                "Vuelos",
-                "Hoteles 4*",
-                "Excursión Glaciar",
-                "Traslados"
-            ],
-            "precio": 850,
-            "moneda": "USD",
-            "imagen": "images\/paquetes-images\/paquete-2-1771255519.jpg",
-            "popular": false,
-            "activo": false
-        },
-        {
-            "id": "3",
-            "nombre": "Crucero por Brasil",
-            "destino": "Río, Buzios e Ilhabela",
-            "duracion": "8 Noches",
-            "incluye": [
-                "Pensión completa",
-                "Entretenimiento",
-                "Tasas portuarias"
-            ],
-            "precio": 950,
-            "moneda": "USD",
-            "imagen": "images\/paquetes-images\/paquete-3-1771255529.jpg",
-            "popular": false,
-            "activo": false
         }
     ],
     "ofertas": [

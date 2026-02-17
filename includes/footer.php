@@ -12,7 +12,7 @@ $base_url = isset($base_url) ? $base_url : './';
         <div class="footer-grid">
             <!-- Col 1: Brand -->
             <div class="footer-brand">
-                <img src="<?php echo $base_url; ?>images/logo-relax.png" alt="Relax Tours" class="footer-logo">
+                <img src="<?php echo $base_url; ?>images/logo-relax.webp" alt="Relax Tours" class="footer-logo">
                 <p>Empresa de viajes y Turismo. Más de 23 años de experiencia creando viajes inolvidables.</p>
                 <div class="footer-social">
                     <a href="https://www.instagram.com/relax.tours/" target="_blank" rel="noopener noreferrer"
@@ -47,25 +47,25 @@ $base_url = isset($base_url) ? $base_url : './';
                         <!-- 2. AVIABUE -->
                         <div class="affiliation-item">
                             <a href="https://www.aviabue.org.ar/" target="_blank">
-                                <img src="<?php echo $base_url; ?>images/aviabue.png" alt="AVIABUE">
+                                <img src="<?php echo $base_url; ?>images/aviabue.webp" alt="AVIABUE">
                             </a>
                         </div>
                         <!-- 3. FAEVYT -->
                         <div class="affiliation-item">
                             <a href="https://www.faevyt.org.ar/" target="_blank">
-                                <img src="<?php echo $base_url; ?>images/faevyt.png" alt="FAEVYT">
+                                <img src="<?php echo $base_url; ?>images/faevyt.webp" alt="FAEVYT">
                             </a>
                         </div>
                         <!-- 4. PDP -->
                         <div class="affiliation-item">
                             <a href="https://www.argentina.gob.ar/aaip/datospersonales" target="_blank">
-                                <img src="<?php echo $base_url; ?>images/pdp.png" alt="Protección de Datos Personales">
+                                <img src="<?php echo $base_url; ?>images/pdp.webp" alt="Protección de Datos Personales">
                             </a>
                         </div>
                         <!-- 5. QR Agencias -->
                         <div class="affiliation-item">
                             <a href="https://agenciasdeviajes.ar/agencias/jek4QnYC" target="_blank">
-                                <img src="<?php echo $base_url; ?>images/qr.png" alt="Registro Nacional de Agencias">
+                                <img src="<?php echo $base_url; ?>images/qr.webp" alt="Registro Nacional de Agencias">
                             </a>
                         </div>
 
@@ -78,22 +78,22 @@ $base_url = isset($base_url) ? $base_url : './';
                         </div>
                         <div class="affiliation-item">
                             <a href="https://www.aviabue.org.ar/" target="_blank">
-                                <img src="<?php echo $base_url; ?>images/aviabue.png" alt="AVIABUE">
+                                <img src="<?php echo $base_url; ?>images/aviabue.webp" alt="AVIABUE">
                             </a>
                         </div>
                         <div class="affiliation-item">
                             <a href="https://www.faevyt.org.ar/" target="_blank">
-                                <img src="<?php echo $base_url; ?>images/faevyt.png" alt="FAEVYT">
+                                <img src="<?php echo $base_url; ?>images/faevyt.webp" alt="FAEVYT">
                             </a>
                         </div>
                         <div class="affiliation-item">
                             <a href="https://www.argentina.gob.ar/aaip/datospersonales" target="_blank">
-                                <img src="<?php echo $base_url; ?>images/pdp.png" alt="Protección de Datos Personales">
+                                <img src="<?php echo $base_url; ?>images/pdp.webp" alt="Protección de Datos Personales">
                             </a>
                         </div>
                         <div class="affiliation-item">
                             <a href="https://agenciasdeviajes.ar/agencias/jek4QnYC" target="_blank">
-                                <img src="<?php echo $base_url; ?>images/qr.png" alt="Registro Nacional de Agencias">
+                                <img src="<?php echo $base_url; ?>images/qr.webp" alt="Registro Nacional de Agencias">
                             </a>
                         </div>
                     </div>

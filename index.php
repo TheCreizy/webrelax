@@ -9,8 +9,8 @@ include 'includes/header.php';
 <!-- HERO -->
 <section id="inicio" class="hero">
     <div class="hero-bg">
-        <img src="images/backround.png" class="hero-bg-image" alt="Nubes de fondo" fetchpriority="high">
-        <img src="images/plane.png" class="hero-plane-image" alt="Avión">
+        <img src="images/backround.webp" class="hero-bg-image" alt="Nubes de fondo" fetchpriority="high">
+        <img src="images/plane.webp" class="hero-plane-image" alt="Avión">
         <div class="hero-gradient"></div>
     </div>
     <div class="container hero-content">
