@@ -170,7 +170,8 @@ $base_url = isset($base_url) ? $base_url : './';
                         <iframe
                             src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3283.963488577944!2d-58.513440423379656!3d-34.605084757571916!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x95bcb7d263dd8bef%3A0xfd9783e961f4dff8!2sRelax%20Tours!5e0!3m2!1sen!2sar!4v1771102202081!5m2!1sen!2sar"
                             width="100%" height="160" style="border:0;" allowfullscreen="" loading="lazy"
-                            referrerpolicy="no-referrer-when-downgrade" class="footer-map">
+                            referrerpolicy="no-referrer-when-downgrade" class="footer-map"
+                            title="Ubicación de Relax Tours en Google Maps">
                         </iframe>
                     </a>
                 </div>
@@ -215,11 +216,11 @@ $base_url = isset($base_url) ? $base_url : './';
 </footer>
 
 <!-- MODAL ARREPENTIMIENTO -->
-<div id="arrepentimiento-modal" class="modal">
+<div id="arrepentimiento-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="arrepentimiento-modal-title">
     <div class="modal-content">
         <div class="modal-header">
-            <h3>Botón de Arrepentimiento</h3>
-            <button onclick="closeArrepentimientoModal()" class="modal-close">&times;</button>
+            <h3 id="arrepentimiento-modal-title">Botón de Arrepentimiento</h3>
+            <button onclick="closeArrepentimientoModal()" class="modal-close" aria-label="Cerrar">&times;</button>
         </div>
         <div class="modal-body">
             <p style="margin-bottom: 20px; font-size: 14px; color: var(--color-gray);">Complete todos los campos para
@@ -278,11 +279,11 @@ $base_url = isset($base_url) ? $base_url : './';
 </div>
 
 <!-- MODAL BLOG -->
-<div id="blog-modal" class="modal">
+<div id="blog-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="blog-modal-title">
     <div class="modal-content blog-modal-content">
         <div class="modal-header">
             <h3 id="blog-modal-title">Tips de Viaje</h3>
-            <button onclick="closeBlogModal()" class="modal-close">&times;</button>
+            <button onclick="closeBlogModal()" class="modal-close" aria-label="Cerrar">&times;</button>
         </div>
         <div class="modal-body">
             <div id="blog-modal-image-container" class="blog-modal-image">
@@ -302,7 +303,7 @@ $base_url = isset($base_url) ? $base_url : './';
 <!-- WHATSAPP -->
 <div class="whatsapp-float">
     <div class="whatsapp-tooltip" style="display: none;">
-        <button class="whatsapp-tooltip-close">&times;</button>
+        <button class="whatsapp-tooltip-close" aria-label="Cerrar tooltip">&times;</button>
         <p class="whatsapp-tooltip-text">¡Hola! Soy Guada de Relax Tours, ¿en qué puedo ayudarte hoy?</p>
     </div>
     <a href="#" class="whatsapp-btn"
@@ -316,7 +317,7 @@ $base_url = isset($base_url) ? $base_url : './';
 </div>
 
 <!-- COOKIE BANNER -->
-<div id="cookie-consent" class="cookie-consent">
+<div id="cookie-consent" class="cookie-consent" role="dialog" aria-label="Consentimiento de cookies">
     <div class="cookie-content">
         <div class="cookie-text">
             <h4>🍪 Política de Cookies</h4>

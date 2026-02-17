@@ -17,6 +17,7 @@
   --color-gray-light: #f3f4f6;
   --color-white: #ffffff;
   --color-whatsapp: #25d366;
+  --color-blog-bg: #dae7ff;
 
   --font-heading: "Outfit", sans-serif;
   --font-body: "Inter", sans-serif;
@@ -925,7 +926,7 @@ section[id] {
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   transform: translateZ(0);
-  
+
   /* Mejorar renderizado de texto */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -1171,6 +1172,7 @@ section[id] {
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.2);
   transition: all 0.4s ease;
+  cursor: pointer;
 }
 
 .oferta-card:hover {
@@ -1360,6 +1362,7 @@ section[id] {
   overflow: hidden;
   box-shadow: var(--shadow-card);
   transition: all 0.4s ease;
+  cursor: pointer;
 }
 
 .blog-card:hover {
@@ -2055,7 +2058,7 @@ section[id] {
 
 /* BLOG SECTION BACKGROUND */
 .section-blog {
-  background-color: #dae7ff;
+  background-color: var(--color-blog-bg);
 }
 
 /* ANIMACIONES */
@@ -2242,57 +2245,57 @@ section[id] {
 
 /* Mapa en Footer */
 .footer-map-container {
-    position: relative;
-    margin-bottom: 20px;
-    border-radius: var(--radius-md, 8px);
-    overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    line-height: 0;
+  position: relative;
+  margin-bottom: 20px;
+  border-radius: var(--radius-md, 8px);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  line-height: 0;
 }
 
 .footer-map {
-    display: block;
-    filter: grayscale(0.3);
-    transition: all 0.3s ease;
+  display: block;
+  filter: grayscale(0.3);
+  transition: all 0.3s ease;
 }
 
 /* Efecto Overlay */
 .map-link-overlay {
-    display: block;
-    position: relative;
-    text-decoration: none;
+  display: block;
+  position: relative;
+  text-decoration: none;
 }
 
 .map-label {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: var(--color-orange);
-    color: white;
-    padding: 8px 16px;
-    border-radius: 4px;
-    font-size: 12px;
-    font-weight: 600;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    z-index: 2;
-    pointer-events: none;
-    white-space: nowrap;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--color-orange);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 2;
+  pointer-events: none;
+  white-space: nowrap;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
 }
 
 .map-link-overlay:hover .map-label {
-    opacity: 1;
+  opacity: 1;
 }
 
 .map-link-overlay:hover .footer-map {
-    filter: grayscale(0) brightness(0.6);
+  filter: grayscale(0) brightness(0.6);
 }
 
 .footer-location-col {
-    display: flex;
-    flex-direction: column;
+  display: flex;
+  flex-direction: column;
 }
 
 .img-afiliaciones {
@@ -3226,5 +3229,62 @@ section[id] {
   .blog-post-content blockquote {
     padding: 16px 20px;
     margin: 24px 0;
+  }
+}
+
+/* ==========================================================================
+   FOCUS-VISIBLE — Keyboard accessibility for custom interactive elements
+   ========================================================================== */
+
+.modal-close:focus-visible,
+.navbar-toggle:focus-visible,
+.carousel-nav:focus-visible,
+.whatsapp-btn:focus-visible,
+.whatsapp-tooltip-close:focus-visible,
+.btn-primary:focus-visible,
+.btn-whatsapp-dark:focus-visible,
+.btn-action-wa:focus-visible,
+.btn-action-email:focus-visible,
+.btn-oferta-email:focus-visible,
+.oferta-whatsapp:focus-visible,
+.footer-social a:focus-visible {
+  outline: 2px solid var(--color-orange);
+  outline-offset: 2px;
+}
+
+/* Dark-background buttons need a lighter ring */
+#mc-embedded-subscribe:focus-visible,
+.btn-cookie-accept:focus-visible {
+  outline: 2px solid var(--color-white);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   BUTTON LOADING SPINNER — Visual feedback during form submission
+   ========================================================================== */
+
+.btn-loading {
+  position: relative;
+  color: transparent !important;
+  pointer-events: none;
+}
+
+.btn-loading::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: var(--color-white);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
   }
 }

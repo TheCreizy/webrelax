@@ -550,6 +550,21 @@ function closeArrepentimientoModal() {
   }
 }
 
+// Close active modals on Escape key
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const activeModal = document.querySelector('.modal.active');
+    if (activeModal) {
+      activeModal.classList.remove('active');
+      document.body.style.overflow = '';
+      // Clean up blog hash if needed
+      if (window.location.hash.includes('#blog-')) {
+        window.history.pushState(null, null, window.location.pathname + window.location.search);
+      }
+    }
+  }
+});
+
 // Check for hash on load
 window.addEventListener('load', () => {
   const hash = window.location.hash;
@@ -597,6 +612,7 @@ async function handleFormSubmit(form, statusId) {
   statusEl.textContent = 'Enviando…';
   statusEl.className = 'form-status';
   submitBtn.disabled = true;
+  submitBtn.classList.add('btn-loading');
   submitBtn.textContent = 'Enviando…';
 
   try {
@@ -624,6 +640,7 @@ async function handleFormSubmit(form, statusId) {
     statusEl.className = 'form-status error';
   } finally {
     submitBtn.disabled = false;
+    submitBtn.classList.remove('btn-loading');
     submitBtn.textContent = originalBtnText;
   }
 }

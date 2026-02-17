@@ -45,24 +45,6 @@ if (file_exists($dataFile)) {
         gtag('config', 'G-ZV0G9YTSQP');
     </script>
 
-    <!-- Asi estaba antes -->
-
-    <!-- 
-
-<?php if (!empty($globalConfig['analytics_id'])): ?>
- 
-        <script async
-            src="https://www.googletagmanager.com/gtag/js?id=<?php echo $globalConfig['analytics_id']; ?>"></script>
-        <script>
-            window.dataLayer = window.dataLayer || [];
-            function gtag() { dataLayer.push(arguments); }
-            gtag('js', new Date());
-    gtag('config', '<?php echo $globalConfig['analytics_id']; ?>');  
-        </script>
-    <?php endif; ?>
- -->
-    <!-- Hasta aca estaba antes -->
-
 
     <link rel="icon" type="image/svg+xml" href="<?php echo $base_url; ?>images/favicon.svg">
     <link rel="icon" type="image/png" sizes="96x96" href="<?php echo $base_url; ?>images/favicon-96x96.png">
