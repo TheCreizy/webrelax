@@ -552,7 +552,7 @@ HTML;
     <body>
         <nav class="navbar scrolled navbar-secondary">
             <div class="container">
-                <a href="../index" class="navbar-logo"><img src="../images/logo-relax.png" alt="Relax Tours"></a>
+                <a href="../index" class="navbar-logo"><img src="../images/logo-relax.webp" alt="Relax Tours"></a>
                 <ul class="navbar-links">
                     <li><a href="../index#inicio">Inicio</a></li>
                     <li><a href="../nosotros">Nosotros</a></li>
