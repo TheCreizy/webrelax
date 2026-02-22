@@ -1,53 +1,64 @@
-# RELAX TOURS - Configuración Apache
+# RELAX TOURS - Configuración Apache Optimizada
+Options -Indexes
 
-# Proteger directorio admin
+# 1. FORZAR HTTPS (Robado del YouTuber, muy importante para seguridad)
 <IfModule mod_rewrite.c>
     RewriteEngine On
+    RewriteCond %{HTTPS} off
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</IfModule>
 
-    # 1. Eliminar .php de la URL
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+
+    # 2. LIMPIEZA DE EXTENSIONES (Tu código actual, que es correcto)
+    # Eliminar .php de la URL
     RewriteCond %{THE_REQUEST} ^[A-Z]{3,}\s([^.]+)\.php [NC]
     RewriteRule ^ %1 [R=301,L]
 
-    # 2. Eliminar .html de la URL
+    # Eliminar .html de la URL
     RewriteCond %{THE_REQUEST} ^[A-Z]{3,}\s([^.]+)\.html [NC]
     RewriteRule ^ %1 [R=301,L]
 
-    # 3. Mapeo interno para archivos PHP
-    RewriteCond %{REQUEST_FILENAME} !-d
+    # 3. MAPEO INTERNO (Optimizado para no procesar archivos reales como CSS/JS)
+    # Si el archivo o directorio real existe, no hacer nada
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # Mapeo para archivos PHP
     RewriteCond %{REQUEST_FILENAME}.php -f
     RewriteRule ^(.*?)/?$ $1.php [L]
 
-    # 4. Mapeo interno para archivos HTML
-    RewriteCond %{REQUEST_FILENAME} !-d
+    # Mapeo para archivos HTML
     RewriteCond %{REQUEST_FILENAME}.html -f
     RewriteRule ^(.*?)/?$ $1.html [L]
-
-    # URLs amigables para blog (Mantiene compatibilidad anterior si se usa query string, pero ahora priorizamos slug limpio)
-    # Mapea blog/mi-post a blog/post.html?slug=mi-post (Esto parece ser para un sistema diferente o legacy, voy a comentar la regla original y adaptar si es necesario)
-    # RewriteRule ^blog/([^/.]+)/?$ blog/post.html?slug=$1 [L,QSA] # Comentado porque ahora usamos archivos estáticos generados
-
 </IfModule>
 
-# Compresión GZIP
+# 4. COMPRESIÓN Y CACHÉ (Tu configuración de rendimiento, que está muy bien)
 <IfModule mod_deflate.c>
     AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json
 </IfModule>
 
-# Cache de archivos estáticos
 <IfModule mod_expires.c>
     ExpiresActive On
-    ExpiresByType image/jpg "access plus 1 month"
-    ExpiresByType image/jpeg "access plus 1 month"
-    ExpiresByType image/png "access plus 1 month"
+    ExpiresDefault "access plus 1 month"
     ExpiresByType text/css "access plus 1 week"
     ExpiresByType application/javascript "access plus 1 week"
 </IfModule>
 
-# Prevenir listado de directorios
-Options -Indexes
-
-# Proteger archivos sensibles
+# 5. SEGURIDAD EXTRA (Protección de archivos y cabeceras)
 <FilesMatch "^\.">
-    Order allow,deny
-    Deny from all
+    # Proteger .env, .htaccess, .git, etc.
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
 </FilesMatch>
+
+# Prevenir que tu web sea embebida en frames de otros (evita Clickjacking)
+Header set X-Frame-Options "SAMEORIGIN"
