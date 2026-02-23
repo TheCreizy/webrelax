@@ -11,7 +11,7 @@
 // Detectamos si estamos en local (XAMPP) o en producción (Web)
 if ($_SERVER['HTTP_HOST'] == 'localhost' || $_SERVER['HTTP_HOST'] == '127.0.0.1') {
     // IMPORTANTE: Cambia 'relaxtours' por el nombre exacto de tu carpeta en htdocs
-    $base_url = '/kimi/'; 
+    $base_url = '/relaxtours/'; 
 } else {
     // En el servidor web real, la raíz es simplemente '/'
     $base_url = '/'; 
@@ -40,6 +40,18 @@ if (file_exists($dataFile)) {
     <title>
         <?php echo $page_title ?? 'Relax Tours - Empresa de Viajes y Turismo'; ?>
     </title>
+
+    <script type="application/ld+json">
+    {
+      "@context" : "https://schema.org",
+      "@type" : "WebSite",
+      "name" : "Relax Tours",
+      "alternateName" : "Relax Tours Viajes",
+      "url" : "https://www.relaxtours.com.ar/"
+    }
+    </script>
+
+    <meta property="og:site_name" content="Relax Tours">
 
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-ZV0G9YTSQP"></script>
     <script>
