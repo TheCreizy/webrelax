@@ -1,9 +1,18 @@
 # RELAX TOURS - Configuración Apache Optimizada
 Options -Indexes
 
-# 1. FORZAR HTTPS (Robado del YouTuber, muy importante para seguridad)
+# 1. REDIRECCIONES Y FORZAR HTTPS
 <IfModule mod_rewrite.c>
     RewriteEngine On
+
+    # --- REDIRECCIONES 301 (SEO - URLs Viejas a Nuevas) ---
+    # 1. Redirigir paquetes-elementor a la nueva sección de paquetes
+    RewriteRule ^paquetes-elementor/?$ /paquetes [L,R=301]
+    
+    # 2. Redirigir contact a la sección de contacto en la home
+    # Usamos [NE] (No Escape) para que el navegador lea bien el #
+    RewriteRule ^contact/?$ /#contacto [NE,L,R=301]
+    # ------------------------------------------------------
 
     # 1. Quitar la barra final (Trailing slash) de manera segura para Local y Web
     RewriteCond %{REQUEST_FILENAME} !-d
@@ -33,7 +42,7 @@ Options -Indexes
     RewriteRule ^(.*?)/?$ $1.html [L]
 </IfModule>
 
-# 4. COMPRESIÓN Y CACHÉ (Tu configuración de rendimiento, que está muy bien)
+# 4. COMPRESIÓN Y CACHÉ 
 <IfModule mod_deflate.c>
     AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json
 </IfModule>

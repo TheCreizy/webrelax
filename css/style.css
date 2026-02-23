@@ -505,6 +505,7 @@ button {
 }
 
 .hero-gradient {
+  opacity: 0%;
   background: linear-gradient(
     135deg,
     rgba(75, 0, 130, 0.8) 0%,
