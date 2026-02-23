@@ -2,12 +2,20 @@
 /**
  * Header Template
  * Variables:
- * $base_url - Base path for assets (e.g., './' or '../')
+ * $base_url - Base path for assets dynamically assigned
  * $page_title - Page title
  * $page_description - Page meta description
  * $active_page - Current page for nav active state ('inicio', 'nosotros', 'paquetes', 'ofertas', 'blog', 'contacto')
  */
-$base_url = isset($base_url) ? $base_url : './';
+
+// Detectamos si estamos en local (XAMPP) o en producción (Web)
+if ($_SERVER['HTTP_HOST'] == 'localhost' || $_SERVER['HTTP_HOST'] == '127.0.0.1') {
+    // IMPORTANTE: Cambia 'relaxtours' por el nombre exacto de tu carpeta en htdocs
+    $base_url = '/kimi/'; 
+} else {
+    // En el servidor web real, la raíz es simplemente '/'
+    $base_url = '/'; 
+}
 
 // Load Global Config
 $dataFile = __DIR__ . '/../data/content.json';
@@ -33,9 +41,6 @@ if (file_exists($dataFile)) {
         <?php echo $page_title ?? 'Relax Tours - Empresa de Viajes y Turismo'; ?>
     </title>
 
-    <!-- Google Analytics -->
-
-    <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-ZV0G9YTSQP"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
@@ -58,7 +63,6 @@ if (file_exists($dataFile)) {
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
     <?php if (isset($active_page) && $active_page === 'inicio'): ?>
-        <!-- Mailchimp Styles -->
         <link href="//cdn-images.mailchimp.com/embedcode/classic-061523.css" rel="stylesheet" type="text/css">
         <style type="text/css">
             #mc_embed_signup {
@@ -86,7 +90,6 @@ if (file_exists($dataFile)) {
 </head>
 
 <body>
-    <!-- NAVEGACIÓN -->
     <nav class="navbar <?php echo ($active_page !== 'inicio') ? 'scrolled navbar-secondary' : ''; ?>">
         <div class="container">
             <a href="<?php echo $base_url; ?>index" class="navbar-logo">
@@ -120,7 +123,6 @@ if (file_exists($dataFile)) {
         </div>
     </nav>
 
-    <!-- MOBILE MENU -->
     <div class="navbar-mobile-menu" id="mobile-menu">
         <a href="<?php echo $base_url; ?>#inicio"
             class="<?php echo ($active_page === 'inicio') ? 'active' : ''; ?>">Inicio</a>
@@ -135,6 +137,5 @@ if (file_exists($dataFile)) {
     </div>
 
     <?php if ($active_page !== 'inicio'): ?>
-        <!-- ESPACIADOR PARA NAVBAR FIJO -->
         <div style="height: 80px;"></div>
     <?php endif; ?>
