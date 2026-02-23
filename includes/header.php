@@ -52,8 +52,8 @@ if (file_exists($dataFile)) {
     <link rel="apple-touch-icon" href="<?php echo $base_url; ?>images/apple-touch-icon.png">
     <link rel="manifest" href="<?php echo $base_url; ?>images/site.webmanifest">
     <meta name="theme-color" content="#F97316">
-    <link rel="stylesheet" href="<?php echo $base_url; ?>/css/style.css">
-    <link rel="stylesheet" href="<?php echo $base_url; ?>/css/cookies.css">
+    <link rel="stylesheet" href="<?php echo $base_url; ?>css/style.css">
+    <link rel="stylesheet" href="<?php echo $base_url; ?>css/cookies.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
