@@ -14,7 +14,7 @@ include 'includes/header.php';
         <div class="hero-gradient"></div>
     </div>
     <div class="container hero-content">
-        <h1 class="hero-title">VIAJÁ POR <span class="text-gradient">MUNDO</span> CON NOSOTROS</h1>
+        <h1 class="hero-title">VIAJÁ POR EL <span class="text-gradient">MUNDO</span> CON NOSOTROS</h1>
         <p class="hero-subtitle">Somos <strong>Relax Tours</strong>, una empresa de viajes y turismo que lleva más de 23
             años creando experiencias inolvidables.<br>Atención personalizada y el respaldo que te brinda viajar con una
             empresa miembro de la Aviabue (Asociación de viajes de Buenos Aires) y la Faevyt (Federación Argentina de

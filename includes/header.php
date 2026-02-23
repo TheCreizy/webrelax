@@ -11,7 +11,7 @@
 // Detectamos si estamos en local (XAMPP) o en producción (Web)
 if ($_SERVER['HTTP_HOST'] == 'localhost' || $_SERVER['HTTP_HOST'] == '127.0.0.1') {
     // IMPORTANTE: Cambia 'relaxtours' por el nombre exacto de tu carpeta en htdocs
-    $base_url = '/kimi/'; 
+    $base_url = '/relaxtours/'; 
 } else {
     // En el servidor web real, la raíz es simplemente '/'
     $base_url = '/'; 
