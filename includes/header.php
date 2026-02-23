@@ -89,7 +89,7 @@ if (file_exists($dataFile)) {
     <!-- NAVEGACIÓN -->
     <nav class="navbar <?php echo ($active_page !== 'inicio') ? 'scrolled navbar-secondary' : ''; ?>">
         <div class="container">
-            <a href="<?php echo $base_url; ?>index" class="navbar-logo">
+            <a href="<?php echo $base_url; ?>https://www.relaxtours.com.ar" class="navbar-logo">
                 <img src="<?php echo $base_url; ?>images/logo-relax.webp" alt="Relax Tours">
             </a>
             <ul class="navbar-links">
