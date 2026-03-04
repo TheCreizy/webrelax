@@ -1537,7 +1537,7 @@ if (isset($_GET['edit'])) {
     <?php else: ?>
         <header class="admin-header">
             <h1>
-                <div class="logo-small">✈️</div>Relax Tours - Panel de Administración
+                <div class="logo-small">✈️</div>Relax Tours - Panel de Administración - <a href="https://www.relaxtours.com.ar" target="_blank"> relaxtours.com.ar </a>
             </h1>
             <a href="?logout=1" class="btn btn-secondary">Salir</a>
         </header>

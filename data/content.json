@@ -1,25 +1,6 @@
 {
     "paquetes": [
         {
-            "id": "69936ba408a32",
-            "nombre": "Calafate Clasico",
-            "destino": "El Calafate - Argentina",
-            "duracion": "4 días \/ 3 noches",
-            "incluye": [
-                "Aéreos",
-                "Traslados",
-                "Hotel Bahia Redonda",
-                "Asistencia Medica"
-            ],
-            "precio": 716800,
-            "moneda": "ARS",
-            "imagen": "images\/paquetes-images\/paquete-69936ba408a32-1771300430.webp",
-            "popular": false,
-            "activo": true,
-            "operador": "Amichi",
-            "comentarios": "Sacado de la web"
-        },
-        {
             "id": "69936ab90d225",
             "nombre": "Mendoza, Experiencia entre Viñedos",
             "destino": "Mendoza, Argentina",
@@ -31,7 +12,7 @@
                 "Asistencia Médica",
                 "Bus Vitivinicola Camino del Vino - Dia Completo"
             ],
-            "precio": 469800,
+            "precio": 445453,
             "moneda": "ARS",
             "imagen": "images\/paquetes-images\/paquete-69936ab90d225-1771300449.webp",
             "popular": false,
@@ -50,16 +31,90 @@
                 "Hotel Raices Esturion",
                 "Asistencia"
             ],
-            "precio": 413920,
+            "precio": 477640,
             "moneda": "ARS",
             "imagen": "images\/paquetes-images\/paquete-6993695334e2c-1771300441.webp",
             "popular": true,
             "activo": true,
             "operador": "Amichi",
             "comentarios": "Sacado de la web"
+        },
+        {
+            "id": "69a72cb569e87",
+            "nombre": "Salta Clasico",
+            "destino": "Salta",
+            "duracion": "4 Días \/ 3 Noches",
+            "incluye": [
+                "Pasajes Aéreos",
+                "Traslados",
+                "Hotel Amerian Salta",
+                "Seguro de Viaje"
+            ],
+            "precio": 505794,
+            "moneda": "ARS",
+            "imagen": "images\/paquetes-images\/paquete-69a72cb569e87-1772563637.webp",
+            "popular": false,
+            "activo": true,
+            "operador": "Amichi",
+            "comentarios": "Sacado de flyer de promos semanalaes"
+        },
+        {
+            "id": "69936ba408a32",
+            "nombre": "Calafate Clasico",
+            "destino": "El Calafate - Argentina",
+            "duracion": "4 días \/ 3 noches",
+            "incluye": [
+                "Aéreos",
+                "Traslados",
+                "Hotel Bahia Redonda",
+                "Asistencia Medica"
+            ],
+            "precio": 716800,
+            "moneda": "ARS",
+            "imagen": "images\/paquetes-images\/paquete-69936ba408a32-1771300430.webp",
+            "popular": false,
+            "activo": true,
+            "operador": "Amichi",
+            "comentarios": "Sacado de la web"
         }
     ],
     "ofertas": [
+        {
+            "id": "69a72fe74e217",
+            "titulo": "PROMOS NAC AND POP",
+            "descripcion": "Promos Semanales Nacionales",
+            "imagen": "images\/ofertas-images\/oferta-69a72fe74e217-1772564455.webp",
+            "badge": "¡OFERTA ESPECIAL!",
+            "badgeColor": "bg-purple-500",
+            "tiempo": "7 Dias",
+            "activa": true,
+            "operador": "Amichi",
+            "comentarios": "Promos semanales"
+        },
+        {
+            "id": "69a72fbb63173",
+            "titulo": "PROMOS NAC AND POP",
+            "descripcion": "Promos semanales nacionales!",
+            "imagen": "images\/ofertas-images\/oferta-69a72fbb63173-1772564411.webp",
+            "badge": "¡OFERTA ESPECIAL!",
+            "badgeColor": "bg-blue-500",
+            "tiempo": "7 dias",
+            "activa": true,
+            "operador": "Amichi",
+            "comentarios": "Promos semanales"
+        },
+        {
+            "id": "699c787b6c777",
+            "titulo": "Pasajes Aéreos",
+            "descripcion": "Promos que se van volando!",
+            "imagen": "images\/ofertas-images\/oferta-699c787b6c777-1771871037.webp",
+            "badge": "¡AÉREOS!",
+            "badgeColor": "bg-green-500",
+            "tiempo": "48hs",
+            "activa": true,
+            "operador": "Ola",
+            "comentarios": "Sacado del mail titulo: ✈️ ¡Aéreos con 𝙎𝙆𝙔 en promoción! 🙌 Última semana de emisión 😉"
+        },
         {
             "id": "69936d74e57ec",
             "titulo": "BRASIL | VERANO 2026 🇧🇷",
