@@ -10,7 +10,7 @@ include 'includes/header.php';
 <section id="nosotros" class="section section-nosotros">
     <div class="container">
         <div class="section-header fade-in visible">
-            <span class="section-tag">Nuestra Familia</span>
+            <span class="section-tag">Nuestra Familia Relax Tours</span>
             <h2 class="section-title">Quiénes <span class="text-gradient">Somos</span></h2>
             <p class="section-subtitle"><strong>RELAX TOURS</strong> es una Empresa de Viajes y Turismo (Legajo 15.548) con sede en
                 Buenos Aires Argentina, emisiva, receptiva y multidestino. Somos una Empresa familiar, cuyos integrantes
