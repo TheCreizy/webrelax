@@ -1,5 +1,5 @@
 <?php
-$page_title = "Relax Tours - Empresa de Viajes y Turismo";
+$page_title = "Relax Tours - Test - Empresa de Viajes y Turismo";
 $page_description = "Viajá por el mundo con Relax Tours. Empresa de viajes y turismo en Villa Devoto con más de 23 años de experiencia.";
 $active_page = 'inicio';
 $base_url = './';
