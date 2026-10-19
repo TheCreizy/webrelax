@@ -78,69 +78,34 @@
             "comentarios": "Sacado de la web"
         }
     ],
-    "ofertas": [
-        {
-            "id": "69a72fe74e217",
-            "titulo": "PROMOS NAC AND POP",
-            "descripcion": "Promos Semanales Nacionales",
-            "imagen": "images\/ofertas-images\/oferta-69a72fe74e217-1772564455.webp",
-            "badge": "¡OFERTA ESPECIAL!",
-            "badgeColor": "bg-purple-500",
-            "tiempo": "7 Dias",
-            "activa": true,
-            "operador": "Amichi",
-            "comentarios": "Promos semanales"
-        },
-        {
-            "id": "69a72fbb63173",
-            "titulo": "PROMOS NAC AND POP",
-            "descripcion": "Promos semanales nacionales!",
-            "imagen": "images\/ofertas-images\/oferta-69a72fbb63173-1772564411.webp",
-            "badge": "¡OFERTA ESPECIAL!",
-            "badgeColor": "bg-blue-500",
-            "tiempo": "7 dias",
-            "activa": true,
-            "operador": "Amichi",
-            "comentarios": "Promos semanales"
-        },
-        {
-            "id": "699c787b6c777",
-            "titulo": "Pasajes Aéreos",
-            "descripcion": "Promos que se van volando!",
-            "imagen": "images\/ofertas-images\/oferta-699c787b6c777-1771871037.webp",
-            "badge": "¡AÉREOS!",
-            "badgeColor": "bg-green-500",
-            "tiempo": "48hs",
-            "activa": true,
-            "operador": "Ola",
-            "comentarios": "Sacado del mail titulo: ✈️ ¡Aéreos con 𝙎𝙆𝙔 en promoción! 🙌 Última semana de emisión 😉"
-        },
-        {
-            "id": "69936d74e57ec",
-            "titulo": "BRASIL | VERANO 2026 🇧🇷",
-            "descripcion": "Paquetes a brasil desde 859 USD!",
-            "imagen": "images\/ofertas-images\/oferta-69936d74e57ec-1771300318.webp",
-            "badge": "MULTIPLES DESTINOS",
-            "badgeColor": "bg-green-500",
-            "tiempo": "",
-            "activa": true,
-            "operador": "Station travel ",
-            "comentarios": "BRASIL | VERANO 2026"
-        },
-        {
-            "id": "6993670172c80",
-            "titulo": "FLASH SALE - Punta Cana",
-            "descripcion": "Punta Cana desde 1709 USD!",
-            "imagen": "images\/ofertas-images\/oferta-6993670172c80-1771300329.webp",
-            "badge": "¡OFERTA ESPECIAL!",
-            "badgeColor": "bg-red-500",
-            "tiempo": "7 Dias",
-            "activa": true,
-            "operador": "Tower Travel",
-            "comentarios": "🌴FLASH SALE :: Punta Cana desde USD 1709 por persona🌊"
-        }
-    ],
+    "ofertas": [],
     "blog": [
+        {
+            "id": "69ac637b6aaf8",
+            "titulo": "Escapadas de lujo:  3 Mejores estancias All Inclusive a menos de 2 horas de Buenos Aires",
+            "extracto": "¿Sentís que necesitás un respiro pero no querés pasarte medio día arriba del auto? Si vivís en Capital o el GBA, sabés que el caos de la ciudad a veces agota. Por eso, las escapadas de lujo a estancias bonaerenses se convirtieron en la opción predilecta para quienes buscan exclusividad, relax y, sobre todo, la comodidad del sistema \"all inclusive\".",
+            "contenido": "<style>\r\n  .post-base {\r\n    font-family: Arial, Helvetica, sans-serif;\r\n    line-height: 1.7;\r\n    color: #333333;\r\n    background-color: #ffffff;\r\n    max-width: 900px;\r\n    margin: 0 auto;\r\n    padding: 24px;\r\n  }\r\n  .post-base h1 {\r\n    font-size: 34px;\r\n    margin-bottom: 16px;\r\n    color: #ff6a00;\r\n  }\r\n  .post-base h2 {\r\n    margin-top: 48px;\r\n    margin-bottom: 16px;\r\n    color: #ff6a00;\r\n    font-size: 26px;\r\n  }\r\n  .post-base p {\r\n    margin-bottom: 16px;\r\n  }\r\n  .post-base ul,\r\n  .post-base ol {\r\n    margin: 20px 0;\r\n    padding-left: 20px;\r\n  }\r\n  .post-base li {\r\n    margin-bottom: 10px;\r\n  }\r\n  .post-base .destacado {\r\n    background-color: #fff4ec;\r\n    border-left: 4px solid #ff6a00;\r\n    padding: 16px;\r\n    margin: 24px 0;\r\n  }\r\n  .post-base table {\r\n    width: 100%;\r\n    border-collapse: collapse;\r\n    margin-top: 24px;\r\n    font-size: 15px;\r\n  }\r\n  .post-base th,\r\n  .post-base td {\r\n    border: 1px solid #e0e0e0;\r\n    padding: 12px;\r\n    text-align: left;\r\n  }\r\n  .post-base thead tr {\r\n    background-color: #ff6a00;\r\n    color: #ffffff;\r\n  }\r\n  .post-base tbody tr:nth-child(even) {\r\n    background-color: #fafafa;\r\n  }\r\n<\/style>\r\n<div class=\"post-base\">\r\n<h1>Escapadas de lujo: Mejores estancias All Inclusive a menos de 2 horas de Buenos Aires<\/h1>\r\n<p>¿Sentís que necesitás un respiro pero no querés pasarte medio día arriba del auto? Si vivís en Capital o el GBA, sabés que el caos de la ciudad a veces agota. Por eso, las escapadas de lujo a estancias bonaerenses se convirtieron en la opción predilecta para quienes buscan exclusividad, relax y, sobre todo, la comodidad del sistema \"all inclusive\".<\/p>\r\n<p>Olvidate de andar buscando dónde almorzar o qué actividades contratar. En estas estancias, tu única preocupación va a ser decidir si querés otra copa de Malbec o si preferís una caminata bajo los árboles centenarios. A continuación, te presentamos tres joyas del campo argentino donde el servicio es impecable y la distancia es mínima.<\/p>\r\n<h2>3 Estancias de lujo que tenés que conocer<\/h2>\r\n<p>El campo argentino ofrece propuestas de alto nivel donde el lujo se fusiona con la tradición criolla y la sofisticación europea, permitiendo una desconexión total sin alejarse de la ciudad.<\/p>\r\n<ul>\r\n  <li>\r\n<strong>Estancia La Candelaria (Lobos):<\/strong> Famosa por su imponente castillo francés, ofrece una experiencia de nobleza con asado premium, shows folclóricos y actividades tradicionales.<\/li>\r\n  <li>\r\n<strong>Estancia Villa Maria (Máximo Paz):<\/strong> Una mansión de estilo Tudor rodeada de parques diseñados por Thays, destacada por su gastronomía refinada y exhibiciones de polo.<\/li>\r\n  <li>\r\n<strong>Estancia La Bamba de Areco (San Antonio de Areco):<\/strong> Parte de Relais &amp; Châteaux, es sinónimo de exclusividad mundial, combinando lujo internacional con el alma del campo.<\/li>\r\n<\/ul>\r\n<table>\r\n  <thead>\r\n    <tr>\r\n      <th>Estancia<\/th>\r\n      <th>Distancia desde CABA<\/th>\r\n      <th>Atractivo Principal<\/th>\r\n    <\/tr>\r\n  <\/thead>\r\n  <tbody>\r\n    <tr>\r\n      <td>La Candelaria<\/td>\r\n      <td>~115 km<\/td>\r\n      <td>Castillo francés y shows de tradición.<\/td>\r\n    <\/tr>\r\n    <tr>\r\n      <td>Villa Maria<\/td>\r\n      <td>~50 km<\/td>\r\n      <td>Arquitectura Tudor y cercanía extrema.<\/td>\r\n    <\/tr>\r\n    <tr>\r\n      <td>La Bamba de Areco<\/td>\r\n      <td>~120 km<\/td>\r\n      <td>Exclusividad Relais &amp; Châteaux y relax total.<\/td>\r\n    <\/tr>\r\n  <\/tbody>\r\n<\/table>\r\n<h2>El encanto de la Pampa Argentina<\/h2>\r\n<p>No hace falta tomarse un avión para vivir una experiencia de clase mundial. Estas estancias te permiten disfrutar de lo mejor de nuestras tradiciones con el confort de un hotel cinco estrellas, garantizando un descanso reparador a la vuelta de la esquina.<\/p>\r\n<div class=\"destacado\">\r\n\"El concepto All Inclusive no es solo para el Caribe; a pocos kilómetros del Obelisco, el lujo se fusiona con la tradición en entornos de ensueño diseñados para el relax total.\"\r\n<\/div>\r\n<h2>Tips para tu escapada de lujo<\/h2>\r\n<ul>\r\n  <li>\r\n<strong>Reservá con tiempo:<\/strong> Al ser lugares exclusivos, suelen agotarse rápido, especialmente en fines de semana largos.<\/li>\r\n  <li>\r\n<strong>Consultá por el \"Día de Campo\":<\/strong> Muchas estancias ofrecen la experiencia All Inclusive durante el día si no podés quedarte a dormir.<\/li>\r\n  <li>\r\n<strong>Vestimenta \"Field Chic\":<\/strong> Llevá ropa cómoda pero elegante; para las cenas se suele optar por un look smart casual.<\/li>\r\n  <li>\r\n<strong>Aviso de dieta:<\/strong> Informá sobre restricciones alimentarias (celiaquía, vegetariano) al reservar para adaptar los menús.<\/li>\r\n<\/ul>\r\n<h2>Preguntas frecuentes<\/h2>\r\n<p>\r\n<strong>¿Los traslados están incluidos?<\/strong>\r\n<br>\r\nGeneralmente no, aunque establecimientos como Villa Maria o La Bamba de Areco pueden coordinar traslados privados con un costo adicional.<\/p>\r\n<p>\r\n<strong>¿Se puede ir con chicos?<\/strong>\r\n<br>\r\nLa Candelaria es muy familiar. Villa Maria y La Bamba de Areco aceptan niños, pero tienen un perfil más orientado al descanso silencioso de adultos.<\/p>\r\n<p>\r\n<strong>¿El alcohol está incluido en el precio?<\/strong>\r\n<br>\r\nEn La Candelaria y Villa Maria suelen incluirse bebidas sin alcohol, facturando el vino aparte. En La Bamba de Areco, la selección de vinos suele estar integrada.<\/p>\r\n<\/div>\r\n<script type=\"application\/ld+json\">\r\n[\r\n  {\r\n    @context: https:\/\/schema.org,\r\n    @type: BlogPosting,\r\n    headline: Escapadas de lujo: Mejores estancias All Inclusive a menos de 2 horas de Buenos Aires,\r\n    description: Descubrí las estancias más exclusivas cerca de CABA y GBA para una escapada de lujo con todo incluido. Análisis de La Candelaria, Villa Maria y La Bamba de Areco.,\r\n    author: {\r\n      @type: Person,\r\n      name: Expertos en Viajes\r\n    },\r\n    genre: Turismo de Lujo,\r\n    keywords: estancias, all inclusive, buenos aires, turismo rural, lujo, escapadas,\r\n    articleSection: Viajes y Ocio,\r\n    inLanguage: es-AR,\r\n    publisher: {\r\n      @type: Organization,\r\n      name: RelaxTours\r\n    }\r\n  },\r\n  {\r\n    @context: https:\/\/schema.org,\r\n    @type: FAQPage,\r\n    mainEntity: [\r\n      {\r\n        @type: Question,\r\n        name: ¿Los traslados están incluidos?,\r\n        acceptedAnswer: {\r\n          @type: Answer,\r\n          text: Generalmente no, aunque establecimientos como Villa Maria o La Bamba de Areco pueden coordinar traslados privados con un costo adicional.\r\n        }\r\n      },\r\n      {\r\n        @type: Question,\r\n        name: ¿Se puede ir con chicos?,\r\n        acceptedAnswer: {\r\n          @type: Answer,\r\n          text: La Candelaria es muy familiar. Villa Maria y La Bamba de Areco aceptan niños, pero tienen un perfil más orientado al descanso silencioso de adultos.\r\n        }\r\n      },\r\n      {\r\n        @type: Question,\r\n        name: ¿El alcohol está incluido en el precio?,\r\n        acceptedAnswer: {\r\n          @type: Answer,\r\n          text: En La Candelaria y Villa Maria suelen incluirse bebidas sin alcohol, facturando el vino aparte. En La Bamba de Areco, la selección de vinos suele estar integrada.\r\n        }\r\n      }\r\n    ]\r\n  }\r\n]\r\n<\/script>",
+            "imagen": "images\/blog-images\/blog-69ac637b6aaf8-1772905339.webp",
+            "fecha": "07 Mar, 2026",
+            "slug": "escapadas-de-lujo-3-mejores-estancias-all-inclusive-a-menos-de-2-horas-de-buenos-aires",
+            "seo_titulo": "",
+            "seo_description": "",
+            "seo_keywords": "",
+            "activo": true
+        },
+        {
+            "id": "69ac5eff4e9db",
+            "titulo": "Los Mejores Trekking y Paisajes de Montaña en Argentina",
+            "extracto": "Los Andes argentinos ofrecen impresionantes paisajes montañosos, ideales para el senderismo y el montañismo. Este artículo destaca los mejores destinos para aventureros de todos los niveles.",
+            "contenido": "<!-- Blog Post: Aventura en las Alturas -->\r\n<style>\r\n  .blog-container { font-family: Arial, sans-serif; color: #333; max-width: 800px; margin: 0 auto; line-height: 1.6; }\r\n  .blog-container h1 { color: #333; font-size: 2.5em; margin-bottom: 20px; }\r\n  .blog-container h2 { color: #ff6a00; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 40px; }\r\n  .blog-container .destacado { background: #fdf2e9; border-left: 5px solid #ff6a00; padding: 20px; margin: 20px 0; font-style: italic; }\r\n  .blog-container table { width: 100%; border-collapse: collapse; margin: 20px 0; }\r\n  .blog-container th { background: #ff6a00; color: #fff; padding: 12px; text-align: left; }\r\n  .blog-container td { border: 1px solid #ddd; padding: 12px; }\r\n  .blog-container ul { padding-left: 20px; }\r\n  .blog-container li { margin-bottom: 10px; }\r\n<\/style>\r\n\r\n<article class=\"blog-container\">\r\n  <h1>Aventura en las Alturas: Los Mejores Trekking y Paisajes de Montaña en Argentina para Desafiar tus Límites<\/h1>\r\n  \r\n  <p>Los Andes argentinos ofrecen impresionantes paisajes montañosos, ideales para el senderismo y el montañismo. Este artículo destaca los mejores destinos para aventureros de todos los niveles.<\/p>\r\n\r\n  <h2>Los Gigantes de Argentina: Aconcagua, Fitz Roy y Lanín<\/h2>\r\n  <p><strong>Cerro Aconcagua (Mendoza):<\/strong> \"Techo de América\" (aprox. 6,960m). Treks a Quebrada de los Horcones u ofrecen vistas a la Pared Sur.<\/p>\r\n  <p><strong>Cerro Fitz Roy (Santa Cruz):<\/strong> \"Capital Nacional del Trekking\". Senderos como Laguna de los Tres.<\/p>\r\n  <p><strong>Volcán Lanín (Neuquén):<\/strong> Estratovolcán cónico en la frontera chilena.<\/p>\r\n\r\n  <table>\r\n    <thead>\r\n      <tr>\r\n        <th>Destino<\/th>\r\n        <th>Dificultad<\/th>\r\n        <th>Mejor Época<\/th>\r\n      <\/tr>\r\n    <\/thead>\r\n    <tbody>\r\n      <tr><td>Cerro Aconcagua<\/td><td>Extrema \/ Moderada<\/td><td>Noviembre a Marzo<\/td><\/tr>\r\n      <tr><td>Cerro Fitz Roy<\/td><td>Moderada a Alta<\/td><td>Octubre a Abril<\/td><\/tr>\r\n      <tr><td>Volcán Lanín<\/td><td>Alta<\/td><td>Diciembre a Marzo<\/td><\/tr>\r\n    <\/tbody>\r\n  <\/table>\r\n\r\n  <h2>Equipamiento y Preparación Física<\/h2>\r\n  <p>Es vital aplicar la teoría de las tres capas (cebolla). El calzado debe estar ablandado previamente.<\/p>\r\n  \r\n  <div class=\"destacado\">\r\n    <strong>Tip de Experto:<\/strong> Invertir en medias de trekking de secado rápido para evitar ampollas.\r\n  <\/div>\r\n\r\n  <h2>Checklist Definitiva<\/h2>\r\n  <ul>\r\n    <li>Consultar clima y registro de guardaparques.<\/li>\r\n    <li>Mochila con 2L de agua y botiquín.<\/li>\r\n    <li>Protección solar y anteojos UV.<\/li>\r\n  <\/ul>\r\n\r\n  <h2>Preguntas frecuentes<\/h2>\r\n  <div itemscope itemtype=\"https:\/\/schema.org\/FAQPage\">\r\n    <div itemscope itemprop=\"mainEntity\" itemtype=\"https:\/\/schema.org\/Question\">\r\n      <h3 itemprop=\"name\">¿Es necesario contratar un guía?<\/h3>\r\n      <div itemscope itemprop=\"acceptedAnswer\" itemtype=\"https:\/\/schema.org\/Answer\">\r\n        <div itemprop=\"text\">No para senderos señalizados; sí para cumbres como el Lanín.<\/div>\r\n      <\/div>\r\n    <\/div>\r\n  <\/div>\r\n<\/article>",
+            "imagen": "images\/blog-images\/blog-69ac5eff4e9db-1772904191.webp",
+            "fecha": "07 Mar, 2026",
+            "slug": "los-mejores-trekking-y-paisajes-de-monta-a-en-argentina",
+            "seo_titulo": "",
+            "seo_description": "",
+            "seo_keywords": "viajes, tusirmo, montaña, trekking, los andes",
+            "activo": true
+        },
         {
             "id": "6992eaf14da1c",
             "titulo": "Escapadas desde Buenos Aires",
@@ -252,8 +217,8 @@
         "telefono": "+54 11 7079-8079",
         "direccion": "Av. Franscisco Beiro 4219, Villa Devoto, CABA, Bsas",
         "horario": "Lun-Vie 10-13hs \/ 14-19hs. Sab 10-13hs",
-        "instagram": "relaxtours.ar",
-        "facebook": "relax_tours",
+        "instagram": "relax.tours",
+        "facebook": "relaxtours.ar",
         "legajo": "15.548",
         "analytics_id": "ZV0G9YTSQP",
         "meta_keywords": "Agencia de viajes, turismo, empresa de viajes y turismo, devoto, villa devoto, beiro, paquetes, viajes, pasajes, aereos, trenes, europa, ofertas, barato",
