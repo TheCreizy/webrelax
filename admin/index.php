@@ -10,7 +10,19 @@ session_start();
 if (file_exists(__DIR__ . '/.env')) {
     $lineas = file(__DIR__ . '/.env', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     foreach ($lineas as $linea) {
-        if (strpos(trim($linea), '#') === 0) continue;
+        if (strpos(trim($linea), '#') === 0)
+            continue;
+        list($name, $value) = explode('=', $linea, 2);
+        $_ENV[trim($name)] = trim($value, " \t\n\r\0\x0B\"");
+    }
+}
+
+// --- CARGAR VARIABLES DE ENTORNO DESDE .ENV ---
+if (file_exists(__DIR__ . '/.env')) {
+    $lineas = file(__DIR__ . '/.env', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lineas as $linea) {
+        if (strpos(trim($linea), '#') === 0)
+            continue;
         list($name, $value) = explode('=', $linea, 2);
         $_ENV[trim($name)] = trim($value, " \t\n\r\0\x0B\"");
     }
@@ -52,13 +64,15 @@ function slugify($text)
     return trim(preg_replace('/[^a-z0-9]+/', '-', strtolower($text)), '-');
 }
 
-function processAndConvertWebP($sourcePath, $destinationPath, $maxWidth = 1200, $quality = 80) {
+function processAndConvertWebP($sourcePath, $destinationPath, $maxWidth = 1200, $quality = 80)
+{
     // Validar si la librería GD está instalada
     if (!function_exists('gd_info')) {
         return "Error: La librería GD no está activada en el servidor.";
     }
     $info = getimagesize($sourcePath);
-    if (!$info) return "Error: No es una imagen válida.";
+    if (!$info)
+        return "Error: No es una imagen válida.";
 
     $mime = $info['mime'];
     $width = $info[0];
@@ -68,7 +82,7 @@ function processAndConvertWebP($sourcePath, $destinationPath, $maxWidth = 1200, 
     if ($width > $maxWidth) {
         $ratio = $maxWidth / $width;
         $newWidth = $maxWidth;
-        $newHeight = (int)($height * $ratio);
+        $newHeight = (int) ($height * $ratio);
     } else {
         $newWidth = $width;
         $newHeight = $height;
@@ -76,16 +90,23 @@ function processAndConvertWebP($sourcePath, $destinationPath, $maxWidth = 1200, 
 
     // Crear recurso de imagen según el original
     switch ($mime) {
-        case 'image/jpeg': $src = imagecreatefromjpeg($sourcePath); break;
-        case 'image/png': 
-            $src = imagecreatefrompng($sourcePath); 
+        case 'image/jpeg':
+            $src = imagecreatefromjpeg($sourcePath);
+            break;
+        case 'image/png':
+            $src = imagecreatefrompng($sourcePath);
             imagepalettetotruecolor($src);
             imagealphablending($src, true);
             imagesavealpha($src, true);
             break;
-        case 'image/gif': $src = imagecreatefromgif($sourcePath); break;
-        case 'image/webp': $src = imagecreatefromwebp($sourcePath); break;
-        default: return "Error: El formato $mime no es compatible.";
+        case 'image/gif':
+            $src = imagecreatefromgif($sourcePath);
+            break;
+        case 'image/webp':
+            $src = imagecreatefromwebp($sourcePath);
+            break;
+        default:
+            return "Error: El formato $mime no es compatible.";
     }
 
     // Redimensionar
@@ -96,7 +117,7 @@ function processAndConvertWebP($sourcePath, $destinationPath, $maxWidth = 1200, 
 
     // Guardar como WebP
     $success = imagewebp($tmp, $destinationPath, $quality);
-    
+
     imagedestroy($src);
     imagedestroy($tmp);
 
@@ -239,7 +260,7 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
             // Send Email if New Offer
             $mailMsg = 'guardado';
             $errorMsg = '';
-            
+
             if ($isNew) {
                 $mail = new PHPMailer(true);
                 try {
@@ -247,12 +268,15 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
                     $mail->isSMTP();
                     $mail->Host = 'smtp.hostinger.com';
                     $mail->SMTPAuth = true;
-		    $mail->Username = $_ENV['SMTP_USER'] ?? '';
-		    $mail->Password = $_ENV['SMTP_PASS'] ?? '';
+                    $mail->Username = $_ENV['SMTP_USER'] ?? '';
+                    $mail->Password = $_ENV['SMTP_PASS'] ?? '';
+                    $mail->Username = $_ENV['SMTP_USER'] ?? '';
+                    $mail->Password = $_ENV['SMTP_PASS'] ?? '';
                     $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
                     $mail->Port = 465;
                     $mail->CharSet = 'UTF-8';
 
+                    $mail->setFrom($_ENV['SMTP_USER'] ?? 'noreply@relaxtours.com.ar', 'Relax Tours Intranet');
                     $mail->setFrom($_ENV['SMTP_USER'] ?? 'noreply@relaxtours.com.ar', 'Relax Tours Intranet');
                     $mail->addAddress('ventas1@relaxtours.com.ar');
 
@@ -340,7 +364,10 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
             $activePosts = array_values(array_filter($data['blog'], fn($p) => !empty($p['activo'])));
             $currentIdx = -1;
             foreach ($activePosts as $idx => $p) {
-                if ($p['id'] === $blog['id']) { $currentIdx = $idx; break; }
+                if ($p['id'] === $blog['id']) {
+                    $currentIdx = $idx;
+                    break;
+                }
             }
             if ($currentIdx > 0) {
                 generateBlogPage($activePosts[$currentIdx - 1], $data['config'], $data['blog']);
@@ -445,7 +472,7 @@ function generateBlogPage($post, $config = [], $allBlog = [])
 
     // Nos aseguramos de que la imagen no tenga '../' al principio si es que lo tiene guardado así
 
-    $cleanImage = str_replace('../', '', $post['imagen']); 
+    $cleanImage = str_replace('../', '', $post['imagen']);
 
     $ogImage = 'https://www.relaxtours.com.ar/' . $cleanImage;
 
@@ -480,7 +507,10 @@ HTML;
         $activePosts = array_values(array_filter($allBlog, fn($p) => !empty($p['activo'])));
         $currentIdx = -1;
         foreach ($activePosts as $idx => $p) {
-            if ($p['id'] === $post['id']) { $currentIdx = $idx; break; }
+            if ($p['id'] === $post['id']) {
+                $currentIdx = $idx;
+                break;
+            }
         }
         if ($currentIdx >= 0) {
             // Array is newest-first, so index+1 = older (anterior), index-1 = newer (próximo)
@@ -1541,13 +1571,15 @@ if (isset($_GET['edit'])) {
                             placeholder="••••••••" required></div>
                     <button type="submit" class="btn btn-primary btn-block">Ingresar</button>
                 </form>
-                <a href="https://relaxtours.com.ar" target="_blank" style="text-align: center; margin-top: 20px; color: #e05d20ff; font-size: 14px;">Ir a la web</a>
+                <a href="https://relaxtours.com.ar" target="_blank"
+                    style="text-align: center; margin-top: 20px; color: #e05d20ff; font-size: 14px;">Ir a la web</a>
             </div>
         </div>
     <?php else: ?>
         <header class="admin-header">
             <h1>
-                <div class="logo-small">✈️</div>Relax Tours - Panel de Administración - <a href="https://www.relaxtours.com.ar" target="_blank"> relaxtours.com.ar </a>
+                <div class="logo-small">✈️</div>Relax Tours - Panel de Administración - <a
+                    href="https://www.relaxtours.com.ar" target="_blank"> relaxtours.com.ar </a>
             </h1>
             <a href="?logout=1" class="btn btn-secondary">Salir</a>
         </header>
@@ -1568,7 +1600,8 @@ if (isset($_GET['edit'])) {
             <?php elseif ($message === 'guardado_email'): ?>
                 <div class="alert alert-success">✅ Oferta guardada y correo enviado correctamente</div>
             <?php elseif ($message === 'guardado_error_email'): ?>
-                <div class="alert alert-error">⚠️ Oferta guardada, pero hubo un error al enviar el correo: <?php echo htmlspecialchars($_GET['err'] ?? ''); ?></div>
+                <div class="alert alert-error">⚠️ Oferta guardada, pero hubo un error al enviar el correo:
+                    <?php echo htmlspecialchars($_GET['err'] ?? ''); ?></div>
             <?php elseif ($message === 'eliminado'): ?>
                 <div class="alert alert-success">✅ Eliminado correctamente</div><?php endif; ?>
 
@@ -1674,11 +1707,15 @@ if (isset($_GET['edit'])) {
                                             <option value="ARS" <?php echo ($editItem['moneda'] ?? '') === 'ARS' ? 'selected' : ''; ?>>Pesos (ARS)</option>
                                         </select></div>
                                 </div>
-                                <div class="form-row" style="background: #f0fdf4; padding: 15px; border-radius: 8px; border: 1px solid #bbf7d0;">
+                                <div class="form-row"
+                                    style="background: #f0fdf4; padding: 15px; border-radius: 8px; border: 1px solid #bbf7d0;">
                                     <div class="form-group"><label>Operador (Interno)</label><input type="text" name="operador"
-                                            value="<?php echo $editItem['operador'] ?? 'Sin información'; ?>" placeholder="Nombre del operador"></div>
-                                    <div class="form-group"><label>Comentarios (Interno)</label><input type="text" name="comentarios"
-                                            value="<?php echo $editItem['comentarios'] ?? 'Sin información'; ?>" placeholder="Comentarios adicionales"></div>
+                                            value="<?php echo $editItem['operador'] ?? 'Sin información'; ?>"
+                                            placeholder="Nombre del operador"></div>
+                                    <div class="form-group"><label>Comentarios (Interno)</label><input type="text"
+                                            name="comentarios"
+                                            value="<?php echo $editItem['comentarios'] ?? 'Sin información'; ?>"
+                                            placeholder="Comentarios adicionales"></div>
                                 </div>
                                 <div class="form-group"><label>Incluye (separado por comas)</label><input type="text"
                                         name="incluye"
@@ -1766,18 +1803,23 @@ if (isset($_GET['edit'])) {
                                 onclick="window.location.href='?tab=ofertas'">&times;</button>
                         </div>
                         <div class="modal-body">
-                            <form method="POST" enctype="multipart/form-data" onsubmit="this.querySelector('button[type=submit]').innerHTML='⏳ Guardando y Enviando...'; this.querySelector('button[type=submit]').disabled=true;">
+                            <form method="POST" enctype="multipart/form-data"
+                                onsubmit="this.querySelector('button[type=submit]').innerHTML='⏳ Guardando y Enviando...'; this.querySelector('button[type=submit]').disabled=true;">
                                 <input type="hidden" name="action" value="save_oferta">
                                 <input type="hidden" name="id" value="<?php echo $editItem['id'] ?? ''; ?>">
                                 <div class="form-group"><label>Título</label><input type="text" name="titulo"
                                         value="<?php echo $editItem['titulo'] ?? ''; ?>" required></div>
                                 <div class="form-group"><label>Descripción</label><input type="text" name="descripcion"
                                         value="<?php echo $editItem['descripcion'] ?? ''; ?>" required></div>
-                                <div class="form-row" style="background: #f0fdf4; padding: 15px; border-radius: 8px; border: 1px solid #bbf7d0;">
+                                <div class="form-row"
+                                    style="background: #f0fdf4; padding: 15px; border-radius: 8px; border: 1px solid #bbf7d0;">
                                     <div class="form-group"><label>Operador (Interno)</label><input type="text" name="operador"
-                                            value="<?php echo $editItem['operador'] ?? 'Sin información'; ?>" placeholder="Nombre del operador"></div>
-                                    <div class="form-group"><label>Comentarios (Interno)</label><input type="text" name="comentarios"
-                                            value="<?php echo $editItem['comentarios'] ?? 'Sin información'; ?>" placeholder="Comentarios adicionales"></div>
+                                            value="<?php echo $editItem['operador'] ?? 'Sin información'; ?>"
+                                            placeholder="Nombre del operador"></div>
+                                    <div class="form-group"><label>Comentarios (Interno)</label><input type="text"
+                                            name="comentarios"
+                                            value="<?php echo $editItem['comentarios'] ?? 'Sin información'; ?>"
+                                            placeholder="Comentarios adicionales"></div>
                                 </div>
                                 <div class="form-row">
                                     <div class="form-group"><label>Texto del Badge</label><input type="text" name="badge"
@@ -1885,99 +1927,111 @@ if (isset($_GET['edit'])) {
                                             value="<?php echo $editItem['slug'] ?? ''; ?>"
                                             placeholder="Se genera automáticamente"></div>
                                 </div>
-                                    <div class="form-group"><label>Extracto</label><textarea name="extracto" rows="2"
-                                            placeholder="Breve descripción para la lista..."><?php echo $editItem['extracto'] ?? ''; ?></textarea>
+                                <div class="form-group"><label>Extracto</label><textarea name="extracto" rows="2"
+                                        placeholder="Breve descripción para la lista..."><?php echo $editItem['extracto'] ?? ''; ?></textarea>
+                                </div>
+
+                                <div class="card"
+                                    style="padding: 16px; background: #f8fafc; border: 1px solid #e2e8f0; margin-bottom: 16px;">
+                                    <h4 style="margin-bottom: 12px; color: #475569;">Optimización SEO (Opcional)</h4>
+                                    <div class="form-group"><label>Título SEO</label><input type="text" name="seo_titulo"
+                                            value="<?php echo $editItem['seo_titulo'] ?? ''; ?>"
+                                            placeholder="Dejar vacío para usar el título del post"></div>
+                                    <div class="form-group"><label>Descripción Meta</label><textarea name="seo_description"
+                                            rows="2"
+                                            placeholder="Dejar vacío para usar el extracto"><?php echo $editItem['seo_description'] ?? ''; ?></textarea>
                                     </div>
-                                    
-                                    <div class="card" style="padding: 16px; background: #f8fafc; border: 1px solid #e2e8f0; margin-bottom: 16px;">
-                                        <h4 style="margin-bottom: 12px; color: #475569;">Optimización SEO (Opcional)</h4>
-                                        <div class="form-group"><label>Título SEO</label><input type="text" name="seo_titulo" 
-                                            value="<?php echo $editItem['seo_titulo'] ?? ''; ?>" placeholder="Dejar vacío para usar el título del post"></div>
-                                        <div class="form-group"><label>Descripción Meta</label><textarea name="seo_description" rows="2" 
-                                            placeholder="Dejar vacío para usar el extracto"><?php echo $editItem['seo_description'] ?? ''; ?></textarea></div>
-                                        <div class="form-group"><label>Palabras Clave</label><input type="text" name="seo_keywords" 
-                                            value="<?php echo $editItem['seo_keywords'] ?? ''; ?>" placeholder="viajes, turismo, playa, oferta"></div>
-                                    </div>
+                                    <div class="form-group"><label>Palabras Clave</label><input type="text" name="seo_keywords"
+                                            value="<?php echo $editItem['seo_keywords'] ?? ''; ?>"
+                                            placeholder="viajes, turismo, playa, oferta"></div>
+                                </div>
 
                                 <!-- WYSIWYG EDITOR -->
                                 <div class="form-group" style="position: relative;">
                                     <label>Contenido del Post</label>
                                     <div class="editor-tabs">
-                                        <button type="button" class="editor-tab active" id="tab-visual" onclick="switchEditorTab('visual')">✏️ Visual</button>
-                                        <button type="button" class="editor-tab" id="tab-html" onclick="switchEditorTab('html')">🖥️ HTML</button>
+                                        <button type="button" class="editor-tab active" id="tab-visual"
+                                            onclick="switchEditorTab('visual')">✏️ Visual</button>
+                                        <button type="button" class="editor-tab" id="tab-html"
+                                            onclick="switchEditorTab('html')">🖥️ HTML</button>
                                     </div>
                                     <div id="visual-editor-wrap">
-                                    <div class="wysiwyg-toolbar" id="editor-toolbar">
-                                        <!-- Text formatting -->
-                                        <button type="button" onclick="editorCmd('bold')"
-                                            title="Negrita (Ctrl+B)"><b>B</b></button>
-                                        <button type="button" onclick="editorCmd('italic')"
-                                            title="Cursiva (Ctrl+I)"><i>I</i></button>
-                                        <button type="button" onclick="editorCmd('underline')"
-                                            title="Subrayado (Ctrl+U)"><u>U</u></button>
-                                        <button type="button" onclick="editorCmd('strikeThrough')"
-                                            title="Tachado"><s>S</s></button>
-                                        <span class="tb-separator"></span>
+                                        <div class="wysiwyg-toolbar" id="editor-toolbar">
+                                            <!-- Text formatting -->
+                                            <button type="button" onclick="editorCmd('bold')"
+                                                title="Negrita (Ctrl+B)"><b>B</b></button>
+                                            <button type="button" onclick="editorCmd('italic')"
+                                                title="Cursiva (Ctrl+I)"><i>I</i></button>
+                                            <button type="button" onclick="editorCmd('underline')"
+                                                title="Subrayado (Ctrl+U)"><u>U</u></button>
+                                            <button type="button" onclick="editorCmd('strikeThrough')"
+                                                title="Tachado"><s>S</s></button>
+                                            <span class="tb-separator"></span>
 
-                                        <!-- Headings -->
-                                        <select onchange="editorBlock(this.value); this.value='';" title="Formato">
-                                            <option value="">Formato</option>
-                                            <option value="P">Párrafo</option>
-                                            <option value="H2">Título H2</option>
-                                            <option value="H3">Subtítulo H3</option>
-                                            <option value="H4">Subtítulo H4</option>
-                                        </select>
-                                        <span class="tb-separator"></span>
+                                            <!-- Headings -->
+                                            <select onchange="editorBlock(this.value); this.value='';" title="Formato">
+                                                <option value="">Formato</option>
+                                                <option value="P">Párrafo</option>
+                                                <option value="H2">Título H2</option>
+                                                <option value="H3">Subtítulo H3</option>
+                                                <option value="H4">Subtítulo H4</option>
+                                            </select>
+                                            <span class="tb-separator"></span>
 
-                                        <!-- Alignment -->
-                                        <button type="button" onclick="editorCmd('justifyLeft')"
-                                            title="Alinear izquierda">⫷</button>
-                                        <button type="button" onclick="editorCmd('justifyCenter')" title="Centrar">⫸</button>
-                                        <button type="button" onclick="editorCmd('justifyRight')"
-                                            title="Alinear derecha">⫸</button>
-                                        <button type="button" onclick="editorCmd('justifyFull')" title="Justificar">☰</button>
-                                        <span class="tb-separator"></span>
+                                            <!-- Alignment -->
+                                            <button type="button" onclick="editorCmd('justifyLeft')"
+                                                title="Alinear izquierda">⫷</button>
+                                            <button type="button" onclick="editorCmd('justifyCenter')"
+                                                title="Centrar">⫸</button>
+                                            <button type="button" onclick="editorCmd('justifyRight')"
+                                                title="Alinear derecha">⫸</button>
+                                            <button type="button" onclick="editorCmd('justifyFull')"
+                                                title="Justificar">☰</button>
+                                            <span class="tb-separator"></span>
 
-                                        <!-- Lists -->
-                                        <button type="button" onclick="editorCmd('insertUnorderedList')"
-                                            title="Lista con viñetas">• ≡</button>
-                                        <button type="button" onclick="editorCmd('insertOrderedList')" title="Lista numerada">1.
-                                            ≡</button>
-                                        <span class="tb-separator"></span>
+                                            <!-- Lists -->
+                                            <button type="button" onclick="editorCmd('insertUnorderedList')"
+                                                title="Lista con viñetas">• ≡</button>
+                                            <button type="button" onclick="editorCmd('insertOrderedList')"
+                                                title="Lista numerada">1.
+                                                ≡</button>
+                                            <span class="tb-separator"></span>
 
-                                        <!-- Link -->
-                                        <button type="button" onclick="editorLink()" title="Insertar enlace">🔗</button>
+                                            <!-- Link -->
+                                            <button type="button" onclick="editorLink()" title="Insertar enlace">🔗</button>
 
-                                        <!-- Image -->
-                                        <button type="button" onclick="editorImage()" title="Insertar imagen">🖼️</button>
-                                        <span class="tb-separator"></span>
+                                            <!-- Image -->
+                                            <button type="button" onclick="editorImage()" title="Insertar imagen">🖼️</button>
+                                            <span class="tb-separator"></span>
 
-                                        <!-- Color picker -->
-                                        <div class="color-picker-wrap">
-                                            <button type="button" class="color-picker-btn" onclick="toggleColorPicker()"
-                                                title="Color de texto">
-                                                A<span class="color-indicator" id="color-indicator"></span>
-                                            </button>
-                                            <div class="color-picker-dropdown" id="color-picker">
-                                                <div class="color-picker-grid" id="color-grid"></div>
-                                                <div class="color-hex-input">
-                                                    <input type="text" id="color-hex" placeholder="#F97316" maxlength="7">
-                                                    <button type="button" onclick="applyHexColor()">✓</button>
+                                            <!-- Color picker -->
+                                            <div class="color-picker-wrap">
+                                                <button type="button" class="color-picker-btn" onclick="toggleColorPicker()"
+                                                    title="Color de texto">
+                                                    A<span class="color-indicator" id="color-indicator"></span>
+                                                </button>
+                                                <div class="color-picker-dropdown" id="color-picker">
+                                                    <div class="color-picker-grid" id="color-grid"></div>
+                                                    <div class="color-hex-input">
+                                                        <input type="text" id="color-hex" placeholder="#F97316" maxlength="7">
+                                                        <button type="button" onclick="applyHexColor()">✓</button>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                        <span class="tb-separator"></span>
+                                            <span class="tb-separator"></span>
 
-                                        <!-- Extras -->
-                                        <button type="button" onclick="editorBlock('BLOCKQUOTE')" title="Cita">❝</button>
-                                        <button type="button" onclick="editorInsertHR()" title="Separador">—</button>
-                                        <button type="button" onclick="editorCleanFormat()"
-                                            title="Limpiar formato">🧹</button>
-                                    </div>
-                                    <div class="wysiwyg-editor" id="editor-area" contenteditable="true">
-                                        <?php echo $editItem['contenido'] ?? '<p>Escribí tu contenido aquí...</p>'; ?></div>
+                                            <!-- Extras -->
+                                            <button type="button" onclick="editorBlock('BLOCKQUOTE')" title="Cita">❝</button>
+                                            <button type="button" onclick="editorInsertHR()" title="Separador">—</button>
+                                            <button type="button" onclick="editorCleanFormat()"
+                                                title="Limpiar formato">🧹</button>
+                                        </div>
+                                        <div class="wysiwyg-editor" id="editor-area" contenteditable="true">
+                                            <?php echo $editItem['contenido'] ?? '<p>Escribí tu contenido aquí...</p>'; ?>
+                                        </div>
                                     </div><!-- /visual-editor-wrap -->
-                                    <textarea id="html-editor" style="display:none;" placeholder="Pegá tu código HTML, CSS y JavaScript aquí..."></textarea>
+                                    <textarea id="html-editor" style="display:none;"
+                                        placeholder="Pegá tu código HTML, CSS y JavaScript aquí..."></textarea>
                                     <textarea name="contenido" id="editor-hidden" style="display:none;"></textarea>
 
                                     <!-- Image toolbar (contextual) -->
@@ -2046,18 +2100,22 @@ if (isset($_GET['edit'])) {
                                 <div class="form-group"><label>Legajo</label><input type="text" name="legajo"
                                         value="<?php echo $data['config']['legajo'] ?? '16649'; ?>"></div>
                             </div>
-                            
+
                             <hr style="margin: 24px 0; border: 0; border-top: 1px solid #e5e5e5;">
                             <h3 style="margin-bottom: 16px; font-size: 16px; color: #333;">SEO y Analítica</h3>
-                            
-                            <div class="form-group"><label>Google Analytics ID (G-XXXXXXXXXX)</label><input type="text" name="analytics_id"
-                                    value="<?php echo $data['config']['analytics_id'] ?? ''; ?>" placeholder="G-XXXXXXXXXX"></div>
-                            
-                            <div class="form-group"><label>Palabras Clave Globales</label><input type="text" name="meta_keywords"
-                                    value="<?php echo $data['config']['meta_keywords'] ?? ''; ?>" placeholder="agencia de viajes, turismo, villa devoto, paquetes"></div>
-                                    
-                            <div class="form-group"><label>Descripción Global del Sitio</label><textarea name="meta_description" rows="2"
-                                    placeholder="Agencia de viajes y turismo en Villa Devoto..."><?php echo $data['config']['meta_description'] ?? ''; ?></textarea></div>
+
+                            <div class="form-group"><label>Google Analytics ID (G-XXXXXXXXXX)</label><input type="text"
+                                    name="analytics_id" value="<?php echo $data['config']['analytics_id'] ?? ''; ?>"
+                                    placeholder="G-XXXXXXXXXX"></div>
+
+                            <div class="form-group"><label>Palabras Clave Globales</label><input type="text"
+                                    name="meta_keywords" value="<?php echo $data['config']['meta_keywords'] ?? ''; ?>"
+                                    placeholder="agencia de viajes, turismo, villa devoto, paquetes"></div>
+
+                            <div class="form-group"><label>Descripción Global del Sitio</label><textarea name="meta_description"
+                                    rows="2"
+                                    placeholder="Agencia de viajes y turismo en Villa Devoto..."><?php echo $data['config']['meta_description'] ?? ''; ?></textarea>
+                            </div>
                             <div style="margin-top: 24px;"><button type="submit" class="btn btn-primary">💾 Guardar
                                     Configuración</button></div>
                         </form>
@@ -2066,386 +2124,386 @@ if (isset($_GET['edit'])) {
             <?php endif; ?>
         </main>
     <?php endif; ?>
-<script>
-    // ===== WYSIWYG EDITOR JS =====
-    const editorArea = document.getElementById('editor-area');
-    const editorHidden = document.getElementById('editor-hidden');
-    const imgToolbar = document.getElementById('img-toolbar');
-    let selectedImg = null;
-    let savedSelection = null;
+    <script>
+        // ===== WYSIWYG EDITOR JS =====
+        const editorArea = document.getElementById('editor-area');
+        const editorHidden = document.getElementById('editor-hidden');
+        const imgToolbar = document.getElementById('img-toolbar');
+        let selectedImg = null;
+        let savedSelection = null;
 
-    // --- Color palette ---
-    const COLORS = [
-        '#000000','#434343','#666666','#999999','#b7b7b7','#cccccc','#ffffff',
-        '#dc2626','#ea580c','#F97316','#eab308','#22c55e','#06b6d4','#3b82f6',
-        '#7c3aed','#ec4899','#f43f5e','#f97316','#84cc16','#14b8a6','#0ea5e9',
-        '#6366f1','#a855f7','#d946ef','#be123c','#9a3412','#854d0e','#166534'
-    ];
+        // --- Color palette ---
+        const COLORS = [
+            '#000000', '#434343', '#666666', '#999999', '#b7b7b7', '#cccccc', '#ffffff',
+            '#dc2626', '#ea580c', '#F97316', '#eab308', '#22c55e', '#06b6d4', '#3b82f6',
+            '#7c3aed', '#ec4899', '#f43f5e', '#f97316', '#84cc16', '#14b8a6', '#0ea5e9',
+            '#6366f1', '#a855f7', '#d946ef', '#be123c', '#9a3412', '#854d0e', '#166534'
+        ];
 
-    function initColorPicker() {
-        const grid = document.getElementById('color-grid');
-        if (!grid) return;
-        COLORS.forEach(c => {
-            const swatch = document.createElement('div');
-            swatch.className = 'color-swatch';
-            swatch.style.background = c;
-            swatch.onclick = () => applyColor(c);
-            grid.appendChild(swatch);
-        });
-    }
-
-    function toggleColorPicker() {
-        const picker = document.getElementById('color-picker');
-        if (!picker) return;
-        saveSelection();
-        picker.classList.toggle('visible');
-    }
-
-    function applyColor(color) {
-        restoreSelection();
-        document.execCommand('foreColor', false, color);
-        document.getElementById('color-indicator').style.background = color;
-        document.getElementById('color-picker').classList.remove('visible');
-        editorArea.focus();
-    }
-
-    function applyHexColor() {
-        const hex = document.getElementById('color-hex').value.trim();
-        if (/^#[0-9A-Fa-f]{3,6}$/.test(hex)) {
-            applyColor(hex);
-        } else {
-            alert('Ingresá un color hexadecimal válido (ej: #F97316)');
-        }
-    }
-
-    // --- Selection save/restore (for color picker) ---
-    function saveSelection() {
-        const sel = window.getSelection();
-        if (sel.rangeCount > 0) {
-            savedSelection = sel.getRangeAt(0);
-        }
-    }
-
-    function restoreSelection() {
-        if (savedSelection) {
-            const sel = window.getSelection();
-            sel.removeAllRanges();
-            sel.addRange(savedSelection);
-        }
-    }
-
-    // --- Core editor commands ---
-    function editorCmd(cmd) {
-        if (!editorArea) return;
-        editorArea.focus();
-        document.execCommand(cmd, false, null);
-    }
-
-    function editorBlock(tag) {
-        if (!tag || !editorArea) return;
-        editorArea.focus();
-        document.execCommand('formatBlock', false, tag);
-    }
-
-    function editorInsertHR() {
-        if (!editorArea) return;
-        editorArea.focus();
-        document.execCommand('insertHTML', false, '<hr>');
-    }
-
-    // --- Clean format: removes inline AND block formatting ---
-    function editorCleanFormat() {
-        if (!editorArea) return;
-        editorArea.focus();
-        document.execCommand('removeFormat', false, null);
-        // Also reset block format to paragraph
-        // Check if inside a blockquote and unwrap manually
-        const sel = window.getSelection();
-        if (sel.anchorNode) {
-            let node = sel.anchorNode;
-            while (node && node !== editorArea) {
-                if (node.tagName === 'BLOCKQUOTE') {
-                    // Replace blockquote with its children
-                    const parent = node.parentNode;
-                    while (node.firstChild) {
-                        parent.insertBefore(node.firstChild, node);
-                    }
-                    parent.removeChild(node);
-                    break;
-                }
-                node = node.parentNode;
-            }
-        }
-        document.execCommand('formatBlock', false, 'P');
-    }
-
-    function editorLink() {
-        const sel = window.getSelection();
-        const selectedText = sel.toString();
-        
-        // Check if we're inside a link already
-        let parentLink = null;
-        if (sel.anchorNode) {
-            let node = sel.anchorNode;
-            while (node && node !== editorArea) {
-                if (node.tagName === 'A') { parentLink = node; break; }
-                node = node.parentNode;
-            }
-        }
-
-        const currentUrl = parentLink ? parentLink.href : '';
-        const url = prompt('URL del enlace:', currentUrl || 'https://');
-        
-        if (url === null) return; // Cancelled
-        if (url === '') {
-            // Remove link
-            if (parentLink) {
-                document.execCommand('unlink', false, null);
-            }
-            return;
-        }
-
-        editorArea.focus();
-        if (selectedText) {
-            document.execCommand('createLink', false, url);
-            // Make link open in new tab
-            const links = editorArea.querySelectorAll('a');
-            links.forEach(l => {
-                if (l.href === url) l.target = '_blank';
+        function initColorPicker() {
+            const grid = document.getElementById('color-grid');
+            if (!grid) return;
+            COLORS.forEach(c => {
+                const swatch = document.createElement('div');
+                swatch.className = 'color-swatch';
+                swatch.style.background = c;
+                swatch.onclick = () => applyColor(c);
+                grid.appendChild(swatch);
             });
-        } else {
-            const linkText = prompt('Texto del enlace:', 'Click aquí');
-            if (linkText) {
-                document.execCommand('insertHTML', false, `<a href="${url}" target="_blank">${linkText}</a>`);
-            }
         }
-    }
 
-    // --- Image upload ---
-    function editorImage() {
-        document.getElementById('editor-img-upload').click();
-    }
-
-    function uploadEditorImage(input) {
-        if (!input.files || !input.files[0]) return;
-        const file = input.files[0];
-        const formData = new FormData();
-        formData.append('image', file);
-
-        // Show uploading feedback
-        const placeholder = document.createElement('div');
-        placeholder.style.cssText = 'padding: 20px; background: #f3f4f6; border-radius: 8px; text-align: center; color: #666; margin: 8px 0;';
-        placeholder.textContent = '⏳ Subiendo imagen...';
-        editorArea.appendChild(placeholder);
-
-        fetch('index.php?ajax=upload_blog_image', {
-            method: 'POST',
-            body: formData
-        })
-        .then(r => r.json())
-        .then(data => {
-            placeholder.remove();
-            if (data.success) {
-                const img = document.createElement('img');
-                img.src = '../' + data.url;
-                img.className = 'img-large img-center';
-                img.alt = 'Imagen del blog';
-                img.onclick = function() { selectImg(this); };
-                editorArea.appendChild(img);
-                // Add a paragraph after the image for continued editing
-                const p = document.createElement('p');
-                p.innerHTML = '<br>';
-                editorArea.appendChild(p);
-            } else {
-                alert('Error al subir imagen: ' + (data.error || 'Error desconocido'));
-            }
-        })
-        .catch(err => {
-            placeholder.remove();
-            alert('Error de red al subir imagen');
-            console.error(err);
-        });
-
-        input.value = ''; // Reset file input
-    }
-
-    // --- Image toolbar ---
-    function selectImg(img) {
-        // Deselect previous
-        if (selectedImg) selectedImg.classList.remove('img-selected');
-        selectedImg = img;
-        img.classList.add('img-selected');
-
-        // Position toolbar near image
-        const rect = img.getBoundingClientRect();
-        const editorRect = editorArea.closest('.form-group').getBoundingClientRect();
-        imgToolbar.style.top = (rect.top - editorRect.top - 8) + 'px';
-        imgToolbar.style.left = (rect.left - editorRect.left) + 'px';
-        imgToolbar.classList.add('visible');
-    }
-
-    function setImgClass(cls) {
-        if (!selectedImg) return;
-        selectedImg.classList.remove('img-small','img-medium','img-large');
-        selectedImg.classList.add(cls);
-    }
-
-    function setImgPos(cls) {
-        if (!selectedImg) return;
-        selectedImg.classList.remove('img-left','img-center','img-right');
-        selectedImg.classList.add(cls);
-    }
-
-    function removeSelectedImg() {
-        if (!selectedImg) return;
-        if (confirm('¿Eliminar esta imagen?')) {
-            selectedImg.remove();
-            selectedImg = null;
-            imgToolbar.classList.remove('visible');
+        function toggleColorPicker() {
+            const picker = document.getElementById('color-picker');
+            if (!picker) return;
+            saveSelection();
+            picker.classList.toggle('visible');
         }
-    }
 
-    // Click on editor images to select them
-    if (editorArea) {
-        editorArea.addEventListener('click', function(e) {
-            if (e.target.tagName === 'IMG') {
-                e.preventDefault();
-                selectImg(e.target);
-            } else {
-                // Deselect image
-                if (selectedImg) {
-                    selectedImg.classList.remove('img-selected');
-                    selectedImg = null;
-                    imgToolbar.classList.remove('visible');
-                }
-            }
-        });
-    }
-
-    // Close color picker when clicking outside
-    document.addEventListener('click', function(e) {
-        const picker = document.getElementById('color-picker');
-        const btn = document.querySelector('.color-picker-btn');
-        if (picker && !picker.contains(e.target) && btn && !btn.contains(e.target)) {
-            picker.classList.remove('visible');
-        }
-    });
-
-    // --- Editor Tab Switching ---
-    let currentEditorMode = 'visual';
-    const htmlEditor = document.getElementById('html-editor');
-    const visualWrap = document.getElementById('visual-editor-wrap');
-    const tabVisual = document.getElementById('tab-visual');
-    const tabHtml = document.getElementById('tab-html');
-
-    function switchEditorTab(mode) {
-        if (!editorArea || !htmlEditor || !visualWrap) return;
-        if (mode === currentEditorMode) return;
-
-        if (mode === 'html') {
-            // Visual → HTML: copy WYSIWYG innerHTML to textarea
-            editorArea.querySelectorAll('.img-selected').forEach(img => img.classList.remove('img-selected'));
-            if (imgToolbar) imgToolbar.classList.remove('visible');
-            selectedImg = null;
-            htmlEditor.value = formatHtml(editorArea.innerHTML);
-            visualWrap.style.display = 'none';
-            htmlEditor.style.display = 'block';
-            htmlEditor.focus();
-            tabVisual.classList.remove('active');
-            tabHtml.classList.add('active');
-        } else {
-            // HTML → Visual: copy textarea content back to WYSIWYG
-            editorArea.innerHTML = htmlEditor.value;
-            // Re-attach click handlers for images
-            editorArea.querySelectorAll('img').forEach(img => {
-                img.onclick = function() { selectImg(this); };
-            });
-            htmlEditor.style.display = 'none';
-            visualWrap.style.display = 'block';
+        function applyColor(color) {
+            restoreSelection();
+            document.execCommand('foreColor', false, color);
+            document.getElementById('color-indicator').style.background = color;
+            document.getElementById('color-picker').classList.remove('visible');
             editorArea.focus();
-            tabHtml.classList.remove('active');
-            tabVisual.classList.add('active');
         }
-        currentEditorMode = mode;
-    }
 
-    // Simple HTML formatter for readability in the HTML tab
-    function formatHtml(html) {
-        // Light formatting: add newlines after closing block tags
-        return html
-            .replace(/></g, '>\n<')
-            .replace(/\n\s*\n/g, '\n')
-            .trim();
-    }
-
-    // --- Sync editor content to hidden textarea on submit ---
-    function syncEditor() {
-        if (!editorHidden) return true;
-        if (currentEditorMode === 'html' && htmlEditor) {
-            // HTML mode: save the textarea content directly
-            editorHidden.value = htmlEditor.value;
-        } else if (editorArea) {
-            // Visual mode: save the WYSIWYG innerHTML
-            editorArea.querySelectorAll('.img-selected').forEach(img => img.classList.remove('img-selected'));
-            editorHidden.value = editorArea.innerHTML;
+        function applyHexColor() {
+            const hex = document.getElementById('color-hex').value.trim();
+            if (/^#[0-9A-Fa-f]{3,6}$/.test(hex)) {
+                applyColor(hex);
+            } else {
+                alert('Ingresá un color hexadecimal válido (ej: #F97316)');
+            }
         }
-        return true;
-    }
 
-    // --- Keyboard shortcuts + Enter key handler ---
-    if (editorArea) {
-        editorArea.addEventListener('keydown', function(e) {
-            // Ctrl shortcuts
-            if (e.ctrlKey || e.metaKey) {
-                switch(e.key.toLowerCase()) {
-                    case 'b': e.preventDefault(); editorCmd('bold'); break;
-                    case 'i': e.preventDefault(); editorCmd('italic'); break;
-                    case 'u': e.preventDefault(); editorCmd('underline'); break;
+        // --- Selection save/restore (for color picker) ---
+        function saveSelection() {
+            const sel = window.getSelection();
+            if (sel.rangeCount > 0) {
+                savedSelection = sel.getRangeAt(0);
+            }
+        }
+
+        function restoreSelection() {
+            if (savedSelection) {
+                const sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(savedSelection);
+            }
+        }
+
+        // --- Core editor commands ---
+        function editorCmd(cmd) {
+            if (!editorArea) return;
+            editorArea.focus();
+            document.execCommand(cmd, false, null);
+        }
+
+        function editorBlock(tag) {
+            if (!tag || !editorArea) return;
+            editorArea.focus();
+            document.execCommand('formatBlock', false, tag);
+        }
+
+        function editorInsertHR() {
+            if (!editorArea) return;
+            editorArea.focus();
+            document.execCommand('insertHTML', false, '<hr>');
+        }
+
+        // --- Clean format: removes inline AND block formatting ---
+        function editorCleanFormat() {
+            if (!editorArea) return;
+            editorArea.focus();
+            document.execCommand('removeFormat', false, null);
+            // Also reset block format to paragraph
+            // Check if inside a blockquote and unwrap manually
+            const sel = window.getSelection();
+            if (sel.anchorNode) {
+                let node = sel.anchorNode;
+                while (node && node !== editorArea) {
+                    if (node.tagName === 'BLOCKQUOTE') {
+                        // Replace blockquote with its children
+                        const parent = node.parentNode;
+                        while (node.firstChild) {
+                            parent.insertBefore(node.firstChild, node);
+                        }
+                        parent.removeChild(node);
+                        break;
+                    }
+                    node = node.parentNode;
+                }
+            }
+            document.execCommand('formatBlock', false, 'P');
+        }
+
+        function editorLink() {
+            const sel = window.getSelection();
+            const selectedText = sel.toString();
+
+            // Check if we're inside a link already
+            let parentLink = null;
+            if (sel.anchorNode) {
+                let node = sel.anchorNode;
+                while (node && node !== editorArea) {
+                    if (node.tagName === 'A') { parentLink = node; break; }
+                    node = node.parentNode;
+                }
+            }
+
+            const currentUrl = parentLink ? parentLink.href : '';
+            const url = prompt('URL del enlace:', currentUrl || 'https://');
+
+            if (url === null) return; // Cancelled
+            if (url === '') {
+                // Remove link
+                if (parentLink) {
+                    document.execCommand('unlink', false, null);
                 }
                 return;
             }
 
-            // Enter key: break out of H2, H3, H4, BLOCKQUOTE
-            if (e.key === 'Enter' && !e.shiftKey) {
-                const sel = window.getSelection();
-                if (!sel.anchorNode) return;
-
-                let block = sel.anchorNode;
-                // Walk up to find the block-level parent
-                while (block && block !== editorArea) {
-                    const tag = block.tagName;
-                    if (tag && ['H2','H3','H4','BLOCKQUOTE'].includes(tag)) {
-                        // Check if cursor is at end of this block
-                        const range = sel.getRangeAt(0);
-                        const cloned = range.cloneRange();
-                        cloned.selectNodeContents(block);
-                        cloned.setStart(range.endContainer, range.endOffset);
-                        const textAfter = cloned.toString().trim();
-
-                        if (textAfter === '') {
-                            // Cursor is at the end — break out to a new <p>
-                            e.preventDefault();
-                            const p = document.createElement('p');
-                            p.innerHTML = '<br>';
-                            block.parentNode.insertBefore(p, block.nextSibling);
-                            // Move cursor into the new paragraph
-                            const newRange = document.createRange();
-                            newRange.setStart(p, 0);
-                            newRange.collapse(true);
-                            sel.removeAllRanges();
-                            sel.addRange(newRange);
-                        }
-                        return;
-                    }
-                    block = block.parentNode;
+            editorArea.focus();
+            if (selectedText) {
+                document.execCommand('createLink', false, url);
+                // Make link open in new tab
+                const links = editorArea.querySelectorAll('a');
+                links.forEach(l => {
+                    if (l.href === url) l.target = '_blank';
+                });
+            } else {
+                const linkText = prompt('Texto del enlace:', 'Click aquí');
+                if (linkText) {
+                    document.execCommand('insertHTML', false, `<a href="${url}" target="_blank">${linkText}</a>`);
                 }
             }
-        });
-    }
+        }
 
-    // Init
-    initColorPicker();
-</script>
+        // --- Image upload ---
+        function editorImage() {
+            document.getElementById('editor-img-upload').click();
+        }
+
+        function uploadEditorImage(input) {
+            if (!input.files || !input.files[0]) return;
+            const file = input.files[0];
+            const formData = new FormData();
+            formData.append('image', file);
+
+            // Show uploading feedback
+            const placeholder = document.createElement('div');
+            placeholder.style.cssText = 'padding: 20px; background: #f3f4f6; border-radius: 8px; text-align: center; color: #666; margin: 8px 0;';
+            placeholder.textContent = '⏳ Subiendo imagen...';
+            editorArea.appendChild(placeholder);
+
+            fetch('index.php?ajax=upload_blog_image', {
+                method: 'POST',
+                body: formData
+            })
+                .then(r => r.json())
+                .then(data => {
+                    placeholder.remove();
+                    if (data.success) {
+                        const img = document.createElement('img');
+                        img.src = '../' + data.url;
+                        img.className = 'img-large img-center';
+                        img.alt = 'Imagen del blog';
+                        img.onclick = function () { selectImg(this); };
+                        editorArea.appendChild(img);
+                        // Add a paragraph after the image for continued editing
+                        const p = document.createElement('p');
+                        p.innerHTML = '<br>';
+                        editorArea.appendChild(p);
+                    } else {
+                        alert('Error al subir imagen: ' + (data.error || 'Error desconocido'));
+                    }
+                })
+                .catch(err => {
+                    placeholder.remove();
+                    alert('Error de red al subir imagen');
+                    console.error(err);
+                });
+
+            input.value = ''; // Reset file input
+        }
+
+        // --- Image toolbar ---
+        function selectImg(img) {
+            // Deselect previous
+            if (selectedImg) selectedImg.classList.remove('img-selected');
+            selectedImg = img;
+            img.classList.add('img-selected');
+
+            // Position toolbar near image
+            const rect = img.getBoundingClientRect();
+            const editorRect = editorArea.closest('.form-group').getBoundingClientRect();
+            imgToolbar.style.top = (rect.top - editorRect.top - 8) + 'px';
+            imgToolbar.style.left = (rect.left - editorRect.left) + 'px';
+            imgToolbar.classList.add('visible');
+        }
+
+        function setImgClass(cls) {
+            if (!selectedImg) return;
+            selectedImg.classList.remove('img-small', 'img-medium', 'img-large');
+            selectedImg.classList.add(cls);
+        }
+
+        function setImgPos(cls) {
+            if (!selectedImg) return;
+            selectedImg.classList.remove('img-left', 'img-center', 'img-right');
+            selectedImg.classList.add(cls);
+        }
+
+        function removeSelectedImg() {
+            if (!selectedImg) return;
+            if (confirm('¿Eliminar esta imagen?')) {
+                selectedImg.remove();
+                selectedImg = null;
+                imgToolbar.classList.remove('visible');
+            }
+        }
+
+        // Click on editor images to select them
+        if (editorArea) {
+            editorArea.addEventListener('click', function (e) {
+                if (e.target.tagName === 'IMG') {
+                    e.preventDefault();
+                    selectImg(e.target);
+                } else {
+                    // Deselect image
+                    if (selectedImg) {
+                        selectedImg.classList.remove('img-selected');
+                        selectedImg = null;
+                        imgToolbar.classList.remove('visible');
+                    }
+                }
+            });
+        }
+
+        // Close color picker when clicking outside
+        document.addEventListener('click', function (e) {
+            const picker = document.getElementById('color-picker');
+            const btn = document.querySelector('.color-picker-btn');
+            if (picker && !picker.contains(e.target) && btn && !btn.contains(e.target)) {
+                picker.classList.remove('visible');
+            }
+        });
+
+        // --- Editor Tab Switching ---
+        let currentEditorMode = 'visual';
+        const htmlEditor = document.getElementById('html-editor');
+        const visualWrap = document.getElementById('visual-editor-wrap');
+        const tabVisual = document.getElementById('tab-visual');
+        const tabHtml = document.getElementById('tab-html');
+
+        function switchEditorTab(mode) {
+            if (!editorArea || !htmlEditor || !visualWrap) return;
+            if (mode === currentEditorMode) return;
+
+            if (mode === 'html') {
+                // Visual → HTML: copy WYSIWYG innerHTML to textarea
+                editorArea.querySelectorAll('.img-selected').forEach(img => img.classList.remove('img-selected'));
+                if (imgToolbar) imgToolbar.classList.remove('visible');
+                selectedImg = null;
+                htmlEditor.value = formatHtml(editorArea.innerHTML);
+                visualWrap.style.display = 'none';
+                htmlEditor.style.display = 'block';
+                htmlEditor.focus();
+                tabVisual.classList.remove('active');
+                tabHtml.classList.add('active');
+            } else {
+                // HTML → Visual: copy textarea content back to WYSIWYG
+                editorArea.innerHTML = htmlEditor.value;
+                // Re-attach click handlers for images
+                editorArea.querySelectorAll('img').forEach(img => {
+                    img.onclick = function () { selectImg(this); };
+                });
+                htmlEditor.style.display = 'none';
+                visualWrap.style.display = 'block';
+                editorArea.focus();
+                tabHtml.classList.remove('active');
+                tabVisual.classList.add('active');
+            }
+            currentEditorMode = mode;
+        }
+
+        // Simple HTML formatter for readability in the HTML tab
+        function formatHtml(html) {
+            // Light formatting: add newlines after closing block tags
+            return html
+                .replace(/></g, '>\n<')
+                .replace(/\n\s*\n/g, '\n')
+                .trim();
+        }
+
+        // --- Sync editor content to hidden textarea on submit ---
+        function syncEditor() {
+            if (!editorHidden) return true;
+            if (currentEditorMode === 'html' && htmlEditor) {
+                // HTML mode: save the textarea content directly
+                editorHidden.value = htmlEditor.value;
+            } else if (editorArea) {
+                // Visual mode: save the WYSIWYG innerHTML
+                editorArea.querySelectorAll('.img-selected').forEach(img => img.classList.remove('img-selected'));
+                editorHidden.value = editorArea.innerHTML;
+            }
+            return true;
+        }
+
+        // --- Keyboard shortcuts + Enter key handler ---
+        if (editorArea) {
+            editorArea.addEventListener('keydown', function (e) {
+                // Ctrl shortcuts
+                if (e.ctrlKey || e.metaKey) {
+                    switch (e.key.toLowerCase()) {
+                        case 'b': e.preventDefault(); editorCmd('bold'); break;
+                        case 'i': e.preventDefault(); editorCmd('italic'); break;
+                        case 'u': e.preventDefault(); editorCmd('underline'); break;
+                    }
+                    return;
+                }
+
+                // Enter key: break out of H2, H3, H4, BLOCKQUOTE
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    const sel = window.getSelection();
+                    if (!sel.anchorNode) return;
+
+                    let block = sel.anchorNode;
+                    // Walk up to find the block-level parent
+                    while (block && block !== editorArea) {
+                        const tag = block.tagName;
+                        if (tag && ['H2', 'H3', 'H4', 'BLOCKQUOTE'].includes(tag)) {
+                            // Check if cursor is at end of this block
+                            const range = sel.getRangeAt(0);
+                            const cloned = range.cloneRange();
+                            cloned.selectNodeContents(block);
+                            cloned.setStart(range.endContainer, range.endOffset);
+                            const textAfter = cloned.toString().trim();
+
+                            if (textAfter === '') {
+                                // Cursor is at the end — break out to a new <p>
+                                e.preventDefault();
+                                const p = document.createElement('p');
+                                p.innerHTML = '<br>';
+                                block.parentNode.insertBefore(p, block.nextSibling);
+                                // Move cursor into the new paragraph
+                                const newRange = document.createRange();
+                                newRange.setStart(p, 0);
+                                newRange.collapse(true);
+                                sel.removeAllRanges();
+                                sel.addRange(newRange);
+                            }
+                            return;
+                        }
+                        block = block.parentNode;
+                    }
+                }
+            });
+        }
+
+        // Init
+        initColorPicker();
+    </script>
 </body>
 
 </html>

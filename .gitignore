@@ -7,5 +7,4 @@
 .vscode
 
 # Archivos de entorno y logs
-.env
 .env.*
