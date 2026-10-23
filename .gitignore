@@ -2,7 +2,9 @@
 *.local
 
 # Carpetas de editores y agentes AI
-.agentS/
+.agents/
+.agents/skills
+.vscode
 
 # Archivos de entorno y logs
 .env
