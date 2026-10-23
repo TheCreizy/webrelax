@@ -1,0 +1,9 @@
+# Dependencias y compilación
+*.local
+
+# Carpetas de editores y agentes AI
+.agentS/
+
+# Archivos de entorno y logs
+.env
+.env.*
