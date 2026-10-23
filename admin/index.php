@@ -6,10 +6,20 @@
 
 session_start();
 
+// --- CARGAR VARIABLES DE ENTORNO DESDE .ENV ---
+if (file_exists(__DIR__ . '/.env')) {
+    $lineas = file(__DIR__ . '/.env', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lineas as $linea) {
+        if (strpos(trim($linea), '#') === 0) continue;
+        list($name, $value) = explode('=', $linea, 2);
+        $_ENV[trim($name)] = trim($value, " \t\n\r\0\x0B\"");
+    }
+}
+
 // Configuración
 define('DATA_FILE', __DIR__ . '/../data/content.json');
-define('ADMIN_USER', 'adminrelax');
-define('ADMIN_PASS', '123RelaxBack456');
+define('ADMIN_USER', $_ENV['ADMIN_USER'] ?? 'admin_por_defecto');
+define('ADMIN_PASS', $_ENV['ADMIN_PASS'] ?? 'pass_por_defecto');
 
 // PHPMailer initialization
 use PHPMailer\PHPMailer\PHPMailer;
@@ -237,13 +247,13 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
                     $mail->isSMTP();
                     $mail->Host = 'smtp.hostinger.com';
                     $mail->SMTPAuth = true;
-                    $mail->Username = 'noreply@relaxtours.com.ar';
-                    $mail->Password = '86V&CVVdFvi*!F=';
+		    $mail->Username = $_ENV['SMTP_USER'] ?? '';
+		    $mail->Password = $_ENV['SMTP_PASS'] ?? '';
                     $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
                     $mail->Port = 465;
                     $mail->CharSet = 'UTF-8';
 
-                    $mail->setFrom('noreply@relaxtours.com.ar', 'Relax Tours Intranet');
+                    $mail->setFrom($_ENV['SMTP_USER'] ?? 'noreply@relaxtours.com.ar', 'Relax Tours Intranet');
                     $mail->addAddress('ventas1@relaxtours.com.ar');
 
                     $mail->Subject = "Promo Relax + " . $oferta['titulo'];
