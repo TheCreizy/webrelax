@@ -61,6 +61,7 @@ include 'includes/header.php';
         <div class="hero-cta">
             <a href="#paquetes" class="btn-primary hero-btn-reveal">Explorar Paquetes</a>
             <a href="#ofertas" class="btn-secondary hero-btn-reveal">Explorar Ofertas</a>
+            <a href="#asistencia" class="btn-primary hero-btn-reveal">Asistencia</a>
             <a href="#contacto" class="btn-secondary hero-btn-reveal">Contactanos</a>
         </div>
     </div>
@@ -93,6 +94,52 @@ include 'includes/header.php';
             </div>
 
             <a href="paquetes" class="btn-primary" style="margin-top: 40px;">Ver Todos los Paquetes</a>
+        </div>
+    </div>
+</section>
+
+<!-- ASISTENCIA -->
+<section id="asistencia" class="section section-asistencia">
+    <div class="container">
+        <div class="asistencia-card fade-in">
+            <div class="asistencia-top-bar">
+                <span class="section-tag asistencia-tag">Viajá Protegido</span>
+                <img src="images/logo-coris.webp" alt="Coris Asistencia al Viajero" class="asistencia-logo" width="150" height="50" loading="lazy">
+            </div>
+
+            <div class="asistencia-content">
+                <h2 class="section-title asistencia-title">
+                    Viajá Seguro con <span class="asistencia-highlight">Coris</span>
+                </h2>
+                <p class="asistencia-subtitle">
+                    Cotizá online tu asistencia médica al viajero en segundos y accedé a tarifas y beneficios exclusivos para pasajeros de <strong>Relax Tours</strong>.
+                </p>
+
+                <div class="asistencia-pills">
+                    <span class="asistencia-pill">
+                        <span class="asistencia-pill-check">✓</span>
+                        Cobertura médica 24/7
+                    </span>
+                    <span class="asistencia-pill">
+                        <span class="asistencia-pill-check">✓</span>
+                        Requisitos Schengen y EE. UU.
+                    </span>
+                    <span class="asistencia-pill">
+                        <span class="asistencia-pill-check">✓</span>
+                        Pérdida de equipaje y demoras
+                    </span>
+                </div>
+
+                <div class="asistencia-cta-wrapper">
+                    <a href="https://www.coris.com.ar/ecommerce/relaxtours.aspx" target="_blank" rel="noopener noreferrer" class="btn-coris">
+                        Cotizá tu asistencia ya
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 </section>

@@ -113,6 +113,7 @@ if (file_exists($dataFile)) {
                 <li><a href="<?php echo $base_url; ?><?php echo ($active_page === 'nosotros') ? 'nosotros' : 'nosotros'; ?>"
                         class="<?php echo ($active_page === 'nosotros') ? 'active' : ''; ?>">Nosotros</a></li>
                 <li><a href="<?php echo $base_url; ?>#paquetes">Paquetes</a></li>
+                <li><a href="<?php echo $base_url; ?>#asistencia">Asistencia</a></li>
                 <li><a href="<?php echo $base_url; ?>#ofertas">Ofertas</a></li>
                 <li><a href="<?php echo $base_url; ?>#blog"
                         class="<?php echo ($active_page === 'blog') ? 'active' : ''; ?>">Tips</a></li>
@@ -141,6 +142,7 @@ if (file_exists($dataFile)) {
         <a href="<?php echo $base_url; ?>nosotros"
             class="<?php echo ($active_page === 'nosotros') ? 'active' : ''; ?>">Nosotros</a>
         <a href="<?php echo $base_url; ?>#paquetes">Paquetes</a>
+        <a href="<?php echo $base_url; ?>#asistencia">Asistencia</a>
         <a href="<?php echo $base_url; ?>#ofertas">Ofertas</a>
         <a href="<?php echo $base_url; ?>#blog"
             class="<?php echo ($active_page === 'blog') ? 'active' : ''; ?>">Tips</a>
