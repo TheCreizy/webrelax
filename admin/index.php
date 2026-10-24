@@ -597,6 +597,7 @@ HTML;
                     <li><a href="../index#inicio">Inicio</a></li>
                     <li><a href="../nosotros">Nosotros</a></li>
                     <li><a href="../index#paquetes">Paquetes</a></li>
+                    <li><a href="../index#asistencia">Asistencia</a></li>
                     <li><a href="../index#ofertas">Ofertas</a></li>
                     <li><a href="../index#blog" class="active">Tips</a></li>
                     <li><a href="../index#contacto">Contacto</a></li>
@@ -618,6 +619,7 @@ HTML;
             <a href="../index#inicio">Inicio</a>
             <a href="../nosotros">Nosotros</a>
             <a href="../index#paquetes">Paquetes</a>
+            <a href="../index#asistencia">Asistencia</a>
             <a href="../index#ofertas">Ofertas</a>
             <a href="../index#blog" class="active">Tips</a>
             <a href="../index#contacto">Contacto</a>
