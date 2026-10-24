@@ -103,7 +103,7 @@ include 'includes/header.php';
     <div class="container">
         <div class="asistencia-card fade-in">
             <div class="asistencia-top-bar">
-                <span class="section-tag asistencia-tag">Viajá Protegido</span>
+                <span class="section-tag asistencia-tag">✈️ Viajá Protegido</span>
                 <img src="images/logo-coris.webp" alt="Coris Asistencia al Viajero" class="asistencia-logo" width="150" height="50" loading="lazy">
             </div>
 

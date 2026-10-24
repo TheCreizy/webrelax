@@ -8,13 +8,15 @@
  * $active_page - Current page for nav active state ('inicio', 'nosotros', 'paquetes', 'ofertas', 'blog', 'contacto')
  */
 
-// Detectamos si estamos en local (XAMPP) o en producción (Web)
-if ($_SERVER['HTTP_HOST'] == 'localhost' || $_SERVER['HTTP_HOST'] == '127.0.0.1') {
-    // IMPORTANTE: Cambia 'relaxtours' por el nombre exacto de tu carpeta en htdocs
-    $base_url = '/relaxtours/'; 
-} else {
-    // En el servidor web real, la raíz es simplemente '/'
-    $base_url = '/'; 
+// Si el generador de blog define $forzar_base_url, respetamos $base_url; sino detectamos automáticamente
+if (empty($forzar_base_url)) {
+    if ($_SERVER["HTTP_HOST"] == "localhost" || $_SERVER["HTTP_HOST"] == "127.0.0.1") {
+        $partes = explode("/", trim($_SERVER["SCRIPT_NAME"], "/"));
+        $carpeta = $partes[0] ?? "relaxtours";
+        $base_url = "/" . $carpeta . "/";
+    } else {
+        $base_url = "/";
+    }
 }
 
 // Load Global Config
@@ -99,6 +101,7 @@ if (file_exists($dataFile)) {
             }
         </style>
     <?php endif; ?>
+    <?php if (!empty($extra_head_meta)) echo $extra_head_meta; ?>
 </head>
 
 <body>

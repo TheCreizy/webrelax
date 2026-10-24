@@ -379,6 +379,16 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
             header('Location: index.php?tab=blog&msg=guardado');
             exit;
 
+        case 'regenerate_all_blogs':
+            foreach ($data['blog'] as $b) {
+                if (!empty($b['slug'])) {
+                    generateBlogPage($b, $data['config'] ?? [], $data['blog']);
+                }
+            }
+            updateSitemap($data);
+            header('Location: index.php?tab=blog&msg=guardado');
+            exit;
+
         case 'delete_blog':
             foreach ($data['blog'] as $b) {
                 if ($b['id'] === $_POST['id'] && !empty($b['imagen'])) {
@@ -562,70 +572,24 @@ HTML;
         $navHtml .= '</div>';
     }
 
+    $base_url = '../';
+    $forzar_base_url = true;
+    $page_title = $seoTitle;
+    $page_description = $seoDesc;
+    $active_page = 'blog';
+    $extra_head_meta = <<<META
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="{$seoTitle}">
+    <meta property="og:description" content="{$seoDesc}">
+    <meta property="og:image" content="{$ogImage}">
+    <meta property="og:url" content="{$ogUrl}">
+    META;
+    ob_start();
+    include __DIR__ . '/../includes/header.php';
+    $headerHtml = ob_get_clean();
+
     $html = <<<HTML
-    <!DOCTYPE html>
-    <html lang="es-AR">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>{$seoTitle}</title>
-        <meta name="description" content="{$seoDesc}">
-        <meta name="keywords" content="{$seoKeys}">
-        
-        <meta property="og:type" content="article">
-        <meta property="og:title" content="{$seoTitle}">
-        <meta property="og:description" content="{$seoDesc}">
-        <meta property="og:image" content="{$ogImage}">
-        <meta property="og:url" content="{$ogUrl}">
-
-
-        {$analyticsScript}
-        <link rel="icon" type="image/svg+xml" href="../images/favicon.svg">
-        <link rel="icon" type="image/png" sizes="96x96" href="../images/favicon-96x96.png">
-        <link rel="shortcut icon" href="../images/favicon.ico">
-        <link rel="apple-touch-icon" href="../images/apple-touch-icon.png">
-        <link rel="manifest" href="../images/site.webmanifest">
-        <meta name="theme-color" content="#F97316">
-        <link rel="stylesheet" href="../css/style.css">
-        <link rel="stylesheet" href="../css/cookies.css">
-    </head>
-    <body>
-        <nav class="navbar scrolled navbar-secondary">
-            <div class="container">
-                <a href="../index" class="navbar-logo"><img src="../images/logo-relax.webp" alt="Relax Tours"></a>
-                <ul class="navbar-links">
-                    <li><a href="../index#inicio">Inicio</a></li>
-                    <li><a href="../nosotros">Nosotros</a></li>
-                    <li><a href="../index#paquetes">Paquetes</a></li>
-                    <li><a href="../index#asistencia">Asistencia</a></li>
-                    <li><a href="../index#ofertas">Ofertas</a></li>
-                    <li><a href="../index#blog" class="active">Tips</a></li>
-                    <li><a href="../index#contacto">Contacto</a></li>
-                </ul>
-                <a href="../index#contacto" class="btn-primary">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
-                    </svg>
-                    Consultar
-                </a>
-                <button class="navbar-toggle" aria-label="Menu">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </button>
-            </div>
-        </nav>
-        <div class="navbar-mobile-menu" id="mobile-menu">
-            <a href="../index#inicio">Inicio</a>
-            <a href="../nosotros">Nosotros</a>
-            <a href="../index#paquetes">Paquetes</a>
-            <a href="../index#asistencia">Asistencia</a>
-            <a href="../index#ofertas">Ofertas</a>
-            <a href="../index#blog" class="active">Tips</a>
-            <a href="../index#contacto">Contacto</a>
-            <a href="../index#contacto" class="btn-primary">Consultar</a>
-        </div>
-        <div style="height: 80px;"></div>
+    {$headerHtml}
         <article class="section" style="padding-top: 70px; background: #fff;">
             <div class="container" style="max-width: 900px;">
                 <div style="margin-bottom: 40px; text-align: center;">
@@ -1854,8 +1818,15 @@ if (isset($_GET['edit'])) {
             <?php elseif ($activeTab === 'blog'): ?>
                 <div class="card">
                     <div class="card-header">
-                        <h2>Gestión de Blog</h2><button class="btn btn-primary"
-                            onclick="document.getElementById('modal-blog').classList.add('active')">+ Nuevo Post</button>
+                        <h2>Gestión de Blog</h2>
+                        <div style="display: flex; gap: 10px;">
+                            <form method="POST" style="display:inline;">
+                                <input type="hidden" name="action" value="regenerate_all_blogs">
+                                <button type="submit" class="btn btn-secondary">🔄 Actualizar todos los Posts</button>
+                            </form>
+                            <button class="btn btn-primary"
+                                onclick="document.getElementById('modal-blog').classList.add('active')">+ Nuevo Post</button>
+                        </div>
                     </div>
                     <table>
                         <thead>
