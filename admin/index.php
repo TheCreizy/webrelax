@@ -10,18 +10,8 @@ session_start();
 if (file_exists(__DIR__ . '/.env')) {
     $lineas = file(__DIR__ . '/.env', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     foreach ($lineas as $linea) {
-        if (strpos(trim($linea), '#') === 0)
-            continue;
-        list($name, $value) = explode('=', $linea, 2);
-        $_ENV[trim($name)] = trim($value, " \t\n\r\0\x0B\"");
-    }
-}
-
-// --- CARGAR VARIABLES DE ENTORNO DESDE .ENV ---
-if (file_exists(__DIR__ . '/.env')) {
-    $lineas = file(__DIR__ . '/.env', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    foreach ($lineas as $linea) {
-        if (strpos(trim($linea), '#') === 0)
+        $linea = trim($linea);
+        if ($linea === '' || strpos($linea, '#') === 0 || strpos($linea, '=') === false)
             continue;
         list($name, $value) = explode('=', $linea, 2);
         $_ENV[trim($name)] = trim($value, " \t\n\r\0\x0B\"");
@@ -70,9 +60,18 @@ function processAndConvertWebP($sourcePath, $destinationPath, $maxWidth = 1200, 
     if (!function_exists('gd_info')) {
         return "Error: La librería GD no está activada en el servidor.";
     }
+
+    // Asegurar que el directorio destino exista
+    $targetDir = dirname($destinationPath);
+    if (!is_dir($targetDir)) {
+        if (!mkdir($targetDir, 0755, true)) {
+            return "Error: No se pudo crear el directorio destino: $targetDir";
+        }
+    }
+
     $info = getimagesize($sourcePath);
     if (!$info)
-        return "Error: No es una imagen válida.";
+        return "Error: El archivo subido no es una imagen válida o compatible.";
 
     $mime = $info['mime'];
     $width = $info[0];
@@ -186,12 +185,19 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 'operador' => !empty($_POST['operador']) ? $_POST['operador'] : 'Sin información',
                 'comentarios' => !empty($_POST['comentarios']) ? $_POST['comentarios'] : 'Sin información'
             ];
-            if (!empty($_FILES['imagen_file']['tmp_name'])) {
-                $filename = 'paquete-' . $paquete['id'] . '-' . time() . '.webp';
-                $dest = __DIR__ . '/../images/paquetes-images/' . $filename;
-                $res = processAndConvertWebP($_FILES['imagen_file']['tmp_name'], $dest, 800);
-                if ($res === true) {
-                    $paquete['imagen'] = 'images/paquetes-images/' . $filename;
+            $imgErr = '';
+            if (!empty($_FILES['imagen_file']['name'])) {
+                if ($_FILES['imagen_file']['error'] === UPLOAD_ERR_OK) {
+                    $filename = 'paquete-' . $paquete['id'] . '-' . time() . '.webp';
+                    $dest = __DIR__ . '/../images/paquetes-images/' . $filename;
+                    $res = processAndConvertWebP($_FILES['imagen_file']['tmp_name'], $dest, 800);
+                    if ($res === true) {
+                        $paquete['imagen'] = 'images/paquetes-images/' . $filename;
+                    } else {
+                        $imgErr = $res;
+                    }
+                } else {
+                    $imgErr = 'Error al subir el archivo (código ' . $_FILES['imagen_file']['error'] . ')';
                 }
             }
             $found = false;
@@ -205,7 +211,11 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!$found)
                 array_unshift($data['paquetes'], $paquete); // Add to beginning (Newest First)
             saveData($data);
-            header('Location: index.php?tab=paquetes&msg=guardado');
+            $redirectUrl = 'Location: index.php?tab=paquetes&msg=guardado';
+            if (!empty($imgErr)) {
+                $redirectUrl .= '&img_err=' . urlencode($imgErr);
+            }
+            header($redirectUrl);
             exit;
 
         case 'delete_paquete':
@@ -237,12 +247,19 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 'operador' => !empty($_POST['operador']) ? $_POST['operador'] : 'Sin información',
                 'comentarios' => !empty($_POST['comentarios']) ? $_POST['comentarios'] : 'Sin información'
             ];
-            if (!empty($_FILES['imagen_file']['tmp_name'])) {
-                $filename = 'oferta-' . $oferta['id'] . '-' . time() . '.webp';
-                $dest = __DIR__ . '/../images/ofertas-images/' . $filename;
-                $res = processAndConvertWebP($_FILES['imagen_file']['tmp_name'], $dest, 800);
-                if ($res === true) {
-                    $oferta['imagen'] = 'images/ofertas-images/' . $filename;
+            $imgErr = '';
+            if (!empty($_FILES['imagen_file']['name'])) {
+                if ($_FILES['imagen_file']['error'] === UPLOAD_ERR_OK) {
+                    $filename = 'oferta-' . $oferta['id'] . '-' . time() . '.webp';
+                    $dest = __DIR__ . '/../images/ofertas-images/' . $filename;
+                    $res = processAndConvertWebP($_FILES['imagen_file']['tmp_name'], $dest, 800);
+                    if ($res === true) {
+                        $oferta['imagen'] = 'images/ofertas-images/' . $filename;
+                    } else {
+                        $imgErr = $res;
+                    }
+                } else {
+                    $imgErr = 'Error al subir el archivo (código ' . $_FILES['imagen_file']['error'] . ')';
                 }
             }
             $found = false;
@@ -270,13 +287,10 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
                     $mail->SMTPAuth = true;
                     $mail->Username = $_ENV['SMTP_USER'] ?? '';
                     $mail->Password = $_ENV['SMTP_PASS'] ?? '';
-                    $mail->Username = $_ENV['SMTP_USER'] ?? '';
-                    $mail->Password = $_ENV['SMTP_PASS'] ?? '';
                     $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
                     $mail->Port = 465;
                     $mail->CharSet = 'UTF-8';
 
-                    $mail->setFrom($_ENV['SMTP_USER'] ?? 'noreply@relaxtours.com.ar', 'Relax Tours Intranet');
                     $mail->setFrom($_ENV['SMTP_USER'] ?? 'noreply@relaxtours.com.ar', 'Relax Tours Intranet');
                     $mail->addAddress('ventas1@relaxtours.com.ar');
 
@@ -306,7 +320,11 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
 
-            header('Location: index.php?tab=ofertas&msg=' . $mailMsg . '&err=' . urlencode($errorMsg));
+            $redirectUrl = 'Location: index.php?tab=ofertas&msg=' . $mailMsg . '&err=' . urlencode($errorMsg);
+            if (!empty($imgErr)) {
+                $redirectUrl .= '&img_err=' . urlencode($imgErr);
+            }
+            header($redirectUrl);
             exit;
 
         case 'delete_oferta':
@@ -338,12 +356,19 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 'seo_keywords' => $_POST['seo_keywords'] ?? '',
                 'activo' => isset($_POST['activo'])
             ];
-            if (!empty($_FILES['imagen_file']['tmp_name'])) {
-                $filename = 'blog-' . $blog['id'] . '-' . time() . '.webp';
-                $dest = __DIR__ . '/../images/blog-images/' . $filename;
-                $res = processAndConvertWebP($_FILES['imagen_file']['tmp_name'], $dest, 1200);
-                if ($res === true) {
-                    $blog['imagen'] = 'images/blog-images/' . $filename;
+            $imgErr = '';
+            if (!empty($_FILES['imagen_file']['name'])) {
+                if ($_FILES['imagen_file']['error'] === UPLOAD_ERR_OK) {
+                    $filename = 'blog-' . $blog['id'] . '-' . time() . '.webp';
+                    $dest = __DIR__ . '/../images/blog-images/' . $filename;
+                    $res = processAndConvertWebP($_FILES['imagen_file']['tmp_name'], $dest, 1200);
+                    if ($res === true) {
+                        $blog['imagen'] = 'images/blog-images/' . $filename;
+                    } else {
+                        $imgErr = $res;
+                    }
+                } else {
+                    $imgErr = 'Error al subir el archivo (código ' . $_FILES['imagen_file']['error'] . ')';
                 }
             }
             $found = false;
@@ -376,7 +401,11 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 generateBlogPage($activePosts[$currentIdx + 1], $data['config'], $data['blog']);
             }
             updateSitemap($data);
-            header('Location: index.php?tab=blog&msg=guardado');
+            $redirectUrl = 'Location: index.php?tab=blog&msg=guardado';
+            if (!empty($imgErr)) {
+                $redirectUrl .= '&img_err=' . urlencode($imgErr);
+            }
+            header($redirectUrl);
             exit;
 
         case 'regenerate_all_blogs':
@@ -1570,6 +1599,9 @@ if (isset($_GET['edit'])) {
                     <?php echo htmlspecialchars($_GET['err'] ?? ''); ?></div>
             <?php elseif ($message === 'eliminado'): ?>
                 <div class="alert alert-success">✅ Eliminado correctamente</div><?php endif; ?>
+            <?php if (!empty($_GET['img_err'])): ?>
+                <div class="alert alert-error">⚠️ Atención con la imagen: <?php echo htmlspecialchars($_GET['img_err']); ?></div>
+            <?php endif; ?>
 
             <div class="stats-grid">
                 <div class="stat-card">

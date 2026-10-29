@@ -8,3 +8,9 @@
 
 # Archivos de entorno y logs
 .env
+.env.*
+*.env
+admin/.env
+admin/.env.*
+!.env.example
+!admin/.env.example

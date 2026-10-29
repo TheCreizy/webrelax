@@ -8,6 +8,18 @@ require 'PHPMailer/PHPMailer-master/src/Exception.php';
 require 'PHPMailer/PHPMailer-master/src/PHPMailer.php';
 require 'PHPMailer/PHPMailer-master/src/SMTP.php';
 
+// Cargar variables de entorno desde admin/.env si existe
+if (file_exists(__DIR__ . '/admin/.env')) {
+    $lineas = file(__DIR__ . '/admin/.env', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lineas as $linea) {
+        $linea = trim($linea);
+        if ($linea === '' || strpos($linea, '#') === 0 || strpos($linea, '=') === false)
+            continue;
+        list($name, $value) = explode('=', $linea, 2);
+        $_ENV[trim($name)] = trim($value, " \t\n\r\0\x0B\"");
+    }
+}
+
 header('Content-Type: application/json');
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -19,14 +31,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $mail->isSMTP();
         $mail->Host = 'smtp.hostinger.com';          // Servidor SMTP de Hostinger
         $mail->SMTPAuth = true;
-        $mail->Username = 'noreply@relaxtours.com.ar';   // Reemplaza por tu cuenta creada en Hostinger
-        $mail->Password = '86V&CVVdFvi*!F=';             // Reemplaza por la contraseña de esa cuenta
+        $mail->Username = $_ENV['SMTP_USER'] ?? 'noreply@relaxtours.com.ar';
+        $mail->Password = $_ENV['SMTP_PASS'] ?? '';
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;   // SSL
         $mail->Port = 465;                           // Puerto SSL
         $mail->CharSet = 'UTF-8';
 
         // Remitente obligatorio (debe coincidir con Username para evitar bloqueos)
-        $mail->setFrom('noreply@relaxtours.com.ar', 'Relax Tours Web');
+        $mail->setFrom($_ENV['SMTP_USER'] ?? 'noreply@relaxtours.com.ar', 'Relax Tours Web');
 
         // --- LÓGICA DE FORMULARIO DE CONTACTO ---
         if ($type === 'contacto') {
