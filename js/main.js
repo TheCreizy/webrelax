@@ -64,7 +64,7 @@ function initHeroParallax() {
 async function loadSiteData() {
   try {
     const basePath = window.location.pathname.includes('/blog/') ? '../' : '';
-    const response = await fetch(basePath + 'data/content.json');
+    const response = await fetch(basePath + 'data/content.json?v=' + Date.now());
     siteData = await response.json();
   } catch (error) {
     console.error('Error cargando datos:', error);
