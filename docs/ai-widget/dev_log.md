@@ -132,3 +132,16 @@
   - `data/content.json` desindexado de Git (`git rm --cached`).
   - Creado [`data/content.example.json`](file:///e:/Herny/2025/Trabajo/Relax%20Tours/New%20Web/Actual/data/content.example.json) como plantilla base rastreada.
   - Las páginas `blog/*.html` y `sitemap.xml` se mantienen generadas y versionadas para máxima velocidad e indexación en Google.
+
+---
+
+## [2026-10-30 04:15 -03:00] — Push a GitHub y Verificación en Vivo en Hostinger
+**Agente**: Orquestador Principal
+
+- Commit `5bd2ce3` enviado exitosamente a la rama `main` en GitHub (`origin/main`).
+- Auto-despliegue de Hostinger completado satisfactoriamente.
+- Pruebas HTTP directas en producción (`https://relaxtours.com.ar`):
+  1. `curl.exe -i "https://relaxtours.com.ar/api/content"`: **HTTP/1.1 200 OK**, payload JSON completo servido desde PHP 8.3 en Hostinger con paquetes, blog y configuración de Supabase.
+  2. `curl.exe -I "https://relaxtours.com.ar/"`: **HTTP/1.1 200 OK**, frontend operativo con widget omnicanal y carga asíncrona resiliente.
+  3. `curl.exe -I "https://relaxtours.com.ar/admin/"`: **HTTP/1.1 200 OK**, backoffice operativo con botones de backup y sincronización en la nube.
+- La arquitectura desacoplada está 100% activa: los despliegues de Git ya no interferirán jamás con las ediciones ni cargas de contenido en producción.

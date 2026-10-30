@@ -53,3 +53,30 @@
 - [x] Ejecutar pruebas automatizadas de normalización de teléfonos E.164, lógica horaria Argentina y llamada en vivo a Gemini API (`gemini-3.5-flash-lite` + `gemini-embedding-001` respondieron en 1.5s con precisión exacta).
 - [x] Verificar tablas, políticas RLS y función `match_knowledge` en Supabase MCP (`lints: []`).
 - [x] Actualizar `dev_log.md`, `thoughts.md`, `tasks.md` y generar el `walkthrough.md` final.
+
+## Fase 6: Migración Definitiva a Base de Datos Supabase & Bucket `relax-media` (Multi-Agente)
+- [x] **Arquitectura y Modelado Supabase (`supabase-architect`)**:
+  - [x] Crear tablas `public.cms_packages`, `public.cms_offers`, `public.cms_blog_posts`, `public.cms_settings` con RLS habilitado.
+  - [x] Crear bucket de almacenamiento público `relax-media` en Supabase con políticas de lectura pública y escritura/borrado `service_role`.
+  - [x] Migrar y sembrar 100% de datos desde `data/content.json` hacia Supabase (4 paquetes, 0 ofertas, 10 blog posts, settings de agencia y chatbot).
+  - [x] Migrar y respaldar imágenes existentes en el bucket `relax-media`.
+  - [x] Auditoría de seguridad con `get_advisors`: 0 alertas de seguridad.
+- [x] **Backend & Repositorio de Contenido (`backend-ia-engineer`)**:
+  - [x] Implementar `api/ContentRepository.php` con patrón *Write-Through Caching*, bloqueo atómico con `flock`, `fsync()` y *Graceful Degradation*.
+  - [x] Implementar soporte de almacenamiento dual (disco local + bucket `relax-media`) en `SupabaseClient.php` (soporte de borrado con JSON payload `{"prefixes": [...]}`).
+  - [x] Crear endpoint `api/content.php` (`/api/content`) que sirve el JSON hidratado desde caché / Supabase.
+  - [x] Conectar `includes/header.php` y `api/GeminiClient.php` con `ContentRepository`.
+- [x] **Backoffice y Gestión de Ciclo de Vida de Medios (`admin-sync-engineer`)**:
+  - [x] Refactorizar `admin/index.php` para realizar CRUD mediante `ContentRepository`.
+  - [x] Implementar borrado y reemplazo sincronizado de imágenes: al modificar o eliminar un paquete, oferta o post, se elimina la imagen anterior del disco local y del bucket `relax-media`.
+  - [x] Soporte para imágenes inline de artículos de blog (`images/blog-content/`).
+  - [x] Agregar botón de descarga de backup (`?action=export_backup`) y reconstrucción manual de caché (`?action=rebuild_cache`).
+  - [x] Mantener generación estática de páginas de blog (`blog/*.html`) y actualización de `sitemap.xml` para SEO según requerimiento explícito del usuario.
+- [x] **Frontend Resiliente y Desacoplamiento Git (`frontend-widget-engineer` + Orquestador)**:
+  - [x] Actualizar `js/main.js`, `blog/index.php` y `blog/post.php` con fallback inteligente (`data/content.json` -> `api/content` -> `api/content.php`).
+  - [x] Agregar estado vacío elegante para ofertas flash cuando no haya items cargados.
+  - [x] Configurar `.gitignore` para ignorar `data/content.json`, `.lock`, `.tmp.*` y carpetas de uploads, manteniendo `.gitkeep`.
+  - [x] Crear `data/content.example.json` como plantilla base para el repositorio.
+  - [x] Desvincular `data/content.json` del índice de Git sin borrarlo del disco (`git rm --cached`).
+  - [x] Commit y Push a `origin/main` (`5bd2ce3`).
+  - [x] Verificación en vivo en producción Hostinger (`https://relaxtours.com.ar/api/content` → HTTP 200 OK y admin funcional).
