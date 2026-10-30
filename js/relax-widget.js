@@ -337,7 +337,7 @@
         ? "Hola Relax Tours! Soy " +
           firstName +
           ", estuve navegando en la web y quería hacer una consulta."
-        : "¡Hola! Soy Atlas de Relax Tours, ¿en qué puedo ayudarte hoy?";
+        : "¡Estuve navegando en la web y quería hacer una consulta.";
     }
 
     const rawNum =
