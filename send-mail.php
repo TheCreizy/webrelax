@@ -4,51 +4,63 @@ use PHPMailer\PHPMailer\Exception;
 use PHPMailer\PHPMailer\SMTP;
 
 // 1. Cargar la librería PHPMailer
-require 'PHPMailer/PHPMailer-master/src/Exception.php';
-require 'PHPMailer/PHPMailer-master/src/PHPMailer.php';
-require 'PHPMailer/PHPMailer-master/src/SMTP.php';
+require __DIR__ . '/PHPMailer/PHPMailer-master/src/Exception.php';
+require __DIR__ . '/PHPMailer/PHPMailer-master/src/PHPMailer.php';
+require __DIR__ . '/PHPMailer/PHPMailer-master/src/SMTP.php';
 
-// Cargar variables de entorno desde admin/.env si existe
-if (file_exists(__DIR__ . '/admin/.env')) {
-    $lineas = file(__DIR__ . '/admin/.env', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    foreach ($lineas as $linea) {
-        $linea = trim($linea);
-        if ($linea === '' || strpos($linea, '#') === 0 || strpos($linea, '=') === false)
-            continue;
-        list($name, $value) = explode('=', $linea, 2);
-        $_ENV[trim($name)] = trim($value, " \t\n\r\0\x0B\"");
-    }
-}
+// 2. Cargar variables de entorno desde includes/env-loader.php
+require_once __DIR__ . '/includes/env-loader.php';
 
-header('Content-Type: application/json');
+header('Content-Type: application/json; charset=utf-8');
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Soportar tanto $_POST tradicional (FormData) como body JSON (application/json desde el widget)
+    $requestData = $_POST;
+    $contentType = $_SERVER['CONTENT_TYPE'] ?? $_SERVER['HTTP_CONTENT_TYPE'] ?? '';
+    if (empty($requestData) || stripos($contentType, 'application/json') !== false) {
+        $rawJson = file_get_contents('php://input');
+        if (!empty($rawJson)) {
+            $decodedJson = json_decode($rawJson, true);
+            if (is_array($decodedJson)) {
+                $requestData = array_merge($requestData, $decodedJson);
+            }
+        }
+    }
+
     $mail = new PHPMailer(true);
-    $type = $_POST['form_type'] ?? '';
+    $type = $requestData['form_type'] ?? 'contacto';
 
     try {
         // --- CONFIGURACIÓN DEL SERVIDOR SMTP (Hostinger) ---
+        $smtpUser = env('SMTP_USER', 'noreply@relaxtours.com.ar');
+        $smtpPass = env('SMTP_PASS', '');
+
         $mail->isSMTP();
         $mail->Host = 'smtp.hostinger.com';          // Servidor SMTP de Hostinger
         $mail->SMTPAuth = true;
-        $mail->Username = $_ENV['SMTP_USER'] ?? 'noreply@relaxtours.com.ar';
-        $mail->Password = $_ENV['SMTP_PASS'] ?? '';
+        $mail->Username = $smtpUser;
+        $mail->Password = $smtpPass;
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;   // SSL
         $mail->Port = 465;                           // Puerto SSL
         $mail->CharSet = 'UTF-8';
 
         // Remitente obligatorio (debe coincidir con Username para evitar bloqueos)
-        $mail->setFrom($_ENV['SMTP_USER'] ?? 'noreply@relaxtours.com.ar', 'Relax Tours Web');
+        $mail->setFrom($smtpUser, 'Relax Tours Web');
 
-        // --- LÓGICA DE FORMULARIO DE CONTACTO ---
+        // --- LÓGICA DE FORMULARIO DE CONTACTO (Footer y Widget IA) ---
         if ($type === 'contacto') {
-            $nombre = strip_tags(trim($_POST['name'] ?? ''));
-            $email = filter_var(trim($_POST['email'] ?? ''), FILTER_SANITIZE_EMAIL);
-            $telefono = strip_tags(trim($_POST['phone'] ?? ''));
-            $consulta = strip_tags(trim($_POST['message'] ?? ''));
+            $nombre = strip_tags(trim((string) ($requestData['name'] ?? $requestData['full_name'] ?? '')));
+            $email = filter_var(trim((string) ($requestData['email'] ?? '')), FILTER_SANITIZE_EMAIL);
+            $telefono = strip_tags(trim((string) ($requestData['phone'] ?? '')));
+            $consulta = strip_tags(trim((string) ($requestData['message'] ?? '')));
+            $origen = strip_tags(trim((string) ($requestData['source'] ?? 'Web Relax Tours')));
 
             if (empty($nombre) || empty($email) || empty($consulta)) {
-                echo json_encode(['status' => 'error', 'message' => 'Campos obligatorios faltantes']);
+                echo json_encode([
+                    'ok' => false,
+                    'status' => 'error',
+                    'message' => 'Campos obligatorios faltantes'
+                ]);
                 exit;
             }
 
@@ -57,7 +69,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $mail->addReplyTo($email, $nombre);
             $mail->Subject = "Nuevo mensaje de contacto - Relax Tours Web";
 
-            $email_content = "Has recibido un nuevo mensaje de contacto desde la web.\n\n";
+            $email_content = "Has recibido un nuevo mensaje de contacto desde la web ($origen).\n\n";
             $email_content .= "Nombre Completo: $nombre\n";
             $email_content .= "Correo Electrónico: $email\n";
             $email_content .= "Teléfono: " . ($telefono ?: "No especificado") . "\n";
@@ -67,16 +79,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             // --- LÓGICA DE FORMULARIO DE ARREPENTIMIENTO ---
         } elseif ($type === 'arrepentimiento') {
-            $nombre = strip_tags(trim($_POST['name'] ?? ''));
-            $email = filter_var(trim($_POST['email'] ?? ''), FILTER_SANITIZE_EMAIL);
-            $fecha_compra = strip_tags(trim($_POST['purchase_date'] ?? ''));
-            $fecha_viaje = strip_tags(trim($_POST['travel_date'] ?? ''));
-            $reserva = strip_tags(trim($_POST['reservation_number'] ?? ''));
-            $servicio = strip_tags(trim($_POST['service'] ?? ''));
-            $motivo = strip_tags(trim($_POST['reason'] ?? ''));
+            $nombre = strip_tags(trim((string) ($requestData['name'] ?? '')));
+            $email = filter_var(trim((string) ($requestData['email'] ?? '')), FILTER_SANITIZE_EMAIL);
+            $fecha_compra = strip_tags(trim((string) ($requestData['purchase_date'] ?? '')));
+            $fecha_viaje = strip_tags(trim((string) ($requestData['travel_date'] ?? '')));
+            $reserva = strip_tags(trim((string) ($requestData['reservation_number'] ?? '')));
+            $servicio = strip_tags(trim((string) ($requestData['service'] ?? '')));
+            $motivo = strip_tags(trim((string) ($requestData['reason'] ?? '')));
 
             if (empty($nombre) || empty($email) || empty($fecha_compra) || empty($fecha_viaje) || empty($reserva) || empty($servicio) || empty($motivo)) {
-                echo json_encode(['status' => 'error', 'message' => 'Todos los campos son obligatorios']);
+                echo json_encode([
+                    'ok' => false,
+                    'status' => 'error',
+                    'message' => 'Todos los campos son obligatorios'
+                ]);
                 exit;
             }
 
@@ -98,25 +114,45 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $mail->Body = $email_content;
 
         } else {
-            echo json_encode(['status' => 'error', 'message' => 'Tipo de formulario no válido']);
+            echo json_encode([
+                'ok' => false,
+                'status' => 'error',
+                'message' => 'Tipo de formulario no válido'
+            ]);
             exit;
         }
 
         // Enviar el correo
         $mail->send();
 
-        // Respuesta exitosa según lo que espera tu main.js
+        // Respuesta exitosa retrocompatible con main.js ('status' => 'success') y con el nuevo widget ('ok' => true)
         if ($type === 'contacto') {
-            echo json_encode(['status' => 'success', 'message' => 'Gracias por contactarnos! Te responderemos a la brevedad!']);
+            echo json_encode([
+                'ok' => true,
+                'status' => 'success',
+                'message' => 'Gracias por contactarnos! Te responderemos a la brevedad!'
+            ]);
         } else {
-            echo json_encode(['status' => 'success', 'message' => 'Solicitud enviada correctamente. El equipo de ventas se contactará con usted.']);
+            echo json_encode([
+                'ok' => true,
+                'status' => 'success',
+                'message' => 'Solicitud enviada correctamente. El equipo de ventas se contactará con usted.'
+            ]);
         }
 
     } catch (Exception $e) {
         // Si PHPMailer falla, devuelve el error específico
-        echo json_encode(['status' => 'error', 'message' => "Hubo un error al enviar: {$mail->ErrorInfo}"]);
+        echo json_encode([
+            'ok' => false,
+            'status' => 'error',
+            'message' => "Hubo un error al enviar: {$mail->ErrorInfo}"
+        ]);
     }
 } else {
-    echo json_encode(['status' => 'error', 'message' => 'Acceso no permitido']);
+    echo json_encode([
+        'ok' => false,
+        'status' => 'error',
+        'message' => 'Acceso no permitido'
+    ]);
 }
 ?>

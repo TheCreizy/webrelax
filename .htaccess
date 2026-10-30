@@ -5,6 +5,9 @@ Options -Indexes
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
+    # Bloquear acceso web directo a documentación interna
+    RewriteRule ^docs/ - [F,L]
+
     # --- REDIRECCIONES 301 (SEO - URLs Viejas a Nuevas) ---
     # 1. Redirigir paquetes-elementor a la nueva sección de paquetes
     RewriteRule ^paquetes-elementor/?$ /paquetes [L,R=301]
@@ -65,8 +68,8 @@ Options -Indexes
 </IfModule>
 
 # 5. SEGURIDAD EXTRA (Protección de archivos y cabeceras)
-<FilesMatch "^\.">
-    # Proteger .env, .htaccess, .git, etc.
+<FilesMatch "(^\.|\.env|\.env\.example|SupabaseClient\.php|GeminiClient\.php|env-loader\.php)$">
+    # Proteger .env, .htaccess, .git y clases internas de backend
     <IfModule mod_authz_core.c>
         Require all denied
     </IfModule>

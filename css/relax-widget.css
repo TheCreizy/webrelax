@@ -1,0 +1,1262 @@
+/* ==========================================================================
+   RELAX TOURS — WIDGET OMNICANAL GLOBAL (css/relax-widget.css)
+   4 Canales: Chatbot IA (RAG) | WhatsApp | Correo Electrónico | Teléfono
+   ========================================================================== */
+
+:root {
+  --rw-orange: #f97316;
+  --rw-orange-light: #fb923c;
+  --rw-orange-dark: #ea580c;
+  --rw-orange-soft: rgba(249, 115, 22, 0.1);
+  --rw-dark: #0f0f0f;
+  --rw-dark-card: #18181b;
+  --rw-slate: #334155;
+  --rw-gray: #64748b;
+  --rw-gray-light: #f1f5f9;
+  --rw-border: #e2e8f0;
+  --rw-white: #ffffff;
+  --rw-whatsapp: #25d366;
+  --rw-whatsapp-dark: #128c7e;
+  --rw-green: #10b981;
+  --rw-red: #ef4444;
+  --rw-amber: #f59e0b;
+  --rw-font-heading: var(--font-heading, "Outfit", -apple-system, BlinkMacSystemFont, sans-serif);
+  --rw-font-body: var(--font-body, "Inter", -apple-system, BlinkMacSystemFont, sans-serif);
+  --rw-shadow-panel: 0 24px 60px -12px rgba(15, 15, 15, 0.28), 0 8px 24px -4px rgba(249, 115, 22, 0.12);
+  --rw-shadow-fab: 0 10px 28px rgba(249, 115, 22, 0.45), 0 4px 12px rgba(15, 15, 15, 0.18);
+  --rw-radius-panel: 24px;
+}
+
+/* Contenedor Raíz */
+.relax-widget-root {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9990;
+  font-family: var(--rw-font-body);
+  color: var(--rw-dark);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+.relax-widget-root *,
+.relax-widget-root *::before,
+.relax-widget-root *::after {
+  box-sizing: border-box;
+}
+
+/* ==========================================================================
+   BOTÓN FLOTANTE PRINCIPAL (.relax-omnifab) Y TOOLTIP
+   ========================================================================== */
+
+.relax-omnifab-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.relax-omnifab {
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, var(--rw-orange) 0%, var(--rw-orange-dark) 100%);
+  color: var(--rw-white);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--rw-shadow-fab);
+  position: relative;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+  outline: none;
+}
+
+.relax-omnifab::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--rw-orange), var(--rw-whatsapp));
+  opacity: 0.35;
+  z-index: -1;
+  animation: rwPulseRing 2.8s cubic-bezier(0.24, 0, 0.38, 1) infinite;
+}
+
+.relax-omnifab:hover {
+  transform: scale(1.07) translateY(-2px);
+  box-shadow: 0 14px 34px rgba(249, 115, 22, 0.55), 0 6px 16px rgba(15, 15, 15, 0.22);
+}
+
+.relax-omnifab:active {
+  transform: scale(0.96);
+}
+
+.relax-omnifab:focus-visible {
+  box-shadow: 0 0 0 3px var(--rw-white), 0 0 0 6px var(--rw-orange);
+}
+
+.relax-omnifab-icon {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
+}
+
+.relax-omnifab-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.relax-omnifab-icon--open {
+  opacity: 1;
+  transform: rotate(0deg) scale(1);
+}
+
+.relax-omnifab-icon--close {
+  opacity: 0;
+  transform: rotate(-90deg) scale(0.5);
+}
+
+.relax-widget-root.is-open .relax-omnifab {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.4);
+}
+
+.relax-widget-root.is-open .relax-omnifab::before {
+  animation: none;
+  opacity: 0;
+}
+
+.relax-widget-root.is-open .relax-omnifab-icon--open {
+  opacity: 0;
+  transform: rotate(90deg) scale(0.5);
+}
+
+.relax-widget-root.is-open .relax-omnifab-icon--close {
+  opacity: 1;
+  transform: rotate(0deg) scale(1);
+}
+
+/* Badge indicador online en el FAB */
+.relax-omnifab-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--rw-whatsapp);
+  border: 2.5px solid var(--rw-white);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Tooltip Flotante (.relax-omnifab-tooltip) */
+.relax-omnifab-tooltip {
+  position: absolute;
+  right: 76px;
+  bottom: 6px;
+  width: 270px;
+  background: var(--rw-white);
+  color: var(--rw-dark);
+  padding: 12px 32px 12px 16px;
+  border-radius: 16px 16px 4px 16px;
+  box-shadow: 0 12px 32px rgba(15, 15, 15, 0.16), 0 2px 6px rgba(15, 15, 15, 0.06);
+  border: 1px solid rgba(249, 115, 22, 0.18);
+  font-size: 13.5px;
+  font-weight: 500;
+  line-height: 1.4;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(8px) scale(0.96);
+  transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), visibility 0.3s;
+  pointer-events: none;
+  cursor: pointer;
+}
+
+.relax-omnifab-tooltip.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.relax-widget-root.is-open .relax-omnifab-tooltip {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+.relax-omnifab-tooltip-text {
+  margin: 0;
+  color: #1e293b;
+}
+
+.relax-omnifab-tooltip-text strong {
+  color: var(--rw-orange-dark);
+  font-weight: 700;
+}
+
+.relax-omnifab-tooltip-close {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, color 0.2s;
+}
+
+.relax-omnifab-tooltip-close:hover {
+  background: #f1f5f9;
+  color: var(--rw-dark);
+}
+
+@keyframes rwPulseRing {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.5;
+  }
+  70% {
+    transform: scale(1.25);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.25);
+    opacity: 0;
+  }
+}
+
+/* ==========================================================================
+   PANEL PRINCIPAL (.relax-widget-panel)
+   ========================================================================== */
+
+.relax-widget-panel {
+  position: absolute;
+  bottom: 78px;
+  right: 0;
+  width: 390px;
+  max-width: calc(100vw - 32px);
+  height: 580px;
+  max-height: calc(100vh - 110px);
+  background: var(--rw-white);
+  border-radius: var(--rw-radius-panel);
+  box-shadow: var(--rw-shadow-panel);
+  border: 1px solid rgba(15, 15, 15, 0.08);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(20px) scale(0.95);
+  transform-origin: bottom right;
+  transition: opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+              visibility 0.28s;
+}
+
+.relax-widget-root.is-open .relax-widget-panel {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+/* ==========================================================================
+   HEADER DEL PANEL Y NAVEGACIÓN OMNICANAL
+   ========================================================================== */
+
+.relax-widget-header {
+  background: linear-gradient(135deg, #141417 0%, #1f242d 55%, #ea580c 145%);
+  color: var(--rw-white);
+  padding: 16px 18px 14px;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.relax-widget-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.relax-widget-brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+}
+
+.relax-widget-back-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--rw-white);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.relax-widget-back-btn.is-visible {
+  display: inline-flex;
+}
+
+.relax-widget-back-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  transform: translateX(-2px);
+}
+
+.relax-widget-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--rw-orange) 0%, var(--rw-orange-dark) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--rw-font-heading);
+  font-weight: 800;
+  font-size: 16px;
+  color: var(--rw-white);
+  position: relative;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.35);
+}
+
+.relax-widget-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 10px;
+  padding: 3px;
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.relax-widget-status-dot {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--rw-whatsapp);
+  border: 2px solid #18181b;
+}
+
+.relax-widget-titles {
+  min-width: 0;
+}
+
+.relax-widget-title {
+  margin: 0;
+  font-family: var(--rw-font-heading);
+  font-size: 15.5px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--rw-white);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.relax-widget-subtitle {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.78);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.relax-widget-close-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.2s, color 0.2s;
+}
+
+.relax-widget-close-btn:hover {
+  background: rgba(255, 255, 255, 0.22);
+  color: var(--rw-white);
+}
+
+/* Barra rápida de navegación omnicanal */
+.relax-widget-nav {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.relax-widget-nav-btn {
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.82);
+  border-radius: 9px;
+  padding: 6px 4px;
+  font-family: var(--rw-font-body);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: background 0.2s, color 0.2s, transform 0.15s;
+}
+
+.relax-widget-nav-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  color: var(--rw-white);
+}
+
+.relax-widget-nav-btn.is-active {
+  background: var(--rw-orange);
+  color: var(--rw-white);
+  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.4);
+}
+
+/* ==========================================================================
+   CUERPO Y VISTAS INTERNAS
+   ========================================================================== */
+
+.relax-widget-body {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #f8fafc;
+}
+
+.relax-view {
+  display: none;
+  flex-direction: column;
+  flex: 1;
+  height: 100%;
+  overflow-y: auto;
+  animation: rwFadeInView 0.22s ease-out;
+}
+
+.relax-view.is-active {
+  display: flex;
+}
+
+@keyframes rwFadeInView {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==========================================================================
+   VISTA 0: MENÚ PRINCIPAL / SELECTOR OMNICANAL
+   ========================================================================== */
+
+.relax-menu-container {
+  padding: 18px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  flex: 1;
+}
+
+.relax-menu-intro {
+  background: var(--rw-white);
+  border: 1px solid var(--rw-border);
+  border-radius: 16px;
+  padding: 13px 15px;
+  box-shadow: 0 2px 8px rgba(15, 15, 15, 0.03);
+}
+
+.relax-menu-intro-title {
+  margin: 0 0 3px;
+  font-family: var(--rw-font-heading);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--rw-dark);
+}
+
+.relax-menu-intro-desc {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--rw-gray);
+}
+
+.relax-channel-card {
+  width: 100%;
+  text-align: left;
+  background: var(--rw-white);
+  border: 1px solid var(--rw-border);
+  border-radius: 16px;
+  padding: 13px 14px;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.relax-channel-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(15, 15, 15, 0.07);
+  border-color: rgba(249, 115, 22, 0.45);
+}
+
+.relax-channel-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.relax-channel-icon--ai {
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.16), rgba(234, 88, 12, 0.08));
+  color: var(--rw-orange-dark);
+}
+
+.relax-channel-icon--whatsapp {
+  background: rgba(37, 211, 102, 0.14);
+  color: #16a34a;
+}
+
+.relax-channel-icon--mail {
+  background: rgba(59, 130, 246, 0.12);
+  color: #2563eb;
+}
+
+.relax-channel-icon--phone {
+  background: rgba(20, 184, 166, 0.14);
+  color: #0d9488;
+}
+
+.relax-channel-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.relax-channel-title {
+  margin: 0;
+  font-family: var(--rw-font-heading);
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--rw-dark);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.relax-channel-tag {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 99px;
+  background: var(--rw-orange-soft);
+  color: var(--rw-orange-dark);
+  letter-spacing: 0.03em;
+}
+
+.relax-channel-desc {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--rw-gray);
+  line-height: 1.35;
+}
+
+.relax-channel-arrow {
+  color: #94a3b8;
+  font-size: 18px;
+  transition: transform 0.2s, color 0.2s;
+}
+
+.relax-channel-card:hover .relax-channel-arrow {
+  transform: translateX(3px);
+  color: var(--rw-orange);
+}
+
+.relax-menu-footer {
+  margin-top: auto;
+  text-align: center;
+  font-size: 11px;
+  color: #94a3b8;
+  padding-top: 4px;
+}
+
+/* ==========================================================================
+   VISTA 1A: PANTALLA PRE-CHAT (GATEKEEPER DE LEADS)
+   ========================================================================== */
+
+.relax-prechat-wrap {
+  padding: 18px 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.relax-prechat-card {
+  background: var(--rw-white);
+  border-radius: 18px;
+  padding: 18px 16px;
+  border: 1px solid var(--rw-border);
+  box-shadow: 0 4px 14px rgba(15, 15, 15, 0.04);
+}
+
+.relax-prechat-header {
+  margin-bottom: 14px;
+}
+
+.relax-prechat-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--rw-orange-dark);
+  background: var(--rw-orange-soft);
+  padding: 3px 9px;
+  border-radius: 99px;
+  margin-bottom: 6px;
+}
+
+.relax-prechat-title {
+  margin: 0 0 4px;
+  font-family: var(--rw-font-heading);
+  font-size: 16.5px;
+  font-weight: 700;
+  color: var(--rw-dark);
+}
+
+.relax-prechat-subtitle {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--rw-gray);
+  line-height: 1.4;
+}
+
+.relax-form-group {
+  margin-bottom: 12px;
+}
+
+.relax-form-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--rw-slate);
+  margin-bottom: 5px;
+}
+
+.relax-form-input,
+.relax-form-select,
+.relax-form-textarea {
+  width: 100%;
+  border: 1.5px solid var(--rw-border);
+  border-radius: 11px;
+  padding: 9px 12px;
+  font-family: var(--rw-font-body);
+  font-size: 13.5px;
+  color: var(--rw-dark);
+  background: #ffffff;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+}
+
+.relax-form-input:focus,
+.relax-form-select:focus,
+.relax-form-textarea:focus {
+  border-color: var(--rw-orange);
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.14);
+}
+
+.relax-form-input.has-error,
+.relax-form-textarea.has-error {
+  border-color: var(--rw-red);
+  background: #fef2f2;
+}
+
+.relax-phone-row {
+  display: grid;
+  grid-template-columns: 112px 1fr;
+  gap: 8px;
+}
+
+.relax-form-help {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  color: #64748b;
+}
+
+.relax-field-error {
+  display: none;
+  margin-top: 4px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--rw-red);
+}
+
+.relax-field-error.is-visible {
+  display: block;
+}
+
+.relax-btn-primary {
+  width: 100%;
+  border: none;
+  border-radius: 12px;
+  padding: 11px 16px;
+  background: linear-gradient(135deg, var(--rw-orange) 0%, var(--rw-orange-dark) 100%);
+  color: var(--rw-white);
+  font-family: var(--rw-font-heading);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 6px 18px rgba(249, 115, 22, 0.32);
+  transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+}
+
+.relax-btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 22px rgba(249, 115, 22, 0.42);
+}
+
+.relax-btn-primary:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.relax-privacy-note {
+  margin-top: 10px;
+  font-size: 11px;
+  color: #64748b;
+  text-align: center;
+  line-height: 1.35;
+}
+
+/* ==========================================================================
+   VISTA 1B: PANTALLA DE CONVERSACIÓN CHAT IA
+   ========================================================================== */
+
+.relax-chat-stage {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  height: 100%;
+  overflow: hidden;
+}
+
+.relax-chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 14px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  scroll-behavior: smooth;
+}
+
+.relax-msg {
+  max-width: 85%;
+  padding: 10px 13px;
+  border-radius: 16px;
+  font-size: 13.2px;
+  line-height: 1.48;
+  word-wrap: break-word;
+  position: relative;
+  animation: rwFadeInView 0.2s ease-out;
+}
+
+.relax-msg p {
+  margin: 0 0 6px;
+}
+
+.relax-msg p:last-child {
+  margin-bottom: 0;
+}
+
+.relax-msg ul {
+  margin: 4px 0 6px 16px;
+  padding: 0;
+}
+
+.relax-msg li {
+  margin-bottom: 3px;
+}
+
+.relax-msg--model {
+  align-self: flex-start;
+  background: var(--rw-white);
+  color: var(--rw-dark);
+  border: 1px solid var(--rw-border);
+  border-bottom-left-radius: 4px;
+  box-shadow: 0 2px 6px rgba(15, 15, 15, 0.04);
+}
+
+.relax-msg--user {
+  align-self: flex-end;
+  background: linear-gradient(135deg, var(--rw-orange) 0%, var(--rw-orange-dark) 100%);
+  color: var(--rw-white);
+  border-bottom-right-radius: 4px;
+  box-shadow: 0 3px 10px rgba(249, 115, 22, 0.25);
+}
+
+.relax-msg a {
+  color: var(--rw-orange-dark);
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.relax-msg--user a {
+  color: var(--rw-white);
+}
+
+/* Botón embebido en burbuja (ej. cuando hay Rate Limit / derivación a WhatsApp) */
+.relax-msg-wa-cta {
+  margin-top: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--rw-whatsapp);
+  color: var(--rw-white) !important;
+  text-decoration: none !important;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 7px 12px;
+  border-radius: 99px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(37, 211, 102, 0.3);
+}
+
+.relax-msg-wa-cta:hover {
+  background: var(--rw-whatsapp-dark);
+}
+
+/* Indicador "Escribiendo..." */
+.relax-typing {
+  align-self: flex-start;
+  background: var(--rw-white);
+  border: 1px solid var(--rw-border);
+  border-radius: 16px 16px 16px 4px;
+  padding: 10px 14px;
+  display: none;
+  align-items: center;
+  gap: 5px;
+  width: fit-content;
+  margin: 0 14px 6px;
+}
+
+.relax-typing.is-visible {
+  display: inline-flex;
+}
+
+.relax-typing-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--rw-orange);
+  animation: rwTypingBounce 1.3s infinite ease-in-out;
+}
+
+.relax-typing-dot:nth-child(2) {
+  animation-delay: 0.18s;
+}
+
+.relax-typing-dot:nth-child(3) {
+  animation-delay: 0.36s;
+}
+
+@keyframes rwTypingBounce {
+  0%, 80%, 100% {
+    transform: scale(0.65);
+    opacity: 0.45;
+  }
+  40% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+}
+
+/* Chips Rápidos */
+.relax-quick-chips {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 6px 12px 8px;
+  background: #f8fafc;
+  border-top: 1px solid rgba(226, 232, 240, 0.7);
+  scrollbar-width: none;
+  flex-shrink: 0;
+}
+
+.relax-quick-chips::-webkit-scrollbar {
+  display: none;
+}
+
+.relax-chip {
+  border: 1px solid rgba(249, 115, 22, 0.3);
+  background: var(--rw-white);
+  color: var(--rw-slate);
+  border-radius: 99px;
+  padding: 5px 11px;
+  font-family: var(--rw-font-body);
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  flex-shrink: 0;
+}
+
+.relax-chip:hover {
+  background: var(--rw-orange);
+  color: var(--rw-white);
+  border-color: var(--rw-orange);
+}
+
+/* Input Inferior del Chat */
+.relax-chat-Composer {
+  background: var(--rw-white);
+  border-top: 1px solid var(--rw-border);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.relax-chat-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.relax-chat-input {
+  flex: 1;
+  border: 1.5px solid var(--rw-border);
+  border-radius: 99px;
+  padding: 9px 14px;
+  font-family: var(--rw-font-body);
+  font-size: 13.2px;
+  color: var(--rw-dark);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.relax-chat-input:focus {
+  border-color: var(--rw-orange);
+}
+
+.relax-chat-send {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, var(--rw-orange) 0%, var(--rw-orange-dark) 100%);
+  color: var(--rw-white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 0.18s, opacity 0.18s;
+}
+
+.relax-chat-send:hover:not(:disabled) {
+  transform: scale(1.06);
+}
+
+.relax-chat-send:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.relax-chat-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 6px;
+  font-size: 10.5px;
+  color: #94a3b8;
+}
+
+/* ==========================================================================
+   VISTA 3: CORREO ELECTRÓNICO
+   ========================================================================== */
+
+.relax-mail-wrap {
+  padding: 16px 18px 20px;
+}
+
+.relax-mail-card {
+  background: var(--rw-white);
+  border: 1px solid var(--rw-border);
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow: 0 4px 14px rgba(15, 15, 15, 0.04);
+}
+
+.relax-alert {
+  display: none;
+  padding: 10px 12px;
+  border-radius: 11px;
+  font-size: 12.5px;
+  font-weight: 500;
+  margin-top: 10px;
+}
+
+.relax-alert.is-visible {
+  display: block;
+}
+
+.relax-alert--success {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.relax-alert--error {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+/* ==========================================================================
+   VISTA 4: LLAMADA TELEFÓNICA (HORARIO COMERCIAL ARGENTINA)
+   ========================================================================== */
+
+.relax-phone-wrap {
+  padding: 18px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.relax-phone-card {
+  background: var(--rw-white);
+  border: 1px solid var(--rw-border);
+  border-radius: 18px;
+  padding: 20px 16px;
+  text-align: center;
+  box-shadow: 0 4px 16px rgba(15, 15, 15, 0.04);
+}
+
+.relax-phone-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.relax-phone-status-badge.is-open {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+
+.relax-phone-status-badge.is-closed {
+  background: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+.relax-phone-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.relax-phone-status-badge.is-open .relax-phone-status-dot {
+  background: #10b981;
+}
+
+.relax-phone-status-badge.is-closed .relax-phone-status-dot {
+  background: #f59e0b;
+}
+
+.relax-phone-number {
+  font-family: var(--rw-font-heading);
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--rw-dark);
+  margin: 4px 0 8px;
+  letter-spacing: -0.02em;
+}
+
+.relax-phone-message {
+  font-size: 13px;
+  color: var(--rw-slate);
+  margin: 0 0 14px;
+  line-height: 1.45;
+}
+
+.relax-phone-schedule {
+  background: #f8fafc;
+  border: 1px solid var(--rw-border);
+  border-radius: 12px;
+  padding: 11px 12px;
+  text-align: left;
+  font-size: 12px;
+  color: var(--rw-slate);
+  margin-bottom: 16px;
+}
+
+.relax-phone-schedule-title {
+  font-weight: 700;
+  color: var(--rw-dark);
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.relax-phone-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.relax-btn-call {
+  width: 100%;
+  border: none;
+  border-radius: 12px;
+  padding: 11px 16px;
+  background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+  color: var(--rw-white);
+  font-family: var(--rw-font-heading);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.relax-btn-whatsapp {
+  width: 100%;
+  border: none;
+  border-radius: 12px;
+  padding: 11px 16px;
+  background: var(--rw-whatsapp);
+  color: var(--rw-white);
+  font-family: var(--rw-font-heading);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 14px rgba(37, 211, 102, 0.3);
+  transition: background 0.2s, transform 0.2s;
+}
+
+.relax-btn-whatsapp:hover {
+  background: var(--rw-whatsapp-dark);
+  transform: translateY(-1px);
+}
+
+.relax-btn-secondary {
+  width: 100%;
+  border: 1.5px solid var(--rw-border);
+  border-radius: 12px;
+  padding: 10px 16px;
+  background: var(--rw-white);
+  color: var(--rw-dark);
+  font-family: var(--rw-font-heading);
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.relax-btn-secondary:hover {
+  border-color: var(--rw-orange);
+  background: var(--rw-orange-soft);
+}
+
+/* ==========================================================================
+   RESPONSIVE MOBILE (@media max-width: 480px)
+   ========================================================================== */
+
+@media (max-width: 480px) {
+  .relax-widget-root {
+    bottom: 16px;
+    right: 16px;
+  }
+
+  .relax-omnifab {
+    width: 58px;
+    height: 58px;
+  }
+
+  .relax-omnifab-tooltip {
+    right: 68px;
+    width: calc(100vw - 104px);
+    max-width: 250px;
+    font-size: 12.5px;
+  }
+
+  .relax-widget-panel {
+    position: fixed;
+    bottom: 84px;
+    right: 12px;
+    left: 12px;
+    width: auto;
+    max-width: none;
+    height: calc(100vh - 104px);
+    max-height: 620px;
+    border-radius: 20px;
+  }
+}

@@ -617,7 +617,8 @@ async function handleFormSubmit(form, statusId) {
 
   try {
     const formData = new FormData(form);
-    const response = await fetch('send-mail.php', {
+    const basePath = window.location.pathname.includes('/blog/') ? '../' : '';
+    const response = await fetch(basePath + 'send-mail.php', {
       method: 'POST',
       body: formData
     });

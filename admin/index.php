@@ -6,22 +6,15 @@
 
 session_start();
 
-// --- CARGAR VARIABLES DE ENTORNO DESDE .ENV ---
-if (file_exists(__DIR__ . '/.env')) {
-    $lineas = file(__DIR__ . '/.env', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    foreach ($lineas as $linea) {
-        $linea = trim($linea);
-        if ($linea === '' || strpos($linea, '#') === 0 || strpos($linea, '=') === false)
-            continue;
-        list($name, $value) = explode('=', $linea, 2);
-        $_ENV[trim($name)] = trim($value, " \t\n\r\0\x0B\"");
-    }
-}
+// --- CARGAR VARIABLES DE ENTORNO Y CLIENTES IA / SUPABASE ---
+require_once __DIR__ . '/../includes/env-loader.php';
+require_once __DIR__ . '/../api/SupabaseClient.php';
+require_once __DIR__ . '/../api/GeminiClient.php';
 
 // Configuración
 define('DATA_FILE', __DIR__ . '/../data/content.json');
-define('ADMIN_USER', $_ENV['ADMIN_USER'] ?? 'admin_por_defecto');
-define('ADMIN_PASS', $_ENV['ADMIN_PASS'] ?? 'pass_por_defecto');
+define('ADMIN_USER', env('ADMIN_USER', 'admin_por_defecto'));
+define('ADMIN_PASS', env('ADMIN_PASS', 'pass_por_defecto'));
 
 // PHPMailer initialization
 use PHPMailer\PHPMailer\PHPMailer;
@@ -35,7 +28,7 @@ require __DIR__ . '/../PHPMailer/PHPMailer-master/src/SMTP.php';
 function loadData()
 {
     if (!file_exists(DATA_FILE)) {
-        return ['paquetes' => [], 'ofertas' => [], 'blog' => [], 'config' => []];
+        return ['paquetes' => [], 'ofertas' => [], 'blog' => [], 'config' => [], 'chatbot_general_info' => ''];
     }
     return json_decode(file_get_contents(DATA_FILE), true);
 }
@@ -52,6 +45,205 @@ function generateId()
 function slugify($text)
 {
     return trim(preg_replace('/[^a-z0-9]+/', '-', strtolower($text)), '-');
+}
+
+/**
+ * Genera el texto estructurado limpio en Markdown de un Paquete Destacado para vectorización RAG.
+ */
+function formatPaqueteMarkdown(array $p): string
+{
+    $nombre   = trim((string) ($p['nombre'] ?? 'Paquete Turístico'));
+    $destino  = trim((string) ($p['destino'] ?? ''));
+    $duracion = trim((string) ($p['duracion'] ?? ''));
+    $moneda   = trim((string) ($p['moneda'] ?? 'USD'));
+    $precio   = isset($p['precio']) ? number_format((float) $p['precio'], 0, ',', '.') : 'Consultar';
+    $incluye  = (!empty($p['incluye']) && is_array($p['incluye']))
+        ? implode(', ', $p['incluye'])
+        : (string) ($p['incluye'] ?? 'Consultar servicios incluidos');
+    $vigencia = trim((string) ($p['vigencia_hasta'] ?? ''));
+    $infoBot  = trim((string) ($p['info_bot'] ?? ''));
+
+    $lines = [
+        "Categoría: Paquete Destacado",
+        "Título: {$nombre}",
+        "Destino: {$destino}",
+        "Duración: {$duracion}",
+        "Incluye: {$incluye}",
+        "Precio desde: {$moneda} \${$precio} por persona (tarifa referencial sujeta a disponibilidad y modificaciones al momento de reservar).",
+    ];
+
+    if ($vigencia !== '') {
+        $lines[] = "Vigencia hasta: {$vigencia}";
+    }
+    if ($infoBot !== '') {
+        $lines[] = "Información adicional del paquete: {$infoBot}";
+    }
+
+    return implode("\n", $lines);
+}
+
+/**
+ * Genera el texto estructurado limpio en Markdown de una Oferta Flash para vectorización RAG.
+ */
+function formatOfertaMarkdown(array $o): string
+{
+    $titulo      = trim((string) ($o['titulo'] ?? 'Oferta Flash'));
+    $descripcion = trim((string) ($o['descripcion'] ?? ''));
+    $badge       = trim((string) ($o['badge'] ?? ''));
+    $tiempo      = trim((string) ($o['tiempo'] ?? ''));
+    $vigencia    = trim((string) ($o['vigencia_hasta'] ?? ''));
+    $infoBot     = trim((string) ($o['info_bot'] ?? ''));
+
+    $lines = [
+        "Categoría: Oferta Flash / Promoción Especial",
+        "Título: {$titulo}",
+        "Descripción: {$descripcion}",
+    ];
+
+    if ($badge !== '') {
+        $lines[] = "Etiqueta promocional: {$badge}";
+    }
+    if ($tiempo !== '') {
+        $lines[] = "Duración de la oferta / Cupos: {$tiempo} (sujeto a disponibilidad al momento de reservar)";
+    }
+    if ($vigencia !== '') {
+        $lines[] = "Vigencia hasta: {$vigencia}";
+    }
+    if ($infoBot !== '') {
+        $lines[] = "Información adicional de la oferta: {$infoBot}";
+    }
+
+    return implode("\n", $lines);
+}
+
+/**
+ * Limpia <style> y <script> del HTML de un artículo del blog y devuelve un resumen estructurado (máx ~2500 caracteres).
+ */
+function formatBlogMarkdown(array $b): string
+{
+    $titulo   = trim((string) ($b['titulo'] ?? 'Artículo del Blog'));
+    $extracto = trim((string) ($b['extracto'] ?? ''));
+    $fecha    = trim((string) ($b['fecha'] ?? ''));
+    $slug     = trim((string) ($b['slug'] ?? ''));
+    $rawHtml  = (string) ($b['contenido'] ?? '');
+
+    // Eliminar bloques <style> y <script> completos
+    $clean = preg_replace('#<style\b[^>]*>.*?</style>#is', ' ', $rawHtml);
+    $clean = preg_replace('#<script\b[^>]*>.*?</script>#is', ' ', (string) $clean);
+    $clean = preg_replace('#<!--.*?-->#s', ' ', (string) $clean);
+
+    // Convertir cierres de bloque y saltos en saltos de línea legibles
+    $clean = preg_replace('#<(br|hr)\b[^>]*>#i', "\n", (string) $clean);
+    $clean = preg_replace('#</(p|div|h1|h2|h3|h4|li|tr|table|ul|ol|blockquote)>#i', "\n", (string) $clean);
+    $clean = preg_replace('#<li\b[^>]*>#i', "- ", (string) $clean);
+    $clean = preg_replace('#<t[dh]\b[^>]*>#i', " | ", (string) $clean);
+
+    $text = strip_tags((string) $clean);
+    $text = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+
+    // Normalizar espacios y líneas múltiples
+    $text = preg_replace('/[ \t]+/', ' ', $text);
+    $text = preg_replace('/\n\s*\n+/', "\n", $text);
+    $text = trim((string) $text);
+
+    if (function_exists('mb_substr')) {
+        $text = mb_substr($text, 0, 2200, 'UTF-8');
+    } else {
+        $text = substr($text, 0, 2200);
+    }
+
+    $lines = [
+        "Categoría: Guía y Consejos de Viaje (Blog Relax Tours)",
+        "Título: {$titulo}",
+    ];
+    if ($fecha !== '') {
+        $lines[] = "Fecha de publicación: {$fecha}";
+    }
+    if ($slug !== '') {
+        $lines[] = "URL del artículo: https://www.relaxtours.com.ar/blog/{$slug}";
+    }
+    if ($extracto !== '') {
+        $lines[] = "Resumen: {$extracto}";
+    }
+    if ($text !== '') {
+        $lines[] = "Contenido clave:\n{$text}";
+    }
+
+    $result = implode("\n", $lines);
+    if (function_exists('mb_substr')) {
+        return mb_substr($result, 0, 2500, 'UTF-8');
+    }
+    return substr($result, 0, 2500);
+}
+
+/**
+ * Genera el vector de embedding con Gemini y realiza upsert en Supabase public.knowledge_base.
+ * Nunca lanza excepciones fatales para no interrumpir el flujo del Backoffice.
+ *
+ * @return array{ok: bool, error: string}
+ */
+function syncSingleItemToSupabase(
+    string $externalId,
+    string $category,
+    string $title,
+    string $markdown,
+    ?string $validUntil,
+    array $metadata,
+    bool $isActive
+): array {
+    try {
+        $supabase = new SupabaseClient();
+        $gemini   = new GeminiClient();
+
+        if (!$supabase->isConfigured()) {
+            return ['ok' => false, 'error' => 'Supabase no está configurado (falta SUPABASE_URL o SUPABASE_SECRET_KEY).'];
+        }
+        if (!$gemini->isConfigured()) {
+            return ['ok' => false, 'error' => 'Gemini no está configurado (falta GEMINI_API_KEY).'];
+        }
+
+        $embedding = $gemini->generateEmbedding($markdown, 'RETRIEVAL_DOCUMENT');
+        if (!is_array($embedding) || empty($embedding)) {
+            return ['ok' => false, 'error' => 'Error al generar embedding en Gemini: ' . $gemini->getLastError()];
+        }
+
+        $validDate = (!empty($validUntil) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $validUntil)) ? $validUntil : null;
+
+        $ok = $supabase->upsertKnowledge(
+            $externalId,
+            $category,
+            $title,
+            $markdown,
+            $validDate,
+            $metadata,
+            $embedding,
+            $isActive
+        );
+
+        if (!$ok) {
+            return ['ok' => false, 'error' => 'Error al guardar en Supabase: ' . $supabase->getLastError()];
+        }
+
+        return ['ok' => true, 'error' => ''];
+    } catch (\Throwable $e) {
+        return ['ok' => false, 'error' => 'Excepción en sincronización: ' . $e->getMessage()];
+    }
+}
+
+/**
+ * Elimina un documento vectorizado de Supabase según su external_id en segundo plano.
+ */
+function deleteSingleItemFromSupabase(string $externalId): bool
+{
+    try {
+        $supabase = new SupabaseClient();
+        if (!$supabase->isConfigured()) {
+            return false;
+        }
+        return $supabase->deleteKnowledgeByExternalId($externalId);
+    } catch (\Throwable $e) {
+        return false;
+    }
 }
 
 function processAndConvertWebP($sourcePath, $destinationPath, $maxWidth = 1200, $quality = 80)
@@ -183,7 +375,9 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 'popular' => isset($_POST['popular']),
                 'activo' => isset($_POST['activo']),
                 'operador' => !empty($_POST['operador']) ? $_POST['operador'] : 'Sin información',
-                'comentarios' => !empty($_POST['comentarios']) ? $_POST['comentarios'] : 'Sin información'
+                'comentarios' => !empty($_POST['comentarios']) ? $_POST['comentarios'] : 'Sin información',
+                'vigencia_hasta' => !empty($_POST['vigencia_hasta']) ? trim($_POST['vigencia_hasta']) : null,
+                'info_bot' => !empty($_POST['info_bot']) ? trim($_POST['info_bot']) : ''
             ];
             $imgErr = '';
             if (!empty($_FILES['imagen_file']['name'])) {
@@ -211,6 +405,23 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!$found)
                 array_unshift($data['paquetes'], $paquete); // Add to beginning (Newest First)
             saveData($data);
+
+            // Sincronización automática en segundo plano con Supabase (si está configurado)
+            syncSingleItemToSupabase(
+                'paquete_' . $paquete['id'],
+                'paquete',
+                $paquete['nombre'] . ' - ' . $paquete['destino'],
+                formatPaqueteMarkdown($paquete),
+                $paquete['vigencia_hasta'],
+                [
+                    'id'      => $paquete['id'],
+                    'destino' => $paquete['destino'],
+                    'precio'  => $paquete['precio'],
+                    'moneda'  => $paquete['moneda'],
+                ],
+                (bool) $paquete['activo']
+            );
+
             $redirectUrl = 'Location: index.php?tab=paquetes&msg=guardado';
             if (!empty($imgErr)) {
                 $redirectUrl .= '&img_err=' . urlencode($imgErr);
@@ -230,6 +441,9 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             $data['paquetes'] = array_values(array_filter($data['paquetes'], fn($p) => $p['id'] !== $_POST['id']));
             saveData($data);
+            if (!empty($_POST['id'])) {
+                deleteSingleItemFromSupabase('paquete_' . $_POST['id']);
+            }
             header('Location: index.php?tab=paquetes&msg=eliminado');
             exit;
 
@@ -245,7 +459,9 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 'tiempo' => $_POST['tiempo'],
                 'activa' => isset($_POST['activa']),
                 'operador' => !empty($_POST['operador']) ? $_POST['operador'] : 'Sin información',
-                'comentarios' => !empty($_POST['comentarios']) ? $_POST['comentarios'] : 'Sin información'
+                'comentarios' => !empty($_POST['comentarios']) ? $_POST['comentarios'] : 'Sin información',
+                'vigencia_hasta' => !empty($_POST['vigencia_hasta']) ? trim($_POST['vigencia_hasta']) : null,
+                'info_bot' => !empty($_POST['info_bot']) ? trim($_POST['info_bot']) : ''
             ];
             $imgErr = '';
             if (!empty($_FILES['imagen_file']['name'])) {
@@ -273,6 +489,21 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!$found)
                 array_unshift($data['ofertas'], $oferta); // Add to beginning (Newest First)
             saveData($data);
+
+            // Sincronización automática en segundo plano con Supabase (si está configurado)
+            syncSingleItemToSupabase(
+                'oferta_' . $oferta['id'],
+                'oferta',
+                $oferta['titulo'],
+                formatOfertaMarkdown($oferta),
+                $oferta['vigencia_hasta'],
+                [
+                    'id'     => $oferta['id'],
+                    'badge'  => $oferta['badge'],
+                    'tiempo' => $oferta['tiempo'],
+                ],
+                (bool) $oferta['activa']
+            );
 
             // Send Email if New Offer
             $mailMsg = 'guardado';
@@ -339,6 +570,9 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             $data['ofertas'] = array_values(array_filter($data['ofertas'], fn($o) => $o['id'] !== $_POST['id']));
             saveData($data);
+            if (!empty($_POST['id'])) {
+                deleteSingleItemFromSupabase('oferta_' . $_POST['id']);
+            }
             header('Location: index.php?tab=ofertas&msg=eliminado');
             exit;
 
@@ -401,6 +635,22 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 generateBlogPage($activePosts[$currentIdx + 1], $data['config'], $data['blog']);
             }
             updateSitemap($data);
+
+            // Sincronización automática en segundo plano con Supabase
+            syncSingleItemToSupabase(
+                'blog_' . $blog['id'],
+                'blog',
+                $blog['titulo'],
+                formatBlogMarkdown($blog),
+                null,
+                [
+                    'id'    => $blog['id'],
+                    'slug'  => $blog['slug'],
+                    'fecha' => $blog['fecha'],
+                ],
+                (bool) $blog['activo']
+            );
+
             $redirectUrl = 'Location: index.php?tab=blog&msg=guardado';
             if (!empty($imgErr)) {
                 $redirectUrl .= '&img_err=' . urlencode($imgErr);
@@ -431,6 +681,9 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
             $data['blog'] = array_values(array_filter($data['blog'], fn($b) => $b['id'] !== $_POST['id']));
             saveData($data);
             updateSitemap($data);
+            if (!empty($_POST['id'])) {
+                deleteSingleItemFromSupabase('blog_' . $_POST['id']);
+            }
             header('Location: index.php?tab=blog&msg=eliminado');
             exit;
 
@@ -450,6 +703,151 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
             ];
             saveData($data);
             header('Location: index.php?tab=config&msg=guardado');
+            exit;
+
+        case 'save_chatbot_info':
+            $data['chatbot_general_info'] = trim((string) ($_POST['chatbot_general_info'] ?? ''));
+            saveData($data);
+
+            if ($data['chatbot_general_info'] !== '') {
+                syncSingleItemToSupabase(
+                    'agency_general_coris',
+                    'agencia',
+                    'Información General de Relax Tours y Asistencia Coris',
+                    $data['chatbot_general_info'],
+                    null,
+                    ['type' => 'general_info'],
+                    true
+                );
+            }
+
+            header('Location: index.php?tab=chatbot&msg=guardado');
+            exit;
+
+        case 'sync_all_supabase':
+            $supabase = new SupabaseClient();
+            $gemini   = new GeminiClient();
+
+            if (!$gemini->isConfigured()) {
+                header('Location: index.php?tab=chatbot&msg=sync_error&err=' . urlencode('Falta configurar GEMINI_API_KEY en admin/.env.'));
+                exit;
+            }
+            if (!$supabase->isConfigured()) {
+                header('Location: index.php?tab=chatbot&msg=sync_error&err=' . urlencode('Falta configurar SUPABASE_URL o SUPABASE_SECRET_KEY en admin/.env.'));
+                exit;
+            }
+
+            $syncedCount = 0;
+            $errorsList  = [];
+
+            // 1. Conocimiento General de la Agencia y Asistencia Coris
+            $generalInfo = trim((string) ($data['chatbot_general_info'] ?? ''));
+            if ($generalInfo !== '') {
+                $res = syncSingleItemToSupabase(
+                    'agency_general_coris',
+                    'agencia',
+                    'Información General de Relax Tours y Asistencia Coris',
+                    $generalInfo,
+                    null,
+                    ['type' => 'general_info'],
+                    true
+                );
+                if ($res['ok']) {
+                    $syncedCount++;
+                } else {
+                    $errorsList[] = 'Conocimiento General: ' . $res['error'];
+                }
+            }
+
+            // 2. Paquetes Destacados activos
+            if (!empty($data['paquetes']) && is_array($data['paquetes'])) {
+                foreach ($data['paquetes'] as $p) {
+                    if (empty($p['activo'])) {
+                        continue;
+                    }
+                    $res = syncSingleItemToSupabase(
+                        'paquete_' . $p['id'],
+                        'paquete',
+                        ($p['nombre'] ?? 'Paquete') . ' - ' . ($p['destino'] ?? ''),
+                        formatPaqueteMarkdown($p),
+                        $p['vigencia_hasta'] ?? null,
+                        [
+                            'id'      => $p['id'],
+                            'destino' => $p['destino'] ?? '',
+                            'precio'  => $p['precio'] ?? 0,
+                            'moneda'  => $p['moneda'] ?? 'USD',
+                        ],
+                        true
+                    );
+                    if ($res['ok']) {
+                        $syncedCount++;
+                    } else {
+                        $errorsList[] = 'Paquete "' . ($p['nombre'] ?? $p['id']) . '": ' . $res['error'];
+                    }
+                }
+            }
+
+            // 3. Ofertas Flash activas
+            if (!empty($data['ofertas']) && is_array($data['ofertas'])) {
+                foreach ($data['ofertas'] as $o) {
+                    if (empty($o['activa'])) {
+                        continue;
+                    }
+                    $res = syncSingleItemToSupabase(
+                        'oferta_' . $o['id'],
+                        'oferta',
+                        $o['titulo'] ?? 'Oferta Flash',
+                        formatOfertaMarkdown($o),
+                        $o['vigencia_hasta'] ?? null,
+                        [
+                            'id'     => $o['id'],
+                            'badge'  => $o['badge'] ?? '',
+                            'tiempo' => $o['tiempo'] ?? '',
+                        ],
+                        true
+                    );
+                    if ($res['ok']) {
+                        $syncedCount++;
+                    } else {
+                        $errorsList[] = 'Oferta "' . ($o['titulo'] ?? $o['id']) . '": ' . $res['error'];
+                    }
+                }
+            }
+
+            // 4. Artículos del Blog publicados
+            if (!empty($data['blog']) && is_array($data['blog'])) {
+                foreach ($data['blog'] as $b) {
+                    if (empty($b['activo'])) {
+                        continue;
+                    }
+                    $res = syncSingleItemToSupabase(
+                        'blog_' . $b['id'],
+                        'blog',
+                        $b['titulo'] ?? 'Post del Blog',
+                        formatBlogMarkdown($b),
+                        null,
+                        [
+                            'id'    => $b['id'],
+                            'slug'  => $b['slug'] ?? '',
+                            'fecha' => $b['fecha'] ?? '',
+                        ],
+                        true
+                    );
+                    if ($res['ok']) {
+                        $syncedCount++;
+                    } else {
+                        $errorsList[] = 'Blog "' . ($b['titulo'] ?? $b['id']) . '": ' . $res['error'];
+                    }
+                }
+            }
+
+            if (!empty($errorsList)) {
+                $firstErr = implode(' | ', array_slice($errorsList, 0, 2));
+                header('Location: index.php?tab=chatbot&msg=sync_partial&synced=' . $syncedCount . '&err=' . urlencode($firstErr));
+                exit;
+            }
+
+            header('Location: index.php?tab=chatbot&msg=sync_ok&synced=' . $syncedCount);
             exit;
     }
 
@@ -653,8 +1051,6 @@ HTML;
             </div>
         </article>
         {$footerHtml}
-    </body>
-    </html>
     HTML;
     file_put_contents(__DIR__ . '/../blog/' . $post['slug'] . '.html', $html);
 }
@@ -1587,6 +1983,8 @@ if (isset($_GET['edit'])) {
                 <li><a href="?tab=blog" class="<?php echo $activeTab === 'blog' ? 'active' : ''; ?>">Blog</a></li>
                 <li><a href="?tab=config" class="<?php echo $activeTab === 'config' ? 'active' : ''; ?>">Configuración</a>
                 </li>
+                <li><a href="?tab=chatbot" class="<?php echo $activeTab === 'chatbot' ? 'active' : ''; ?>">🤖 Chatbot IA</a>
+                </li>
             </ul>
         </nav>
         <main class="admin-content">
@@ -1598,7 +1996,17 @@ if (isset($_GET['edit'])) {
                 <div class="alert alert-error">⚠️ Oferta guardada, pero hubo un error al enviar el correo:
                     <?php echo htmlspecialchars($_GET['err'] ?? ''); ?></div>
             <?php elseif ($message === 'eliminado'): ?>
-                <div class="alert alert-success">✅ Eliminado correctamente</div><?php endif; ?>
+                <div class="alert alert-success">✅ Eliminado correctamente</div>
+            <?php elseif ($message === 'sync_ok'): ?>
+                <div class="alert alert-success">✅ Sincronización completada con éxito: se vectorizaron y actualizaron
+                    <strong><?php echo (int) ($_GET['synced'] ?? 0); ?></strong> documentos en Supabase (pgvector).</div>
+            <?php elseif ($message === 'sync_partial'): ?>
+                <div class="alert alert-error">⚠️ Se sincronizaron <strong><?php echo (int) ($_GET['synced'] ?? 0); ?></strong>
+                    documentos, pero ocurrieron errores: <?php echo htmlspecialchars($_GET['err'] ?? ''); ?></div>
+            <?php elseif ($message === 'sync_error'): ?>
+                <div class="alert alert-error">❌ No se pudo sincronizar con Supabase:
+                    <?php echo htmlspecialchars($_GET['err'] ?? ''); ?></div>
+            <?php endif; ?>
             <?php if (!empty($_GET['img_err'])): ?>
                 <div class="alert alert-error">⚠️ Atención con la imagen: <?php echo htmlspecialchars($_GET['img_err']); ?></div>
             <?php endif; ?>
@@ -1719,6 +2127,18 @@ if (isset($_GET['edit'])) {
                                         name="incluye"
                                         value="<?php echo isset($editItem['incluye']) ? implode(', ', $editItem['incluye']) : ''; ?>"
                                         placeholder="Ej: Aéreos, Traslados, Hotel"></div>
+                                <div style="background: #f0fdf4; padding: 15px; border-radius: 8px; border: 1px solid #bbf7d0; margin-bottom: 16px;">
+                                    <div class="form-group">
+                                        <label>Vigencia hasta (Opcional - el Chatbot dejará de ofrecerlo tras esta fecha)</label>
+                                        <input type="date" name="vigencia_hasta"
+                                            value="<?php echo htmlspecialchars($editItem['vigencia_hasta'] ?? ''); ?>">
+                                    </div>
+                                    <div class="form-group" style="margin-bottom: 0;">
+                                        <label>Información extra para el Chatbot IA (Opcional - horarios de vuelo, equipaje, señas, etc.)</label>
+                                        <textarea name="info_bot" rows="2"
+                                            placeholder="Ej: Incluye equipaje de mano de 10kg, salidas garantizadas en mayo..."><?php echo htmlspecialchars($editItem['info_bot'] ?? ''); ?></textarea>
+                                    </div>
+                                </div>
                                 <div class="form-group">
                                     <label>Imagen</label>
                                     <?php if ($editItem && $editItem['imagen']): ?><img
@@ -1818,6 +2238,18 @@ if (isset($_GET['edit'])) {
                                             name="comentarios"
                                             value="<?php echo $editItem['comentarios'] ?? 'Sin información'; ?>"
                                             placeholder="Comentarios adicionales"></div>
+                                </div>
+                                <div style="background: #f0fdf4; padding: 15px; border-radius: 8px; border: 1px solid #bbf7d0; margin-bottom: 16px;">
+                                    <div class="form-group">
+                                        <label>Vigencia hasta (Opcional - el Chatbot dejará de ofrecerlo tras esta fecha)</label>
+                                        <input type="date" name="vigencia_hasta"
+                                            value="<?php echo htmlspecialchars($editItem['vigencia_hasta'] ?? ''); ?>">
+                                    </div>
+                                    <div class="form-group" style="margin-bottom: 0;">
+                                        <label>Información extra para el Chatbot IA (Opcional - horarios de vuelo, equipaje, señas, etc.)</label>
+                                        <textarea name="info_bot" rows="2"
+                                            placeholder="Ej: Cupos limitados, tarifa en base doble, incluye carry-on..."><?php echo htmlspecialchars($editItem['info_bot'] ?? ''); ?></textarea>
+                                    </div>
                                 </div>
                                 <div class="form-row">
                                     <div class="form-group"><label>Texto del Badge</label><input type="text" name="badge"
@@ -2125,6 +2557,203 @@ if (isset($_GET['edit'])) {
                                     Configuración</button></div>
                         </form>
                     </div>
+                </div>
+
+            <?php elseif ($activeTab === 'chatbot'): ?>
+                <?php
+                $geminiKeyRaw      = trim((string) env('GEMINI_API_KEY', ''));
+                $geminiConfigured  = ($geminiKeyRaw !== '');
+                $geminiChatModel   = trim((string) env('GEMINI_CHAT_MODEL', 'gemini-3.5-flash-lite')) ?: 'gemini-3.5-flash-lite';
+                $geminiEmbedModel  = trim((string) env('GEMINI_EMBEDDING_MODEL', 'gemini-embedding-001')) ?: 'gemini-embedding-001';
+                $geminiStartsAq    = false;
+
+                $supaUrlRaw        = trim((string) env('SUPABASE_URL', ''));
+                $supaSecretRaw     = trim((string) (env('SUPABASE_SECRET_KEY', '') ?: env('SUPABASE_SERVICE_ROLE_KEY', '')));
+                $supaConfigured    = ($supaUrlRaw !== '' && $supaSecretRaw !== '');
+
+                $supabaseClientInstance = new SupabaseClient();
+                $recentLeads = [];
+                $leadsError  = '';
+                if ($supabaseClientInstance->isConfigured()) {
+                    $recentLeads = $supabaseClientInstance->getRecentLeads(30);
+                    if (empty($recentLeads) && $supabaseClientInstance->getLastError() !== '') {
+                        $leadsError = $supabaseClientInstance->getLastError();
+                    }
+                }
+                ?>
+
+                <!-- 1. Tarjetas de Estado de Conexión -->
+                <div class="form-row" style="margin-bottom: 24px;">
+                    <div class="card" style="padding: 20px; border-left: 4px solid <?php echo $geminiConfigured ? '#22c55e' : '#ef4444'; ?>;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <h3 style="font-size: 16px; color: #111;">🧠 Google Gemini API (IA & Embeddings)</h3>
+                            <?php if ($geminiConfigured): ?>
+                                <span class="badge badge-green">Configurada</span>
+                            <?php else: ?>
+                                <span class="badge" style="background: #fee2e2; color: #dc2626;">Falta configurar</span>
+                            <?php endif; ?>
+                        </div>
+                        <p style="font-size: 14px; color: #555; margin-bottom: 6px;">
+                            <strong>Modelo Chat activo:</strong> <code><?php echo htmlspecialchars($geminiChatModel); ?></code>
+                            &nbsp;|&nbsp;
+                            <strong>Embeddings:</strong> <code><?php echo htmlspecialchars($geminiEmbedModel); ?></code> (768 dims)
+                        </p>
+                        <?php if ($geminiStartsAq): ?>
+                            <div style="margin-top: 10px; padding: 10px 12px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; font-size: 13px; color: #92400e;">
+                                ℹ️ <strong>Nota sobre GEMINI_API_KEY:</strong> La clave actual en <code>admin/.env</code> comienza con <code>AQ.</code> en lugar del formato estándar <code>AIzaSy...</code>. Si al sincronizar recibís error de <em>API Key not valid</em> en Google AI Studio, generá una clave que empiece con <code>AIzaSy...</code> desde <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: #d97706; font-weight: 600;">aistudio.google.com</a> y pegala en <code>admin/.env</code>.
+                            </div>
+                        <?php endif; ?>
+                    </div>
+
+                    <div class="card" style="padding: 20px; border-left: 4px solid <?php echo $supaConfigured ? '#22c55e' : '#f59e0b'; ?>;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <h3 style="font-size: 16px; color: #111;">🗄️ Supabase (PostgreSQL + pgvector + Leads)</h3>
+                            <?php if ($supaConfigured): ?>
+                                <span class="badge badge-green">Conectado</span>
+                            <?php else: ?>
+                                <span class="badge badge-orange">Falta SUPABASE_SECRET_KEY</span>
+                            <?php endif; ?>
+                        </div>
+                        <p style="font-size: 14px; color: #555; margin-bottom: 6px;">
+                            <strong>URL Proyecto:</strong> <code><?php echo htmlspecialchars($supaUrlRaw ?: 'No definida'); ?></code>
+                        </p>
+                        <?php if (!$supaConfigured): ?>
+                            <div style="margin-top: 10px; padding: 10px 12px; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px; font-size: 13px; color: #9a3412;">
+                                ⚠️ <strong>Acción requerida:</strong> Pegá tu clave secreta (<code>sb_secret_...</code> o <code>service_role</code>) en la variable <code>SUPABASE_SECRET_KEY=</code> dentro del archivo <code>admin/.env</code> para habilitar la sincronización vectorial y el listado de Leads.
+                            </div>
+                        <?php else: ?>
+                            <p style="font-size: 13px; color: #16a34a; margin-top: 6px;">
+                                ✔️ Clave secreta cargada correctamente en <code>admin/.env</code>. Sincronización automática activa al guardar o eliminar paquetes, ofertas y posts.
+                            </p>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <!-- 2. Acción Principal: Sincronizar Todo con Supabase -->
+                <div class="card" style="margin-bottom: 24px; background: linear-gradient(135deg, #fff7ed 0%, #ffffff 100%); border: 1px solid #fed7aa;">
+                    <div style="padding: 20px 24px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px;">
+                        <div>
+                            <h2 style="font-size: 18px; color: #9a3412; margin-bottom: 6px;">🚀 Base de Conocimiento Vectorial (RAG)</h2>
+                            <p style="font-size: 14px; color: #555; max-width: 760px;">
+                                Generá y actualizá en un clic los vectores de IA (768 dimensiones) de la <strong>Información General + Coris</strong>, todos los <strong>Paquetes activos</strong>, las <strong>Ofertas Flash activas</strong> y los <strong>Posts publicados del Blog</strong> en Supabase.
+                            </p>
+                        </div>
+                        <form method="POST" onsubmit="const btn = this.querySelector('button[type=submit]'); btn.innerHTML='⏳ Generando vectores IA y sincronizando...'; btn.disabled=true;">
+                            <input type="hidden" name="action" value="sync_all_supabase">
+                            <button type="submit" class="btn btn-primary" style="padding: 14px 24px; font-size: 15px; box-shadow: 0 4px 12px rgba(249, 115, 22, 0.25);">
+                                🔄 Sincronizar Todo con Supabase (Generar Vectores IA)
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- 3. Formulario de Conocimiento General de la Agencia y Asistencia Coris -->
+                <div class="card" style="margin-bottom: 24px;">
+                    <div class="card-header">
+                        <h2>📘 Conocimiento General de la Agencia y Asistencia Coris</h2>
+                    </div>
+                    <div style="padding: 24px;">
+                        <p style="font-size: 14px; color: #666; margin-bottom: 16px;">
+                            Este texto alimenta directamente al asistente virtual sobre quiénes somos, horarios, dirección en Villa Devoto, canales de contacto, cobertura de <strong>Asistencia al Viajero Coris</strong> y cotización de aéreos o paquetes a medida.
+                        </p>
+                        <form method="POST">
+                            <input type="hidden" name="action" value="save_chatbot_info">
+                            <div class="form-group">
+                                <label>Texto institucional y directrices operativas para el Chatbot IA (Markdown)</label>
+                                <textarea name="chatbot_general_info" rows="15" style="font-family: 'Consolas', 'Monaco', monospace; font-size: 14px; line-height: 1.6;" required><?php echo htmlspecialchars($data['chatbot_general_info'] ?? ''); ?></textarea>
+                            </div>
+                            <div style="display: flex; justify-content: flex-end;">
+                                <button type="submit" class="btn btn-primary">💾 Guardar Conocimiento General</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- 4. Tabla de Últimos Leads Capturados (Pre-Chat) -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2>👥 Últimos Leads Capturados (Pre-Chat)</h2>
+                        <span class="badge badge-orange">Últimos 30 registros</span>
+                    </div>
+                    <?php if (!$supaConfigured): ?>
+                        <div style="padding: 24px;">
+                            <div class="alert alert-error" style="margin-bottom: 0;">
+                                ⚠️ Para visualizar los Leads capturados por el Chatbot, abrí el archivo <code>admin/.env</code> y completá la variable <code>SUPABASE_SECRET_KEY=tu_clave_secreta_de_supabase</code> (disponible en el panel de Supabase &rarr; Project Settings &rarr; API).
+                            </div>
+                        </div>
+                    <?php elseif ($leadsError !== ''): ?>
+                        <div style="padding: 24px;">
+                            <div class="alert alert-error" style="margin-bottom: 0;">
+                                ⚠️ Error al consultar Leads en Supabase: <?php echo htmlspecialchars($leadsError); ?>
+                            </div>
+                        </div>
+                    <?php elseif (empty($recentLeads)): ?>
+                        <div style="padding: 32px 24px; text-align: center; color: #6b7280;">
+                            Todavía no hay leads registrados en el Chatbot. Cuando un visitante complete sus datos para iniciar el chat, aparecerá aquí automáticamente.
+                        </div>
+                    <?php else: ?>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Nombre Completo</th>
+                                    <th>Email</th>
+                                    <th>Teléfono / WhatsApp</th>
+                                    <th>Origen</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($recentLeads as $lead): ?>
+                                    <?php
+                                    $rawDate = $lead['created_at'] ?? '';
+                                    $formattedDate = $rawDate;
+                                    if (!empty($rawDate)) {
+                                        try {
+                                            $dt = new DateTime($rawDate);
+                                            $dt->setTimezone(new DateTimeZone('America/Argentina/Buenos_Aires'));
+                                            $formattedDate = $dt->format('d/m/Y H:i');
+                                        } catch (\Throwable $e) {
+                                            $formattedDate = $rawDate;
+                                        }
+                                    }
+                                    $leadName  = (string) ($lead['full_name'] ?? 'Sin nombre');
+                                    $leadEmail = (string) ($lead['email'] ?? '');
+                                    $leadPhone = (string) ($lead['phone_e164'] ?? '');
+                                    $leadSrc   = (string) ($lead['source'] ?? 'chatbot_web');
+                                    $waDigits  = preg_replace('/\D+/', '', $leadPhone);
+                                    $waText    = urlencode("Hola {$leadName}! Te escribimos de Relax Tours por tu consulta en nuestro asistente web.");
+                                    ?>
+                                    <tr>
+                                        <td style="white-space: nowrap; font-size: 14px; color: #555;"><?php echo htmlspecialchars($formattedDate); ?></td>
+                                        <td><strong><?php echo htmlspecialchars($leadName); ?></strong></td>
+                                        <td>
+                                            <?php if ($leadEmail !== ''): ?>
+                                                <a href="mailto:<?php echo htmlspecialchars($leadEmail); ?>" style="color: #F97316; text-decoration: none;">
+                                                    <?php echo htmlspecialchars($leadEmail); ?>
+                                                </a>
+                                            <?php else: ?>
+                                                -
+                                            <?php endif; ?>
+                                        </td>
+                                        <td>
+                                            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                                <span><?php echo htmlspecialchars($leadPhone); ?></span>
+                                                <?php if ($waDigits !== ''): ?>
+                                                    <a href="https://wa.me/<?php echo htmlspecialchars($waDigits); ?>?text=<?php echo $waText; ?>"
+                                                        target="_blank"
+                                                        class="btn btn-success btn-small"
+                                                        style="padding: 4px 10px; font-size: 12px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                                                        💬 Abrir WhatsApp
+                                                    </a>
+                                                <?php endif; ?>
+                                            </div>
+                                        </td>
+                                        <td><span class="badge badge-gray"><?php echo htmlspecialchars($leadSrc); ?></span></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    <?php endif; ?>
                 </div>
             <?php endif; ?>
         </main>
