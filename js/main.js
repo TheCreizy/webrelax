@@ -4,9 +4,9 @@
 
 // Datos de la web
 var siteData = siteData || null;
-const WHATSAPP_NUMBER = '5491138593924';
+const WHATSAPP_NUMBER = "5491138593924";
 
-document.addEventListener('DOMContentLoaded', async function() {
+document.addEventListener("DOMContentLoaded", async function () {
   await loadSiteData();
   initNavbar();
   initScrollAnimations();
@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   renderConfig();
   renderPaquetes();
   renderOfertas();
-  if (!window.location.pathname.includes('/blog/')) {
+  if (!window.location.pathname.includes("/blog/")) {
     renderBlog();
   }
   initHeroParallax();
@@ -22,55 +22,59 @@ document.addEventListener('DOMContentLoaded', async function() {
 });
 
 function initHeroParallax() {
-  const hero = document.querySelector('.hero');
-  const plane = document.querySelector('.hero-plane-image');
-  const stats = document.querySelector('.hero-stats');
-  const buttons = document.querySelectorAll('.hero-btn-reveal');
-  
+  const hero = document.querySelector(".hero");
+  const plane = document.querySelector(".hero-plane-image");
+  const stats = document.querySelector(".hero-stats");
+  const buttons = document.querySelectorAll(".hero-btn-reveal");
+
   if (!hero || !plane) return;
 
-  window.addEventListener('scroll', () => {
-    // Mobile check - disable parallax/reveals
-    if (window.innerWidth < 769) return;
+  window.addEventListener(
+    "scroll",
+    () => {
+      // Mobile check - disable parallax/reveals
+      if (window.innerWidth < 769) return;
 
-    const scrolled = window.scrollY;
-    const viewportHeight = window.innerHeight;
-    
-    // Only animate while the hero is visible (scroll within 0 to viewportHeight)
-    if (scrolled > viewportHeight) return;
+      const scrolled = window.scrollY;
+      const viewportHeight = window.innerHeight;
 
-    // Progress: 0 at top, 1 when hero is fully scrolled out
-    const progress = scrolled / viewportHeight;
+      // Only animate while the hero is visible (scroll within 0 to viewportHeight)
+      if (scrolled > viewportHeight) return;
 
-    // 1. Plane Animation: Move down as user scrolls
-    const planeOffset = scrolled * 0.4;
-    plane.style.transform = `translate(-50%, calc(-50% + ${planeOffset}px))`;
+      // Progress: 0 at top, 1 when hero is fully scrolled out
+      const progress = scrolled / viewportHeight;
 
-    // 2. Reveal Stats (at ~20% scroll through hero)
-    if (progress > 0.2) {
-      if (stats) stats.classList.add('reveal-visible');
-    } else {
-      if (stats) stats.classList.remove('reveal-visible');
-    }
+      // 1. Plane Animation: Move down as user scrolls
+      const planeOffset = scrolled * 0.4;
+      plane.style.transform = `translate(-50%, calc(-50% + ${planeOffset}px))`;
 
-    // 3. Reveal Buttons (at ~40% scroll through hero)
-    if (progress > 0.4) {
-      buttons.forEach(btn => btn.classList.add('reveal-visible'));
-    } else {
-      buttons.forEach(btn => btn.classList.remove('reveal-visible'));
-    }
-  }, { passive: true });
+      // 2. Reveal Stats (at ~20% scroll through hero)
+      if (progress > 0.2) {
+        if (stats) stats.classList.add("reveal-visible");
+      } else {
+        if (stats) stats.classList.remove("reveal-visible");
+      }
+
+      // 3. Reveal Buttons (at ~40% scroll through hero)
+      if (progress > 0.4) {
+        buttons.forEach((btn) => btn.classList.add("reveal-visible"));
+      } else {
+        buttons.forEach((btn) => btn.classList.remove("reveal-visible"));
+      }
+    },
+    { passive: true },
+  );
 }
 
 function initHeroBackgroundSequence() {
-  const canvas = document.getElementById('hero-bg-canvas');
-  const hero = document.querySelector('.hero');
+  const canvas = document.getElementById("hero-bg-canvas");
+  const hero = document.querySelector(".hero");
   if (!canvas || !hero) return;
 
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext("2d");
   if (!ctx) return;
 
-  const TOTAL_FRAMES = 120;
+  const TOTAL_FRAMES = 60;
   const frames = new Array(TOTAL_FRAMES);
   let currentRenderedIndex = -1;
   let targetIndex = 0;
@@ -78,7 +82,7 @@ function initHeroBackgroundSequence() {
   let preloadingStarted = false;
 
   function getFrameSrc(index) {
-    const pad = String(index).padStart(3, '0');
+    const pad = String(index).padStart(3, "0");
     return `images/hero-sequence/frame_${pad}.webp`;
   }
 
@@ -88,11 +92,21 @@ function initHeroBackgroundSequence() {
     }
     for (let offset = 1; offset < TOTAL_FRAMES; offset++) {
       const prev = idx - offset;
-      if (prev >= 0 && frames[prev] && frames[prev].complete && frames[prev].naturalWidth > 0) {
+      if (
+        prev >= 0 &&
+        frames[prev] &&
+        frames[prev].complete &&
+        frames[prev].naturalWidth > 0
+      ) {
         return { img: frames[prev], index: prev };
       }
       const next = idx + offset;
-      if (next < TOTAL_FRAMES && frames[next] && frames[next].complete && frames[next].naturalWidth > 0) {
+      if (
+        next < TOTAL_FRAMES &&
+        frames[next] &&
+        frames[next].complete &&
+        frames[next].naturalWidth > 0
+      ) {
         return { img: frames[next], index: next };
       }
     }
@@ -105,8 +119,8 @@ function initHeroBackgroundSequence() {
 
     ctx.drawImage(found.img, 0, 0, canvas.width, canvas.height);
     currentRenderedIndex = found.index;
-    if (!canvas.classList.contains('is-ready')) {
-      canvas.classList.add('is-ready');
+    if (!canvas.classList.contains("is-ready")) {
+      canvas.classList.add("is-ready");
     }
   }
 
@@ -125,7 +139,10 @@ function initHeroBackgroundSequence() {
 
     // Sincronizado: avanza cuando se hace scroll hacia abajo, retrocede hacia arriba (ambos sentidos)
     const progress = Math.min(1, Math.max(0, scrolled / heroHeight));
-    targetIndex = Math.min(TOTAL_FRAMES - 1, Math.floor(progress * (TOTAL_FRAMES - 1)));
+    targetIndex = Math.min(
+      MAX_FRAME_TO_REACH,
+      Math.floor(progress * MAX_FRAME_TO_REACH),
+    );
 
     scheduleRender();
   }
@@ -154,7 +171,7 @@ function initHeroBackgroundSequence() {
       }
       nextIndex = end;
       if (nextIndex < TOTAL_FRAMES) {
-        if ('requestIdleCallback' in window) {
+        if ("requestIdleCallback" in window) {
           requestIdleCallback(() => loadNextBatch(), { timeout: 200 });
         } else {
           setTimeout(loadNextBatch, 50);
@@ -162,7 +179,7 @@ function initHeroBackgroundSequence() {
       }
     }
 
-    if ('requestIdleCallback' in window) {
+    if ("requestIdleCallback" in window) {
       requestIdleCallback(() => loadNextBatch(), { timeout: 150 });
     } else {
       setTimeout(loadNextBatch, 50);
@@ -182,30 +199,30 @@ function initHeroBackgroundSequence() {
     preloadRemainingFrames();
   }
 
-  window.addEventListener('scroll', updateOnScroll, { passive: true });
-  window.addEventListener('resize', updateOnScroll, { passive: true });
+  window.addEventListener("scroll", updateOnScroll, { passive: true });
+  window.addEventListener("resize", updateOnScroll, { passive: true });
   updateOnScroll();
 }
 
 async function loadSiteData() {
   try {
-    const basePath = window.location.pathname.includes('/blog/') ? '../' : '';
+    const basePath = window.location.pathname.includes("/blog/") ? "../" : "";
     let response;
     try {
-      response = await fetch(basePath + 'data/content.json?v=' + Date.now());
-      if (!response.ok) throw new Error('Status ' + response.status);
+      response = await fetch(basePath + "data/content.json?v=" + Date.now());
+      if (!response.ok) throw new Error("Status " + response.status);
       siteData = await response.json();
     } catch (e) {
       // Fallback a endpoint de auto-hidratación si content.json no existiera
-      response = await fetch(basePath + 'api/content?v=' + Date.now());
+      response = await fetch(basePath + "api/content?v=" + Date.now());
       if (!response.ok) {
-        response = await fetch(basePath + 'api/content.php?v=' + Date.now());
+        response = await fetch(basePath + "api/content.php?v=" + Date.now());
       }
-      if (!response.ok) throw new Error('Status ' + response.status);
+      if (!response.ok) throw new Error("Status " + response.status);
       siteData = await response.json();
     }
   } catch (error) {
-    console.error('Error cargando datos:', error);
+    console.error("Error cargando datos:", error);
     siteData = getFallbackData();
   }
 }
@@ -216,60 +233,66 @@ function getFallbackData() {
     ofertas: [],
     blog: [],
     config: {
-      whatsapp: '5491138593924',
-      email: 'info@relaxtours.com.ar',
-      telefono: '+54 11 7079-8079',
-      direccion: 'Av. Francisco Beiró 4219, Villa Devoto, CABA',
-      instagram: 'relax.tours',
-      facebook: 'relaxtours.ar',
-      legajo: '15.548'
-    }
+      whatsapp: "5491138593924",
+      email: "info@relaxtours.com.ar",
+      telefono: "+54 11 7079-8079",
+      direccion: "Av. Francisco Beiró 4219, Villa Devoto, CABA",
+      instagram: "relax.tours",
+      facebook: "relaxtours.ar",
+      legajo: "15.548",
+    },
   };
 }
 
 function initNavbar() {
-  const navbar = document.querySelector('.navbar');
-  window.addEventListener('scroll', () => {
-    navbar.classList.toggle('scrolled', window.scrollY > 50);
-  });
-  
-  document.querySelectorAll('a[href^="#"], a[href^="./#"]').forEach(anchor => {
-    anchor.addEventListener('click', function(e) {
-      const href = this.getAttribute('href');
-      if (!href || href === '#' || href.length <= 1) return;
-      
-      const targetId = href.startsWith('./') ? href.split('#')[1] : href.substring(1);
-      const target = document.getElementById(targetId);
-      
-      if (target) {
-        e.preventDefault();
-        // Mantener URL limpia sin #
-        // window.history.pushState(null, null, ' '); // Opcional, si queremos borrar el hash
-        
-        target.scrollIntoView({ behavior: 'smooth' });
-      }
-    });
+  const navbar = document.querySelector(".navbar");
+  window.addEventListener("scroll", () => {
+    navbar.classList.toggle("scrolled", window.scrollY > 50);
   });
 
+  document
+    .querySelectorAll('a[href^="#"], a[href^="./#"]')
+    .forEach((anchor) => {
+      anchor.addEventListener("click", function (e) {
+        const href = this.getAttribute("href");
+        if (!href || href === "#" || href.length <= 1) return;
+
+        const targetId = href.startsWith("./")
+          ? href.split("#")[1]
+          : href.substring(1);
+        const target = document.getElementById(targetId);
+
+        if (target) {
+          e.preventDefault();
+          // Mantener URL limpia sin #
+          // window.history.pushState(null, null, ' '); // Opcional, si queremos borrar el hash
+
+          target.scrollIntoView({ behavior: "smooth" });
+        }
+      });
+    });
+
   // Mobile menu toggle
-  const toggle = document.querySelector('.navbar-toggle');
-  const mobileMenu = document.getElementById('mobile-menu');
-  
+  const toggle = document.querySelector(".navbar-toggle");
+  const mobileMenu = document.getElementById("mobile-menu");
+
   if (toggle && mobileMenu) {
-    toggle.addEventListener('click', () => {
-      toggle.classList.toggle('active');
-      mobileMenu.classList.toggle('active');
-      navbar.classList.toggle('menu-open');
-      document.body.style.overflow = mobileMenu.classList.contains('active') ? 'hidden' : '';
+    toggle.addEventListener("click", () => {
+      toggle.classList.toggle("active");
+      mobileMenu.classList.toggle("active");
+      navbar.classList.toggle("menu-open");
+      document.body.style.overflow = mobileMenu.classList.contains("active")
+        ? "hidden"
+        : "";
     });
 
     // Close menu when a link is clicked
-    mobileMenu.querySelectorAll('a').forEach(link => {
-      link.addEventListener('click', () => {
-        toggle.classList.remove('active');
-        mobileMenu.classList.remove('active');
-        navbar.classList.remove('menu-open');
-        document.body.style.overflow = '';
+    mobileMenu.querySelectorAll("a").forEach((link) => {
+      link.addEventListener("click", () => {
+        toggle.classList.remove("active");
+        mobileMenu.classList.remove("active");
+        navbar.classList.remove("menu-open");
+        document.body.style.overflow = "";
       });
     });
   }
@@ -278,112 +301,126 @@ function initNavbar() {
 function initScrollAnimations() {
   const observerOptions = {
     threshold: 0.1,
-    rootMargin: '0px 0px -50px 0px'
+    rootMargin: "0px 0px -50px 0px",
   };
 
   const observer = new IntersectionObserver((entries) => {
-    entries.forEach((entry, index) => { 
+    entries.forEach((entry, index) => {
       if (entry.isIntersecting) {
         // Añadir retraso escalonado (stagger) para mejorar el movimiento
-        if (!entry.target.classList.contains('visible')) {
+        if (!entry.target.classList.contains("visible")) {
           setTimeout(() => {
-            entry.target.classList.add('visible');
-          }, index * 250); 
+            entry.target.classList.add("visible");
+          }, index * 250);
         }
-      } 
+      }
     });
   }, observerOptions);
-  
+
   // Exponer observer globalmente para poder usarlo con contenido dinámico
   window.scrollObserver = observer;
-  
-  document.querySelectorAll('.fade-in, .paquete-card, .oferta-card, .blog-card, .bento-item').forEach(el => observer.observe(el));
-  
+
+  document
+    .querySelectorAll(
+      ".fade-in, .paquete-card, .oferta-card, .blog-card, .bento-item",
+    )
+    .forEach((el) => observer.observe(el));
+
   initBentoInteractions();
 }
 
 function initBentoInteractions() {
-  const items = document.querySelectorAll('.bento-item');
-  
-  items.forEach(item => {
-    item.addEventListener('mousemove', (e) => {
+  const items = document.querySelectorAll(".bento-item");
+
+  items.forEach((item) => {
+    item.addEventListener("mousemove", (e) => {
       const rect = item.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
-      
+
       const centerX = rect.width / 2;
       const centerY = rect.height / 2;
-      
+
       // Much subtler values (max 4 degrees)
       const rotateX = ((y - centerY) / centerY) * -4;
       const rotateY = ((x - centerX) / centerX) * 4;
-      
+
       item.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
-      
+
       // Moving individual elements slightly for depth (Parallax)
-      const content = item.querySelector('.bento-content');
+      const content = item.querySelector(".bento-content");
       if (content) {
         content.style.transform = `translateZ(20px)`;
       }
     });
-    
-    item.addEventListener('mouseleave', () => {
-      item.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)';
-      const content = item.querySelector('.bento-content');
+
+    item.addEventListener("mouseleave", () => {
+      item.style.transform =
+        "perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)";
+      const content = item.querySelector(".bento-content");
       if (content) {
-        content.style.transform = 'translateZ(0px)';
+        content.style.transform = "translateZ(0px)";
       }
     });
   });
 }
 
 function initWhatsAppFloat() {
-  const tooltip = document.querySelector('.whatsapp-tooltip');
-  const closeBtn = document.querySelector('.whatsapp-tooltip-close');
-  
-  setTimeout(() => { if (tooltip) tooltip.style.display = 'block'; }, 5000);
-  if (closeBtn) closeBtn.addEventListener('click', () => { if (tooltip) tooltip.style.display = 'none'; });
-  setTimeout(() => { if (tooltip) tooltip.style.display = 'none'; }, 13000);
+  const tooltip = document.querySelector(".whatsapp-tooltip");
+  const closeBtn = document.querySelector(".whatsapp-tooltip-close");
+
+  setTimeout(() => {
+    if (tooltip) tooltip.style.display = "block";
+  }, 5000);
+  if (closeBtn)
+    closeBtn.addEventListener("click", () => {
+      if (tooltip) tooltip.style.display = "none";
+    });
+  setTimeout(() => {
+    if (tooltip) tooltip.style.display = "none";
+  }, 13000);
 }
 
-function openWhatsApp(message = '') {
-  const text = message || 'Hola! Vengo de la web de Relax Tours y quiero consultar sobre un viaje.';
+function openWhatsApp(message = "") {
+  const text =
+    message ||
+    "Hola! Vengo de la web de Relax Tours y quiero consultar sobre un viaje.";
   const number = siteData?.config?.whatsapp || WHATSAPP_NUMBER;
-  
+
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-  const url = isMobile 
+  const url = isMobile
     ? `https://wa.me/${number}?text=${encodeURIComponent(text)}`
     : `https://web.whatsapp.com/send?phone=${number}&text=${encodeURIComponent(text)}`;
-    
-  window.open(url, '_blank');
+
+  window.open(url, "_blank");
 }
 
 function renderConfig() {
   if (!siteData?.config) return;
   const c = siteData.config;
-  
+
   // Update footer info using data attributes
   const updateEl = (key, value) => {
     const el = document.querySelector(`[data-config="${key}"]`);
     if (el) el.textContent = value;
   };
 
-  updateEl('direccion', c.direccion);
-  updateEl('telefono', c.telefono);
-  updateEl('email', c.email);
-  
-  const footerLegajo = document.querySelector('.footer-legajo');
-  if (footerLegajo && c.legajo) footerLegajo.textContent = `Leg. ${c.legajo}`;
-  
-  // Update social links
-  const igHandle = (c.instagram || 'relax.tours').replace('@', '');
-  const fbHandle = c.facebook || 'relaxtours.ar';
+  updateEl("direccion", c.direccion);
+  updateEl("telefono", c.telefono);
+  updateEl("email", c.email);
 
-  document.querySelectorAll('a[href*="instagram.com"]').forEach(link => {
+  const footerLegajo = document.querySelector(".footer-legajo");
+  if (footerLegajo && c.legajo) footerLegajo.textContent = `Leg. ${c.legajo}`;
+
+  // Update social links
+  const igHandle = (c.instagram || "relax.tours").replace("@", "");
+  const fbHandle = c.facebook || "relaxtours.ar";
+
+  document.querySelectorAll('a[href*="instagram.com"]').forEach((link) => {
     link.href = `https://instagram.com/${igHandle}`;
   });
-  
-  document.querySelectorAll('a[href*="facebook.com"]').forEach(link => {
+
+  document.querySelectorAll('a[href*="facebook.com"]').forEach((link) => {
     link.href = `https://facebook.com/${fbHandle}`;
   });
 }
@@ -395,16 +432,16 @@ let carouselItemsData = [];
 
 function renderPaquetes() {
   if (!siteData?.paquetes) return;
-  const paquetesActivos = siteData.paquetes.filter(p => p.activo);
+  const paquetesActivos = siteData.paquetes.filter((p) => p.activo);
 
   // Check for Grid (paquetes.php)
-  const gridContainer = document.getElementById('paquetes-grid');
+  const gridContainer = document.getElementById("paquetes-grid");
   if (gridContainer) {
     renderPaquetesGrid(gridContainer, paquetesActivos);
   }
 
   // Check for Carousel (index.php)
-  const carouselContainer = document.getElementById('paquetes-carousel');
+  const carouselContainer = document.getElementById("paquetes-carousel");
   if (carouselContainer) {
     if (paquetesActivos.length === 0) return;
     carouselItemsData = paquetesActivos;
@@ -413,31 +450,37 @@ function renderPaquetes() {
 }
 
 function renderPaquetesGrid(container, paquetes) {
-  container.innerHTML = paquetes.map(paquete => generatePaqueteCardHTML(paquete, false)).join('');
+  container.innerHTML = paquetes
+    .map((paquete) => generatePaqueteCardHTML(paquete, false))
+    .join("");
   initScrollAnimations();
 }
 
 function renderPaquetesCarousel(container) {
   // Create HTML for all items, but wrapped in carousel-item
-  container.innerHTML = carouselItemsData.map((paquete, index) => `
+  container.innerHTML = carouselItemsData
+    .map(
+      (paquete, index) => `
     <div class="carousel-item" data-index="${index}">
       ${generatePaqueteCardHTML(paquete, true)}
     </div>
-  `).join('');
+  `,
+    )
+    .join("");
 
   // Initial state
   updateCarouselState();
-  
+
   // Auto play
   startCarouselAutoPlay();
 
   // Pause on hover ONLY on the active item
   // We use event delegation on the container because class 'active' changes dynamically
   if (container) {
-    container.addEventListener('mousemove', (e) => {
+    container.addEventListener("mousemove", (e) => {
       // Check if hovering over an active item (or its children)
-      const target = e.target.closest('.carousel-item');
-      if (target && target.classList.contains('active')) {
+      const target = e.target.closest(".carousel-item");
+      if (target && target.classList.contains("active")) {
         stopCarouselAutoPlay();
       } else {
         // If moved out of active item (even if still in container), resume
@@ -446,8 +489,8 @@ function renderPaquetesCarousel(container) {
         startCarouselAutoPlay();
       }
     });
-    
-    container.addEventListener('mouseleave', startCarouselAutoPlay);
+
+    container.addEventListener("mouseleave", startCarouselAutoPlay);
   }
 }
 
@@ -456,13 +499,13 @@ function generatePaqueteCardHTML(paquete, isCarousel) {
   // If isCarousel is true, we might want fewer animations or different classes if needed,
   // but for now we reuse the card structure.
   // Note: key change is removing 'fade-in' class for carousel items to avoid conflict with carousel transitions
-  const animationClass = isCarousel ? '' : 'fade-in';
-  
+  const animationClass = isCarousel ? "" : "fade-in";
+
   return `
     <div class="paquete-card ${animationClass}">
       <div class="paquete-image">
         <img src="${paquete.imagen}" alt="${paquete.nombre}" loading="lazy">
-        ${paquete.popular ? `<span class="paquete-badge"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>Popular</span>` : ''}
+        ${paquete.popular ? `<span class="paquete-badge"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>Popular</span>` : ""}
       </div>
       <div class="paquete-content">
         <h3 class="paquete-title">${paquete.nombre}</h3>
@@ -477,11 +520,11 @@ function generatePaqueteCardHTML(paquete, isCarousel) {
           </div>
         </div>
         <div class="paquete-incluye">
-          ${paquete.incluye.map(item => `<span class="paquete-incluye-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>${item}</span>`).join('')}
+          ${paquete.incluye.map((item) => `<span class="paquete-incluye-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>${item}</span>`).join("")}
         </div>
         <div class="paquete-footer">
           <div class="paquete-price-row">
-            <div><span class="paquete-precio-label">Precio</span><div class="paquete-precio">Desde $${paquete.precio.toLocaleString()} ${paquete.moneda || 'USD'}</div></div>
+            <div><span class="paquete-precio-label">Precio</span><div class="paquete-precio">Desde $${paquete.precio.toLocaleString()} ${paquete.moneda || "USD"}</div></div>
           </div>
           <div class="paquete-footer-actions">
             <button class="btn-whatsapp-dark" onclick="toggleConsultar(event, '${paquete.id}')">
@@ -503,26 +546,27 @@ function generatePaqueteCardHTML(paquete, isCarousel) {
 }
 
 function updateCarouselState() {
-  const items = document.querySelectorAll('.carousel-item');
+  const items = document.querySelectorAll(".carousel-item");
   if (!items.length) return;
 
   const total = items.length;
-  
+
   items.forEach((item, index) => {
     // Clean classes
-    item.classList.remove('active', 'prev', 'next', 'hidden');
-    
+    item.classList.remove("active", "prev", "next", "hidden");
+
     // Determine relative position in circular array
     let offset = (index - carouselCurrentIndex + total) % total;
-    
+
     if (offset === 0) {
-      item.classList.add('active');
-    } else if (offset === total - 1) { // Same as -1
-      item.classList.add('prev');
+      item.classList.add("active");
+    } else if (offset === total - 1) {
+      // Same as -1
+      item.classList.add("prev");
     } else if (offset === 1) {
-      item.classList.add('next');
+      item.classList.add("next");
     } else {
-      item.classList.add('hidden');
+      item.classList.add("hidden");
     }
   });
 }
@@ -530,7 +574,7 @@ function updateCarouselState() {
 function moveCarousel(direction) {
   const total = carouselItemsData.length;
   if (!total) return;
-  
+
   carouselCurrentIndex = (carouselCurrentIndex + direction + total) % total;
   updateCarouselState();
 }
@@ -553,16 +597,17 @@ function stopCarouselAutoPlay() {
 window.moveCarousel = moveCarousel;
 
 function renderOfertas() {
-  const container = document.getElementById('ofertas-grid');
-  const timerEl = document.getElementById('countdown-timer');
+  const container = document.getElementById("ofertas-grid");
+  const timerEl = document.getElementById("countdown-timer");
   if (!container || !siteData?.ofertas) return;
-  
-  const ofertasActivas = siteData.ofertas.filter(o => o.activa);
+
+  const ofertasActivas = siteData.ofertas.filter((o) => o.activa);
 
   if (timerEl) {
-    timerEl.textContent = ofertasActivas.length > 0
-      ? '🔥 ¡Cupos limitados por tiempo reducido!'
-      : '⚡ Consultá por nuestras promociones vigentes';
+    timerEl.textContent =
+      ofertasActivas.length > 0
+        ? "🔥 ¡Cupos limitados por tiempo reducido!"
+        : "⚡ Consultá por nuestras promociones vigentes";
   }
 
   if (ofertasActivas.length === 0) {
@@ -574,8 +619,10 @@ function renderOfertas() {
     `;
     return;
   }
-  
-  container.innerHTML = ofertasActivas.map(oferta => `
+
+  container.innerHTML = ofertasActivas
+    .map(
+      (oferta) => `
     <div class="oferta-card fade-in">
       <div class="oferta-image" onclick="enlargeImage('${oferta.image || oferta.imagen}')">
         <img src="${oferta.image || oferta.imagen}" alt="${oferta.titulo}" loading="lazy">
@@ -596,14 +643,16 @@ function renderOfertas() {
         </a>
       </div>
     </div>
-  `).join('');
-  
+  `,
+    )
+    .join("");
+
   initScrollAnimations();
 }
 
 function enlargeImage(src) {
-  const overlay = document.createElement('div');
-  overlay.className = 'image-overlay';
+  const overlay = document.createElement("div");
+  overlay.className = "image-overlay";
   overlay.innerHTML = `
     <div class="image-overlay-content">
       <img src="${src}" alt="Oferta">
@@ -611,27 +660,32 @@ function enlargeImage(src) {
     </div>
   `;
   document.body.appendChild(overlay);
-  setTimeout(() => overlay.classList.add('active'), 10);
-  
+  setTimeout(() => overlay.classList.add("active"), 10);
+
   overlay.onclick = (e) => {
-    if (e.target.classList.contains('image-overlay') || e.target.classList.contains('image-overlay-close')) {
-      overlay.classList.remove('active');
+    if (
+      e.target.classList.contains("image-overlay") ||
+      e.target.classList.contains("image-overlay-close")
+    ) {
+      overlay.classList.remove("active");
       setTimeout(() => overlay.remove(), 300);
     }
   };
 }
 
 function renderBlog() {
-  const container = document.getElementById('blog-grid');
+  const container = document.getElementById("blog-grid");
   if (!container || !siteData?.blog) return;
-  
-  // Mostrar solo los últimos 6 posts activos
-  const postsActivos = siteData.blog.filter(p => p.activo).slice(0, 6);
-  
-  // Detectar path: Si estamos en root, el link es "blog/slug.html". Si ya estamos en /blog/, es "slug.html"
-  const linkPrefix = window.location.pathname.includes('/blog/') ? '' : 'blog/';
 
-  container.innerHTML = postsActivos.map(post => `
+  // Mostrar solo los últimos 6 posts activos
+  const postsActivos = siteData.blog.filter((p) => p.activo).slice(0, 6);
+
+  // Detectar path: Si estamos en root, el link es "blog/slug.html". Si ya estamos en /blog/, es "slug.html"
+  const linkPrefix = window.location.pathname.includes("/blog/") ? "" : "blog/";
+
+  container.innerHTML = postsActivos
+    .map(
+      (post) => `
     <article class="blog-card fade-in">
       <a href="${linkPrefix}${post.slug}.html" class="blog-image-link" style="display:block; overflow:hidden;">
         <div class="blog-image">
@@ -650,89 +704,100 @@ function renderBlog() {
         </h3>
         <p class="blog-excerpt">${post.extracto}</p>
         <a href="${linkPrefix}${post.slug}.html" class="blog-link">
-            Leer tip de ${post.destino || 'viaje'}
+            Leer tip de ${post.destino || "viaje"}
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
         </a>
       </div>
     </article>
-  `).join('');
-  
+  `,
+    )
+    .join("");
+
   initScrollAnimations();
 }
 
 // Helpers & Handlers
 function openBlogModal(slug) {
-  const post = siteData?.blog?.find(p => p.slug === slug);
+  const post = siteData?.blog?.find((p) => p.slug === slug);
   if (!post) {
     // If not found in siteData (rare), try to go to the page
     window.location.href = `blog/post.php?slug=${slug}`;
     return;
   }
 
-  const modal = document.getElementById('blog-modal');
+  const modal = document.getElementById("blog-modal");
   if (modal) {
-    const basePath = window.location.pathname.includes('/blog/') ? '../' : '';
-    document.getElementById('blog-modal-title').textContent = post.titulo;
-    document.getElementById('blog-modal-image').src = basePath + post.imagen;
-    document.getElementById('blog-modal-meta').innerHTML = `<span>${post.fecha}</span>`;
-    document.getElementById('blog-modal-body').innerHTML = post.contenido;
-    
-    modal.classList.add('active');
-    document.body.style.overflow = 'hidden';
-    
+    const basePath = window.location.pathname.includes("/blog/") ? "../" : "";
+    document.getElementById("blog-modal-title").textContent = post.titulo;
+    document.getElementById("blog-modal-image").src = basePath + post.imagen;
+    document.getElementById("blog-modal-meta").innerHTML =
+      `<span>${post.fecha}</span>`;
+    document.getElementById("blog-modal-body").innerHTML = post.contenido;
+
+    modal.classList.add("active");
+    document.body.style.overflow = "hidden";
+
     // Update hash for deep link
     window.history.pushState(null, null, `#blog-${slug}`);
   }
 }
 
 function closeBlogModal() {
-  const modal = document.getElementById('blog-modal');
+  const modal = document.getElementById("blog-modal");
   if (modal) {
-    modal.classList.remove('active');
-    document.body.style.overflow = '';
+    modal.classList.remove("active");
+    document.body.style.overflow = "";
     // Clean up hash
-    if (window.location.hash.includes('#blog-')) {
-      window.history.pushState(null, null, window.location.pathname + window.location.search);
+    if (window.location.hash.includes("#blog-")) {
+      window.history.pushState(
+        null,
+        null,
+        window.location.pathname + window.location.search,
+      );
     }
   }
 }
 
 function openArrepentimientoModal() {
-  const modal = document.getElementById('arrepentimiento-modal');
+  const modal = document.getElementById("arrepentimiento-modal");
   if (modal) {
-    modal.classList.add('active');
-    document.body.style.overflow = 'hidden';
+    modal.classList.add("active");
+    document.body.style.overflow = "hidden";
   }
 }
 
 function closeArrepentimientoModal() {
-  const modal = document.getElementById('arrepentimiento-modal');
+  const modal = document.getElementById("arrepentimiento-modal");
   if (modal) {
-    modal.classList.remove('active');
-    document.body.style.overflow = '';
+    modal.classList.remove("active");
+    document.body.style.overflow = "";
   }
 }
 
 // Close active modals on Escape key
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') {
-    const activeModal = document.querySelector('.modal.active');
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    const activeModal = document.querySelector(".modal.active");
     if (activeModal) {
-      activeModal.classList.remove('active');
-      document.body.style.overflow = '';
+      activeModal.classList.remove("active");
+      document.body.style.overflow = "";
       // Clean up blog hash if needed
-      if (window.location.hash.includes('#blog-')) {
-        window.history.pushState(null, null, window.location.pathname + window.location.search);
+      if (window.location.hash.includes("#blog-")) {
+        window.history.pushState(
+          null,
+          null,
+          window.location.pathname + window.location.search,
+        );
       }
     }
   }
 });
 
 // Check for hash on load
-window.addEventListener('load', () => {
+window.addEventListener("load", () => {
   const hash = window.location.hash;
-  if (hash.startsWith('#blog-')) {
-    const slug = hash.replace('#blog-', '');
+  if (hash.startsWith("#blog-")) {
+    const slug = hash.replace("#blog-", "");
     // Wait for data to be ready
     const checkData = setInterval(() => {
       if (siteData) {
@@ -747,23 +812,25 @@ window.addEventListener('load', () => {
 function toggleConsultar(event, id) {
   event.stopPropagation();
   const dropdown = document.getElementById(`consultar-dropdown-${id}`);
-  const allDropdowns = document.querySelectorAll('.consultar-dropdown');
-  
-  allDropdowns.forEach(d => {
-    if (d.id !== `consultar-dropdown-${id}`) d.classList.remove('active');
+  const allDropdowns = document.querySelectorAll(".consultar-dropdown");
+
+  allDropdowns.forEach((d) => {
+    if (d.id !== `consultar-dropdown-${id}`) d.classList.remove("active");
   });
-  
-  dropdown.classList.toggle('active');
+
+  dropdown.classList.toggle("active");
 }
 
-document.addEventListener('click', () => {
-  document.querySelectorAll('.consultar-dropdown').forEach(d => d.classList.remove('active'));
+document.addEventListener("click", () => {
+  document
+    .querySelectorAll(".consultar-dropdown")
+    .forEach((d) => d.classList.remove("active"));
 });
 
 function scrollToContact() {
-  const contactSection = document.getElementById('contacto');
+  const contactSection = document.getElementById("contacto");
   if (contactSection) {
-    contactSection.scrollIntoView({ behavior: 'smooth' });
+    contactSection.scrollIntoView({ behavior: "smooth" });
   }
 }
 
@@ -771,40 +838,40 @@ async function handleFormSubmit(form, statusId) {
   const statusEl = document.getElementById(statusId);
   const submitBtn = form.querySelector('button[type="submit"]');
   const originalBtnText = submitBtn.textContent;
-  
-  statusEl.textContent = 'Enviando…';
-  statusEl.className = 'form-status';
+
+  statusEl.textContent = "Enviando…";
+  statusEl.className = "form-status";
   submitBtn.disabled = true;
-  submitBtn.classList.add('btn-loading');
-  submitBtn.textContent = 'Enviando…';
+  submitBtn.classList.add("btn-loading");
+  submitBtn.textContent = "Enviando…";
 
   try {
     const formData = new FormData(form);
-    const basePath = window.location.pathname.includes('/blog/') ? '../' : '';
-    const response = await fetch(basePath + 'send-mail.php', {
-      method: 'POST',
-      body: formData
+    const basePath = window.location.pathname.includes("/blog/") ? "../" : "";
+    const response = await fetch(basePath + "send-mail.php", {
+      method: "POST",
+      body: formData,
     });
-    
+
     const result = await response.json();
-    
-    if (result.status === 'success') {
+
+    if (result.status === "success") {
       statusEl.textContent = result.message;
-      statusEl.className = 'form-status success';
+      statusEl.className = "form-status success";
       form.reset();
-      if (statusId === 'arrepentimiento-form-status') {
+      if (statusId === "arrepentimiento-form-status") {
         setTimeout(closeArrepentimientoModal, 3000);
       }
     } else {
       statusEl.textContent = result.message;
-      statusEl.className = 'form-status error';
+      statusEl.className = "form-status error";
     }
   } catch (error) {
-    statusEl.textContent = 'Error al enviar el mensaje. Intente nuevamente.';
-    statusEl.className = 'form-status error';
+    statusEl.textContent = "Error al enviar el mensaje. Intente nuevamente.";
+    statusEl.className = "form-status error";
   } finally {
     submitBtn.disabled = false;
-    submitBtn.classList.remove('btn-loading');
+    submitBtn.classList.remove("btn-loading");
     submitBtn.textContent = originalBtnText;
   }
 }
@@ -818,25 +885,25 @@ window.closeBlogModal = closeBlogModal;
 window.toggleConsultar = toggleConsultar;
 window.scrollToContact = scrollToContact;
 
-document.addEventListener('DOMContentLoaded', () => {
-  const contactForm = document.getElementById('contact-form');
+document.addEventListener("DOMContentLoaded", () => {
+  const contactForm = document.getElementById("contact-form");
   if (contactForm) {
-    contactForm.addEventListener('submit', (e) => {
+    contactForm.addEventListener("submit", (e) => {
       e.preventDefault();
-      handleFormSubmit(contactForm, 'contact-form-status');
+      handleFormSubmit(contactForm, "contact-form-status");
     });
   }
 
-  const arrepentimientoForm = document.getElementById('arrepentimiento-form');
+  const arrepentimientoForm = document.getElementById("arrepentimiento-form");
   if (arrepentimientoForm) {
-    arrepentimientoForm.addEventListener('submit', (e) => {
+    arrepentimientoForm.addEventListener("submit", (e) => {
       e.preventDefault();
-      handleFormSubmit(arrepentimientoForm, 'arrepentimiento-form-status');
+      handleFormSubmit(arrepentimientoForm, "arrepentimiento-form-status");
     });
   }
 });
 
-window.reloadSiteData = async function() {
+window.reloadSiteData = async function () {
   await loadSiteData();
   renderPaquetes();
   renderOfertas();
