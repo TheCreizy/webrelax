@@ -9,29 +9,29 @@
  * ============================================================================
  */
 (function () {
-  'use strict';
+  "use strict";
 
-  const STORAGE_LEAD_KEY = 'relax_lead_data';
-  const STORAGE_HISTORY_KEY = 'relax_chat_history';
-  const STORAGE_TOOLTIP_DISMISSED = 'relax_tooltip_dismissed';
-  const DEFAULT_WHATSAPP = '5491138593924';
-  const PHONE_DISPLAY = '11 7079-8079';
-  const PHONE_TEL_URI = 'tel:+541170798079';
+  const STORAGE_LEAD_KEY = "relax_lead_data";
+  const STORAGE_HISTORY_KEY = "relax_chat_history";
+  const STORAGE_TOOLTIP_DISMISSED = "relax_tooltip_dismissed";
+  const DEFAULT_WHATSAPP = "5491138593924";
+  const PHONE_DISPLAY = "11 7079-8079";
+  const PHONE_TEL_URI = "tel:+541170798079";
 
   /**
    * Detecta automáticamente la ruta base relativa según si la página actual
    * se encuentra dentro de /blog/ o en el directorio raíz del sitio.
    */
   function getBasePath() {
-    const path = window.location.pathname || '';
-    return path.includes('/blog/') ? '../' : '';
+    const path = window.location.pathname || "";
+    return path.includes("/blog/") ? "../" : "";
   }
 
   /**
    * Detecta si el usuario navega desde un dispositivo móvil (Android / iOS).
    */
   function esDispositivoMovil() {
-    return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+    return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || "");
   }
 
   /**
@@ -43,8 +43,8 @@
    */
   function estaEnHorarioComercialArgentina() {
     try {
-      const arString = new Date().toLocaleString('en-US', {
-        timeZone: 'America/Argentina/Buenos_Aires'
+      const arString = new Date().toLocaleString("en-US", {
+        timeZone: "America/Argentina/Buenos_Aires",
       });
       const arDate = new Date(arString);
       const dia = arDate.getDay(); // 0 = Dom, 1 = Lun, ..., 6 = Sáb
@@ -53,7 +53,10 @@
       const horaDecimal = hora + min / 60;
 
       if (dia >= 1 && dia <= 5) {
-        return (horaDecimal >= 10 && horaDecimal < 13) || (horaDecimal >= 14 && horaDecimal < 19);
+        return (
+          (horaDecimal >= 10 && horaDecimal < 13) ||
+          (horaDecimal >= 14 && horaDecimal < 19)
+        );
       }
       if (dia === 6) {
         return horaDecimal >= 10 && horaDecimal < 13;
@@ -73,47 +76,51 @@
    * @returns {string|null} Teléfono en formato E.164 (ej. "+5491138593924") o null si es inválido
    */
   function normalizePhoneToE164(rawInput, countryCode) {
-    if (!rawInput || typeof rawInput !== 'string') return null;
+    if (!rawInput || typeof rawInput !== "string") return null;
 
     // Si libphonenumber-js está disponible globalmente, intentar primero con él para no-AR
     const cleanRaw = rawInput.trim();
     if (!cleanRaw) return null;
 
     // Extraer solo dígitos
-    let digits = cleanRaw.replace(/\D+/g, '');
+    let digits = cleanRaw.replace(/\D+/g, "");
     if (!digits || digits.length < 7) return null;
 
     // Rechazar secuencias repetidas inválidas (ej. 11111111, 00000000, 1234567890)
-    if (/^(\d)\1{6,}$/.test(digits) || digits === '1234567890' || digits === '0123456789') {
+    if (
+      /^(\d)\1{6,}$/.test(digits) ||
+      digits === "1234567890" ||
+      digits === "0123456789"
+    ) {
       return null;
     }
 
-    const code = String(countryCode || '54').replace(/\D+/g, '');
+    const code = String(countryCode || "54").replace(/\D+/g, "");
 
     // Normalización estricta para Argentina (+54 -> +549 + 10 dígitos)
-    if (code === '54' || (cleanRaw.startsWith('+54') && code !== 'other')) {
+    if (code === "54" || (cleanRaw.startsWith("+54") && code !== "other")) {
       let national = digits;
 
       // Quitar prefijos internacionales si el usuario los incluyó (00549, 0054, 549, 54)
-      if (national.startsWith('00549')) {
+      if (national.startsWith("00549")) {
         national = national.slice(5);
-      } else if (national.startsWith('0054')) {
+      } else if (national.startsWith("0054")) {
         national = national.slice(4);
-      } else if (national.startsWith('549') && national.length >= 13) {
+      } else if (national.startsWith("549") && national.length >= 13) {
         national = national.slice(3);
-      } else if (national.startsWith('54') && national.length >= 12) {
+      } else if (national.startsWith("54") && national.length >= 12) {
         national = national.slice(2);
       }
 
       // Quitar 0 inicial del código de área (ej. 011 -> 11, 0351 -> 351, 0223 -> 223)
-      national = national.replace(/^0+/, '');
+      national = national.replace(/^0+/, "");
 
       // Si el usuario ingresó 10 dígitos comenzando con "15" (ej. 15 3859 3924 -> CABA/GBA área 11)
-      if (national.length === 10 && national.startsWith('15')) {
-        national = '11' + national.slice(2);
-      } else if (national.length === 8 && !national.startsWith('11')) {
+      if (national.length === 10 && national.startsWith("15")) {
+        national = "11" + national.slice(2);
+      } else if (national.length === 8 && !national.startsWith("11")) {
         // Si ingresó los 8 dígitos locales de AMBA sin código de área
-        national = '11' + national;
+        national = "11" + national;
       }
 
       // Quitar el prefijo móvil "15" ubicado después del código de área (2, 3 o 4 dígitos)
@@ -128,7 +135,11 @@
         }
       } else if (national.length === 11) {
         const match11 = national.match(/^(\d{2,4})15(\d{5,7})$/);
-        if (match11 && (match11[1].length + match11[2].length === 9 || match11[1].length + match11[2].length === 10)) {
+        if (
+          match11 &&
+          (match11[1].length + match11[2].length === 9 ||
+            match11[1].length + match11[2].length === 10)
+        ) {
           national = match11[1] + match11[2];
         }
       }
@@ -143,16 +154,16 @@
         return null;
       }
 
-      return '+549' + national;
+      return "+549" + national;
     }
 
     // Otros países (Uruguay +598, Chile +56, Brasil +55, EE.UU. +1, España +34, u otro)
     let intlDigits = digits;
-    if (intlDigits.startsWith('00')) {
+    if (intlDigits.startsWith("00")) {
       intlDigits = intlDigits.slice(2);
     }
     if (code && !intlDigits.startsWith(code)) {
-      intlDigits = code + intlDigits.replace(/^0+/, '');
+      intlDigits = code + intlDigits.replace(/^0+/, "");
     }
 
     if (intlDigits.length < 10 || intlDigits.length > 15) {
@@ -162,26 +173,30 @@
       return null;
     }
 
-    return '+' + intlDigits;
+    return "+" + intlDigits;
   }
 
   /**
    * Valida Nombre y Apellido (mínimo 2 palabras reales de al menos 2 letras cada una).
    */
   function isValidFullName(name) {
-    if (!name || typeof name !== 'string') return false;
-    const cleaned = name.trim().replace(/\s+/g, ' ');
+    if (!name || typeof name !== "string") return false;
+    const cleaned = name.trim().replace(/\s+/g, " ");
     if (cleaned.length < 4 || cleaned.length > 100) return false;
-    return /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ'.-]{2,}(\s+[A-Za-zÁÉÍÓÚÜÑáéíóúüñ'.-]{2,})+$/.test(cleaned);
+    return /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ'.-]{2,}(\s+[A-Za-zÁÉÍÓÚÜÑáéíóúüñ'.-]{2,})+$/.test(
+      cleaned,
+    );
   }
 
   /**
    * Valida formato de correo electrónico.
    */
   function isValidEmail(email) {
-    if (!email || typeof email !== 'string') return false;
+    if (!email || typeof email !== "string") return false;
     const cleaned = email.trim().toLowerCase();
-    return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(cleaned) && cleaned.length <= 120;
+    return (
+      /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(cleaned) && cleaned.length <= 120
+    );
   }
 
   /**
@@ -189,32 +204,32 @@
    * (**negritas**, listas con - y enlaces) en HTML limpio y seguro.
    */
   function formatBotMessageSafe(rawText) {
-    const safe = String(rawText || '')
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
+    const safe = String(rawText || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
 
     // Negritas **texto**
-    let formatted = safe.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    let formatted = safe.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
 
     // Enlaces URL http/https
     formatted = formatted.replace(
       /(https?:\/\/[^\s<]+)/g,
-      '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
+      '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>',
     );
 
     // Separar por líneas para armar párrafos y listas
     const lines = formatted.split(/\r?\n/);
-    let html = '';
+    let html = "";
     let inList = false;
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim();
       if (!line) {
         if (inList) {
-          html += '</ul>';
+          html += "</ul>";
           inList = false;
         }
         continue;
@@ -222,24 +237,24 @@
 
       if (/^[-•*]\s+/.test(line)) {
         if (!inList) {
-          html += '<ul>';
+          html += "<ul>";
           inList = true;
         }
-        html += '<li>' + line.replace(/^[-•*]\s+/, '') + '</li>';
+        html += "<li>" + line.replace(/^[-•*]\s+/, "") + "</li>";
       } else {
         if (inList) {
-          html += '</ul>';
+          html += "</ul>";
           inList = false;
         }
-        html += '<p>' + line + '</p>';
+        html += "<p>" + line + "</p>";
       }
     }
 
     if (inList) {
-      html += '</ul>';
+      html += "</ul>";
     }
 
-    return html || '<p>' + formatted + '</p>';
+    return html || "<p>" + formatted + "</p>";
   }
 
   /**
@@ -300,7 +315,10 @@
    */
   function saveChatHistory(history) {
     try {
-      sessionStorage.setItem(STORAGE_HISTORY_KEY, JSON.stringify(history.slice(-14)));
+      sessionStorage.setItem(
+        STORAGE_HISTORY_KEY,
+        JSON.stringify(history.slice(-14)),
+      );
     } catch (e) {
       // Ignorar
     }
@@ -311,39 +329,46 @@
    */
   function triggerWhatsAppChannel(customText) {
     const lead = getStoredLead();
-    const firstName = lead && lead.first_name ? lead.first_name : '';
-    let message = customText || '';
+    const firstName = lead && lead.first_name ? lead.first_name : "";
+    let message = customText || "";
 
     if (!message) {
       message = firstName
-        ? 'Hola Relax Tours! Soy ' + firstName + ', estuve navegando en la web y quería hacer una consulta.'
-        : '¡Hola! Soy Guada de Relax Tours, ¿en qué puedo ayudarte hoy?';
+        ? "Hola Relax Tours! Soy " +
+          firstName +
+          ", estuve navegando en la web y quería hacer una consulta."
+        : "¡Hola! Soy Atlas de Relax Tours, ¿en qué puedo ayudarte hoy?";
     }
 
     const rawNum =
-      (window.siteData && window.siteData.config && window.siteData.config.whatsapp) ||
+      (window.siteData &&
+        window.siteData.config &&
+        window.siteData.config.whatsapp) ||
       DEFAULT_WHATSAPP;
-    const cleanNum = String(rawNum).replace(/\D+/g, '') || DEFAULT_WHATSAPP;
+    const cleanNum = String(rawNum).replace(/\D+/g, "") || DEFAULT_WHATSAPP;
 
     const url = esDispositivoMovil()
-      ? 'https://wa.me/' + cleanNum + '?text=' + encodeURIComponent(message)
-      : 'https://web.whatsapp.com/send?phone=' + cleanNum + '&text=' + encodeURIComponent(message);
+      ? "https://wa.me/" + cleanNum + "?text=" + encodeURIComponent(message)
+      : "https://web.whatsapp.com/send?phone=" +
+        cleanNum +
+        "&text=" +
+        encodeURIComponent(message);
 
-    window.open(url, '_blank', 'noopener,noreferrer');
+    window.open(url, "_blank", "noopener,noreferrer");
   }
 
   /**
    * Construye e inyecta el widget omnicanal en document.body.
    */
   function initRelaxOmnichannelWidget() {
-    if (document.getElementById('relax-widget-root')) return;
+    if (document.getElementById("relax-widget-root")) return;
 
     const basePath = getBasePath();
-    const logoSrc = basePath + 'images/logo-relax.webp';
+    const logoSrc = basePath + "images/logo-relax.webp";
 
-    const root = document.createElement('div');
-    root.id = 'relax-widget-root';
-    root.className = 'relax-widget-root';
+    const root = document.createElement("div");
+    root.id = "relax-widget-root";
+    root.className = "relax-widget-root";
     root.innerHTML = `
       <!-- Panel Principal Omnicanal -->
       <section class="relax-widget-panel" id="relax-widget-panel" role="dialog" aria-modal="false" aria-label="Centro de Atención Omnicanal de Relax Tours">
@@ -638,7 +663,7 @@
         <div class="relax-omnifab-tooltip" id="rw-tooltip" role="status">
           <button type="button" class="relax-omnifab-tooltip-close" id="rw-tooltip-close" aria-label="Cerrar saludo">&times;</button>
           <p class="relax-omnifab-tooltip-text" id="rw-tooltip-body">
-            ¡Hola! Soy <strong>Guada</strong> de Relax Tours, ¿en qué puedo ayudarte hoy?
+            ¡Hola! Soy <strong>Atlas</strong> de Relax Tours, ¿en qué puedo ayudarte hoy?
           </p>
         </div>
 
@@ -662,62 +687,62 @@
     document.body.appendChild(root);
 
     // Referencias DOM
-    const fabBtn = document.getElementById('rw-omnifab');
-    const closeBtn = document.getElementById('rw-close-btn');
-    const backBtn = document.getElementById('rw-back-btn');
-    const tooltip = document.getElementById('rw-tooltip');
-    const tooltipClose = document.getElementById('rw-tooltip-close');
-    const tooltipBody = document.getElementById('rw-tooltip-body');
-    const headerTitle = document.getElementById('rw-header-title');
-    const headerSubtitle = document.getElementById('rw-header-subtitle');
+    const fabBtn = document.getElementById("rw-omnifab");
+    const closeBtn = document.getElementById("rw-close-btn");
+    const backBtn = document.getElementById("rw-back-btn");
+    const tooltip = document.getElementById("rw-tooltip");
+    const tooltipClose = document.getElementById("rw-tooltip-close");
+    const tooltipBody = document.getElementById("rw-tooltip-body");
+    const headerTitle = document.getElementById("rw-header-title");
+    const headerSubtitle = document.getElementById("rw-header-subtitle");
 
     const views = {
-      menu: document.getElementById('rw-view-menu'),
-      prechat: document.getElementById('rw-view-prechat'),
-      chat: document.getElementById('rw-view-chat'),
-      mail: document.getElementById('rw-view-mail'),
-      phone: document.getElementById('rw-view-phone')
+      menu: document.getElementById("rw-view-menu"),
+      prechat: document.getElementById("rw-view-prechat"),
+      chat: document.getElementById("rw-view-chat"),
+      mail: document.getElementById("rw-view-mail"),
+      phone: document.getElementById("rw-view-phone"),
     };
 
-    const navBtns = root.querySelectorAll('[data-rw-nav]');
-    const channelCards = root.querySelectorAll('[data-rw-channel]');
+    const navBtns = root.querySelectorAll("[data-rw-nav]");
+    const channelCards = root.querySelectorAll("[data-rw-channel]");
 
     // Pre-chat form elements
-    const prechatForm = document.getElementById('rw-prechat-form');
-    const leadNameInput = document.getElementById('rw-lead-name');
-    const leadEmailInput = document.getElementById('rw-lead-email');
-    const leadCountrySelect = document.getElementById('rw-lead-country');
-    const leadPhoneInput = document.getElementById('rw-lead-phone');
-    const prechatSubmitBtn = document.getElementById('rw-prechat-submit');
-    const errName = document.getElementById('rw-err-name');
-    const errEmail = document.getElementById('rw-err-email');
-    const errPhone = document.getElementById('rw-err-phone');
+    const prechatForm = document.getElementById("rw-prechat-form");
+    const leadNameInput = document.getElementById("rw-lead-name");
+    const leadEmailInput = document.getElementById("rw-lead-email");
+    const leadCountrySelect = document.getElementById("rw-lead-country");
+    const leadPhoneInput = document.getElementById("rw-lead-phone");
+    const prechatSubmitBtn = document.getElementById("rw-prechat-submit");
+    const errName = document.getElementById("rw-err-name");
+    const errEmail = document.getElementById("rw-err-email");
+    const errPhone = document.getElementById("rw-err-phone");
 
     // Chat elements
-    const chatMessagesEl = document.getElementById('rw-chat-messages');
-    const chatTypingEl = document.getElementById('rw-chat-typing');
-    const chatForm = document.getElementById('rw-chat-form');
-    const chatInput = document.getElementById('rw-chat-input');
-    const chatSendBtn = document.getElementById('rw-chat-send');
-    const charCounter = document.getElementById('rw-char-counter');
-    const quickChips = root.querySelectorAll('[data-rw-prompt]');
+    const chatMessagesEl = document.getElementById("rw-chat-messages");
+    const chatTypingEl = document.getElementById("rw-chat-typing");
+    const chatForm = document.getElementById("rw-chat-form");
+    const chatInput = document.getElementById("rw-chat-input");
+    const chatSendBtn = document.getElementById("rw-chat-send");
+    const charCounter = document.getElementById("rw-char-counter");
+    const quickChips = root.querySelectorAll("[data-rw-prompt]");
 
     // Mail elements
-    const mailForm = document.getElementById('rw-mail-form');
-    const mailName = document.getElementById('rw-mail-name');
-    const mailEmail = document.getElementById('rw-mail-email');
-    const mailPhone = document.getElementById('rw-mail-phone');
-    const mailMessage = document.getElementById('rw-mail-message');
-    const mailSubmitBtn = document.getElementById('rw-mail-submit');
-    const mailAlert = document.getElementById('rw-mail-alert');
+    const mailForm = document.getElementById("rw-mail-form");
+    const mailName = document.getElementById("rw-mail-name");
+    const mailEmail = document.getElementById("rw-mail-email");
+    const mailPhone = document.getElementById("rw-mail-phone");
+    const mailMessage = document.getElementById("rw-mail-message");
+    const mailSubmitBtn = document.getElementById("rw-mail-submit");
+    const mailAlert = document.getElementById("rw-mail-alert");
 
     // Phone elements
-    const phoneBadge = document.getElementById('rw-phone-badge');
-    const phoneBadgeText = document.getElementById('rw-phone-badge-text');
-    const phoneMessage = document.getElementById('rw-phone-message');
-    const phoneCallBtn = document.getElementById('rw-phone-call-btn');
-    const phoneWaBtn = document.getElementById('rw-phone-wa-btn');
-    const phoneMailBtn = document.getElementById('rw-phone-mail-btn');
+    const phoneBadge = document.getElementById("rw-phone-badge");
+    const phoneBadgeText = document.getElementById("rw-phone-badge-text");
+    const phoneMessage = document.getElementById("rw-phone-message");
+    const phoneCallBtn = document.getElementById("rw-phone-call-btn");
+    const phoneWaBtn = document.getElementById("rw-phone-wa-btn");
+    const phoneMailBtn = document.getElementById("rw-phone-mail-btn");
 
     let isOpen = false;
     let isSendingChat = false;
@@ -730,7 +755,8 @@
       if (!lead) return;
       if (lead.full_name && !mailName.value) mailName.value = lead.full_name;
       if (lead.email && !mailEmail.value) mailEmail.value = lead.email;
-      if (lead.phone_e164 && !mailPhone.value) mailPhone.value = lead.phone_e164;
+      if (lead.phone_e164 && !mailPhone.value)
+        mailPhone.value = lead.phone_e164;
     }
 
     /**
@@ -739,42 +765,43 @@
     function switchView(viewName) {
       Object.keys(views).forEach(function (key) {
         if (views[key]) {
-          views[key].classList.toggle('is-active', key === viewName);
+          views[key].classList.toggle("is-active", key === viewName);
         }
       });
 
       // Mostrar u ocultar botón de volver al menú
-      if (viewName === 'menu') {
-        backBtn.classList.remove('is-visible');
-        headerTitle.textContent = 'Asistente Relax Tours';
-        headerSubtitle.textContent = 'Atención Omnicanal • En línea';
+      if (viewName === "menu") {
+        backBtn.classList.remove("is-visible");
+        headerTitle.textContent = "Asistente Relax Tours";
+        headerSubtitle.textContent = "Atención Omnicanal • En línea";
       } else {
-        backBtn.classList.add('is-visible');
-        if (viewName === 'prechat' || viewName === 'chat') {
-          headerTitle.textContent = 'Asistente IA • Relax Tours';
-          headerSubtitle.textContent = 'Respuestas al instante 24/7';
-        } else if (viewName === 'mail') {
-          headerTitle.textContent = 'Consulta por Correo';
-          headerSubtitle.textContent = 'ventas1@relaxtours.com.ar';
-        } else if (viewName === 'phone') {
-          headerTitle.textContent = 'Atención Telefónica';
-          headerSubtitle.textContent = 'Oficina Comercial Devoto';
+        backBtn.classList.add("is-visible");
+        if (viewName === "prechat" || viewName === "chat") {
+          headerTitle.textContent = "Asistente IA • Relax Tours";
+          headerSubtitle.textContent = "Respuestas al instante 24/7";
+        } else if (viewName === "mail") {
+          headerTitle.textContent = "Consulta por Correo";
+          headerSubtitle.textContent = "ventas1@relaxtours.com.ar";
+        } else if (viewName === "phone") {
+          headerTitle.textContent = "Atención Telefónica";
+          headerSubtitle.textContent = "Oficina Comercial Devoto";
         }
       }
 
       // Actualizar estado activo en barra de navegación
       navBtns.forEach(function (btn) {
-        const navTarget = btn.getAttribute('data-rw-nav');
+        const navTarget = btn.getAttribute("data-rw-nav");
         const active =
-          (navTarget === 'chat' && (viewName === 'chat' || viewName === 'prechat')) ||
+          (navTarget === "chat" &&
+            (viewName === "chat" || viewName === "prechat")) ||
           navTarget === viewName;
-        btn.classList.toggle('is-active', active);
+        btn.classList.toggle("is-active", active);
       });
 
-      if (viewName === 'mail') {
+      if (viewName === "mail") {
         syncLeadToMailForm();
       }
-      if (viewName === 'chat') {
+      if (viewName === "chat") {
         ensureChatInitialized();
         setTimeout(function () {
           chatInput.focus();
@@ -786,12 +813,12 @@
      * Abre o cierra el panel del widget.
      */
     function toggleWidget(forceState) {
-      isOpen = typeof forceState === 'boolean' ? forceState : !isOpen;
-      root.classList.toggle('is-open', isOpen);
-      fabBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      isOpen = typeof forceState === "boolean" ? forceState : !isOpen;
+      root.classList.toggle("is-open", isOpen);
+      fabBtn.setAttribute("aria-expanded", isOpen ? "true" : "false");
 
       if (isOpen) {
-        tooltip.classList.remove('is-visible');
+        tooltip.classList.remove("is-visible");
         syncLeadToMailForm();
       }
     }
@@ -799,77 +826,80 @@
     // Mostrar Tooltip discreto a los 4 segundos si el widget está cerrado
     setTimeout(function () {
       try {
-        if (!isOpen && sessionStorage.getItem(STORAGE_TOOLTIP_DISMISSED) !== '1') {
-          tooltip.classList.add('is-visible');
+        if (
+          !isOpen &&
+          sessionStorage.getItem(STORAGE_TOOLTIP_DISMISSED) !== "1"
+        ) {
+          tooltip.classList.add("is-visible");
         }
       } catch (e) {
-        if (!isOpen) tooltip.classList.add('is-visible');
+        if (!isOpen) tooltip.classList.add("is-visible");
       }
     }, 4000);
 
-    tooltipClose.addEventListener('click', function (e) {
+    tooltipClose.addEventListener("click", function (e) {
       e.stopPropagation();
-      tooltip.classList.remove('is-visible');
+      tooltip.classList.remove("is-visible");
       try {
-        sessionStorage.setItem(STORAGE_TOOLTIP_DISMISSED, '1');
+        sessionStorage.setItem(STORAGE_TOOLTIP_DISMISSED, "1");
       } catch (err) {}
     });
 
-    tooltipBody.addEventListener('click', function () {
-      tooltip.classList.remove('is-visible');
+    tooltipBody.addEventListener("click", function () {
+      tooltip.classList.remove("is-visible");
       toggleWidget(true);
     });
 
-    fabBtn.addEventListener('click', function () {
+    fabBtn.addEventListener("click", function () {
       toggleWidget();
     });
 
-    closeBtn.addEventListener('click', function () {
+    closeBtn.addEventListener("click", function () {
       toggleWidget(false);
     });
 
-    backBtn.addEventListener('click', function () {
-      switchView('menu');
+    backBtn.addEventListener("click", function () {
+      switchView("menu");
     });
 
     /**
      * Maneja la selección de cualquiera de los 4 canales (desde tarjetas del menú o barra superior).
      */
     function handleChannelSelection(channel) {
-      if (channel === 'chat') {
+      if (channel === "chat") {
         const lead = getStoredLead();
         if (lead && lead.lead_token) {
-          switchView('chat');
+          switchView("chat");
         } else {
-          switchView('prechat');
+          switchView("prechat");
         }
         return;
       }
 
-      if (channel === 'whatsapp') {
+      if (channel === "whatsapp") {
         triggerWhatsAppChannel();
         return;
       }
 
-      if (channel === 'mail') {
-        switchView('mail');
+      if (channel === "mail") {
+        switchView("mail");
         return;
       }
 
-      if (channel === 'phone') {
+      if (channel === "phone") {
         handlePhoneOptionClick();
       }
     }
 
     channelCards.forEach(function (card) {
-      card.addEventListener('click', function () {
-        handleChannelSelection(card.getAttribute('data-rw-channel'));
+      card.addEventListener("click", function () {
+        handleChannelSelection(card.getAttribute("data-rw-channel"));
       });
     });
 
     navBtns.forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        handleChannelSelection(btn.getAttribute('data-rw-nav'));
+      btn.addEventListener("click", function () {
+        handleChannelSelection(btn.getAttribute("data-rw-nav"));
       });
     });
 
@@ -879,17 +909,17 @@
 
     function renderPhoneViewState(inBusinessHours, isMobileDevice) {
       if (inBusinessHours) {
-        phoneBadge.className = 'relax-phone-status-badge is-open';
-        phoneBadgeText.textContent = 'Abierto ahora • Línea disponible';
+        phoneBadge.className = "relax-phone-status-badge is-open";
+        phoneBadgeText.textContent = "Abierto ahora • Línea disponible";
         phoneMessage.textContent =
-          'Nuestras líneas telefónicas están habilitadas en este momento. Llamá al 11 7079-8079 o contactanos por WhatsApp o Correo.';
-        phoneCallBtn.style.display = isMobileDevice ? 'inline-flex' : 'none';
+          "Nuestras líneas telefónicas están habilitadas en este momento. Llamá al 11 7079-8079 o contactanos por WhatsApp o Correo.";
+        phoneCallBtn.style.display = isMobileDevice ? "inline-flex" : "none";
       } else {
-        phoneBadge.className = 'relax-phone-status-badge is-closed';
-        phoneBadgeText.textContent = 'Cerrado en este momento';
+        phoneBadge.className = "relax-phone-status-badge is-closed";
+        phoneBadgeText.textContent = "Cerrado en este momento";
         phoneMessage.textContent =
-          'En este momento nuestras líneas telefónicas están cerradas. Nuestro horario de atención es de Lunes a Viernes de 10:00 a 13:00 y de 14:00 a 19:00 hs, y Sábados de 10:00 a 13:00 hs.';
-        phoneCallBtn.style.display = 'none';
+          "En este momento nuestras líneas telefónicas están cerradas. Nuestro horario de atención es de Lunes a Viernes de 10:00 a 13:00 y de 14:00 a 19:00 hs, y Sábados de 10:00 a 13:00 hs.";
+        phoneCallBtn.style.display = "none";
       }
     }
 
@@ -898,7 +928,7 @@
       const esMovil = esDispositivoMovil();
 
       renderPhoneViewState(enHorario, esMovil);
-      switchView('phone');
+      switchView("phone");
 
       // Caso A: Dispositivo móvil (Android / iOS) + Dentro del horario comercial de Argentina
       if (esMovil && enHorario) {
@@ -906,12 +936,12 @@
       }
     }
 
-    phoneWaBtn.addEventListener('click', function () {
+    phoneWaBtn.addEventListener("click", function () {
       triggerWhatsAppChannel();
     });
 
-    phoneMailBtn.addEventListener('click', function () {
-      switchView('mail');
+    phoneMailBtn.addEventListener("click", function () {
+      switchView("mail");
     });
 
     // ========================================================================
@@ -919,19 +949,19 @@
     // ========================================================================
 
     function clearPrechatErrors() {
-      leadNameInput.classList.remove('has-error');
-      leadEmailInput.classList.remove('has-error');
-      leadPhoneInput.classList.remove('has-error');
-      errName.classList.remove('is-visible');
-      errEmail.classList.remove('is-visible');
-      errPhone.classList.remove('is-visible');
+      leadNameInput.classList.remove("has-error");
+      leadEmailInput.classList.remove("has-error");
+      leadPhoneInput.classList.remove("has-error");
+      errName.classList.remove("is-visible");
+      errEmail.classList.remove("is-visible");
+      errPhone.classList.remove("is-visible");
     }
 
-    prechatForm.addEventListener('submit', async function (e) {
+    prechatForm.addEventListener("submit", async function (e) {
       e.preventDefault();
       clearPrechatErrors();
 
-      const fullName = leadNameInput.value.trim().replace(/\s+/g, ' ');
+      const fullName = leadNameInput.value.trim().replace(/\s+/g, " ");
       const email = leadEmailInput.value.trim().toLowerCase();
       const countryCode = leadCountrySelect.value;
       const rawPhone = leadPhoneInput.value.trim();
@@ -939,21 +969,21 @@
       let valid = true;
 
       if (!isValidFullName(fullName)) {
-        leadNameInput.classList.add('has-error');
-        errName.classList.add('is-visible');
+        leadNameInput.classList.add("has-error");
+        errName.classList.add("is-visible");
         valid = false;
       }
 
       if (!isValidEmail(email)) {
-        leadEmailInput.classList.add('has-error');
-        errEmail.classList.add('is-visible');
+        leadEmailInput.classList.add("has-error");
+        errEmail.classList.add("is-visible");
         valid = false;
       }
 
       const phoneE164 = normalizePhoneToE164(rawPhone, countryCode);
       if (!phoneE164) {
-        leadPhoneInput.classList.add('has-error');
-        errPhone.classList.add('is-visible');
+        leadPhoneInput.classList.add("has-error");
+        errPhone.classList.add("is-visible");
         valid = false;
       }
 
@@ -961,59 +991,61 @@
 
       prechatSubmitBtn.disabled = true;
       const originalBtnHtml = prechatSubmitBtn.innerHTML;
-      prechatSubmitBtn.textContent = 'Conectando...';
+      prechatSubmitBtn.textContent = "Conectando...";
 
       try {
-        const res = await fetch(basePath + 'api/lead', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        const res = await fetch(basePath + "api/lead", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             full_name: fullName,
             email: email,
             phone: phoneE164,
-            page_url: window.location.href
-          })
+            page_url: window.location.href,
+          }),
         });
 
         const data = await res.json();
 
         if (!res.ok || !data || !data.ok) {
-          const field = data && data.field ? data.field : 'phone';
-          const msg = (data && data.message) || 'Verificá los datos ingresados.';
-          if (field === 'full_name') {
-            leadNameInput.classList.add('has-error');
+          const field = data && data.field ? data.field : "phone";
+          const msg =
+            (data && data.message) || "Verificá los datos ingresados.";
+          if (field === "full_name") {
+            leadNameInput.classList.add("has-error");
             errName.textContent = msg;
-            errName.classList.add('is-visible');
-          } else if (field === 'email') {
-            leadEmailInput.classList.add('has-error');
+            errName.classList.add("is-visible");
+          } else if (field === "email") {
+            leadEmailInput.classList.add("has-error");
             errEmail.textContent = msg;
-            errEmail.classList.add('is-visible');
+            errEmail.classList.add("is-visible");
           } else {
-            leadPhoneInput.classList.add('has-error');
+            leadPhoneInput.classList.add("has-error");
             errPhone.textContent = msg;
-            errPhone.classList.add('is-visible');
+            errPhone.classList.add("is-visible");
           }
           return;
         }
 
-        const firstName = data.first_name || fullName.split(' ')[0];
+        const firstName = data.first_name || fullName.split(" ")[0];
         const leadRecord = {
           lead_id: data.lead_id,
           lead_token: data.lead_token,
           full_name: fullName,
           first_name: firstName,
           email: email,
-          phone_e164: data.phone_e164 || phoneE164
+          phone_e164: data.phone_e164 || phoneE164,
         };
 
         saveStoredLead(leadRecord);
         syncLeadToMailForm();
-        switchView('chat');
+        switchView("chat");
       } catch (err) {
         // Fallback local resiliente si la red falla momentáneamente
-        leadPhoneInput.classList.add('has-error');
-        errPhone.textContent = 'No pudimos conectar con el servidor. Intentá nuevamente.';
-        errPhone.classList.add('is-visible');
+        leadPhoneInput.classList.add("has-error");
+        errPhone.textContent =
+          "No pudimos conectar con el servidor. Intentá nuevamente.";
+        errPhone.classList.add("is-visible");
       } finally {
         prechatSubmitBtn.disabled = false;
         prechatSubmitBtn.innerHTML = originalBtnHtml;
@@ -1025,20 +1057,22 @@
      */
     function appendMessageBubble(role, text, options) {
       const opts = options || {};
-      const div = document.createElement('div');
-      div.className = 'relax-msg ' + (role === 'user' ? 'relax-msg--user' : 'relax-msg--model');
+      const div = document.createElement("div");
+      div.className =
+        "relax-msg " +
+        (role === "user" ? "relax-msg--user" : "relax-msg--model");
 
-      if (role === 'user') {
+      if (role === "user") {
         div.textContent = text;
       } else {
         div.innerHTML = formatBotMessageSafe(text);
         if (opts.showWhatsAppCta) {
-          const waBtn = document.createElement('button');
-          waBtn.type = 'button';
-          waBtn.className = 'relax-msg-wa-cta';
-          waBtn.innerHTML = '🟢 Continuar en WhatsApp con un asesor';
-          waBtn.addEventListener('click', function () {
-            triggerWhatsAppChannel(opts.waPrefill || '');
+          const waBtn = document.createElement("button");
+          waBtn.type = "button";
+          waBtn.className = "relax-msg-wa-cta";
+          waBtn.innerHTML = "🟢 Continuar en WhatsApp con un asesor";
+          waBtn.addEventListener("click", function () {
+            triggerWhatsAppChannel(opts.waPrefill || "");
           });
           div.appendChild(waBtn);
         }
@@ -1056,7 +1090,7 @@
 
       const history = getChatHistory();
       const lead = getStoredLead();
-      const firstName = (lead && lead.first_name) || 'viajero/a';
+      const firstName = (lead && lead.first_name) || "viajero/a";
 
       if (history.length > 0) {
         history.forEach(function (item) {
@@ -1064,10 +1098,10 @@
         });
       } else {
         const welcome =
-          '¡Hola ' +
+          "¡Hola " +
           firstName +
-          '! 👋 Soy el asistente virtual de **Relax Tours**. Puedo ayudarte con información sobre nuestros **paquetes turísticos**, **ofertas flash**, **asistencia al viajero Coris** y tips para tu próximo viaje. ¿Qué destino tenés en mente?';
-        appendMessageBubble('model', welcome);
+          "! 👋 Soy el asistente virtual de **Relax Tours**. Puedo ayudarte con información sobre nuestros **paquetes turísticos**, **ofertas flash**, **asistencia al viajero Coris** y tips para tu próximo viaje. ¿Qué destino tenés en mente?";
+        appendMessageBubble("model", welcome);
       }
     }
 
@@ -1075,58 +1109,70 @@
      * Envía una consulta al endpoint RAG api/chat.php.
      */
     async function sendChatMessage(rawText) {
-      const text = String(rawText || '').trim().slice(0, 400);
+      const text = String(rawText || "")
+        .trim()
+        .slice(0, 400);
       if (!text || isSendingChat) return;
 
       const lead = getStoredLead();
       if (!lead || !lead.lead_token) {
-        switchView('prechat');
+        switchView("prechat");
         return;
       }
 
       isSendingChat = true;
-      chatInput.value = '';
-      charCounter.textContent = '0 / 400';
+      chatInput.value = "";
+      charCounter.textContent = "0 / 400";
       chatSendBtn.disabled = true;
 
-      appendMessageBubble('user', text);
+      appendMessageBubble("user", text);
 
       const history = getChatHistory();
-      chatTypingEl.classList.add('is-visible');
+      chatTypingEl.classList.add("is-visible");
       chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
 
       try {
-        const response = await fetch(basePath + 'api/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        const response = await fetch(basePath + "api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             message: text,
             history: history.slice(-6),
             lead_token: lead.lead_token,
-            email: lead.email
-          })
+            email: lead.email,
+          }),
         });
 
         const data = await response.json();
-        chatTypingEl.classList.remove('is-visible');
+        chatTypingEl.classList.remove("is-visible");
 
-        if (response.status === 403 || (data && data.code === 'LEAD_REQUIRED')) {
+        if (
+          response.status === 403 ||
+          (data && data.code === "LEAD_REQUIRED")
+        ) {
           clearStoredLead();
-          switchView('prechat');
+          switchView("prechat");
           return;
         }
 
         if (
           response.status === 429 ||
           response.status === 503 ||
-          (data && (data.code === 'RATE_LIMIT' || data.code === 'AI_QUOTA_EXCEEDED' || data.code === 'AI_UNAVAILABLE'))
+          (data &&
+            (data.code === "RATE_LIMIT" ||
+              data.code === "AI_QUOTA_EXCEEDED" ||
+              data.code === "AI_UNAVAILABLE"))
         ) {
           const msg =
             (data && data.message) ||
-            'Alcanzaste el límite de consultas automáticas. Podés continuar charlando con nuestros asesores por WhatsApp.';
-          appendMessageBubble('model', msg, {
+            "Alcanzaste el límite de consultas automáticas. Podés continuar charlando con nuestros asesores por WhatsApp.";
+          appendMessageBubble("model", msg, {
             showWhatsAppCta: true,
-            waPrefill: 'Hola Relax Tours! Soy ' + (lead.first_name || '') + '. Mi consulta es: ' + text
+            waPrefill:
+              "Hola Relax Tours! Soy " +
+              (lead.first_name || "") +
+              ". Mi consulta es: " +
+              text,
           });
           return;
         }
@@ -1134,28 +1180,28 @@
         if (!response.ok || !data || !data.ok) {
           const errMsg =
             (data && data.message) ||
-            'En este momento no pudimos procesar tu consulta. Tocá el botón debajo para hablar directo por WhatsApp.';
-          appendMessageBubble('model', errMsg, {
+            "En este momento no pudimos procesar tu consulta. Tocá el botón debajo para hablar directo por WhatsApp.";
+          appendMessageBubble("model", errMsg, {
             showWhatsAppCta: true,
-            waPrefill: 'Hola Relax Tours! Quería consultar: ' + text
+            waPrefill: "Hola Relax Tours! Quería consultar: " + text,
           });
           return;
         }
 
-        appendMessageBubble('model', data.reply);
+        appendMessageBubble("model", data.reply);
 
-        history.push({ role: 'user', message: text });
-        history.push({ role: 'model', message: data.reply });
+        history.push({ role: "user", message: text });
+        history.push({ role: "model", message: data.reply });
         saveChatHistory(history);
       } catch (err) {
-        chatTypingEl.classList.remove('is-visible');
+        chatTypingEl.classList.remove("is-visible");
         appendMessageBubble(
-          'model',
-          'Ocurrió un problema de conexión. Podés escribirnos directamente por WhatsApp para atención inmediata.',
+          "model",
+          "Ocurrió un problema de conexión. Podés escribirnos directamente por WhatsApp para atención inmediata.",
           {
             showWhatsAppCta: true,
-            waPrefill: 'Hola Relax Tours! Quería consultar: ' + text
-          }
+            waPrefill: "Hola Relax Tours! Quería consultar: " + text,
+          },
         );
       } finally {
         isSendingChat = false;
@@ -1163,19 +1209,19 @@
       }
     }
 
-    chatInput.addEventListener('input', function () {
+    chatInput.addEventListener("input", function () {
       const len = chatInput.value.length;
-      charCounter.textContent = len + ' / 400';
+      charCounter.textContent = len + " / 400";
     });
 
-    chatForm.addEventListener('submit', function (e) {
+    chatForm.addEventListener("submit", function (e) {
       e.preventDefault();
       sendChatMessage(chatInput.value);
     });
 
     quickChips.forEach(function (chip) {
-      chip.addEventListener('click', function () {
-        const promptText = chip.getAttribute('data-rw-prompt');
+      chip.addEventListener("click", function () {
+        const promptText = chip.getAttribute("data-rw-prompt");
         sendChatMessage(promptText);
       });
     });
@@ -1184,10 +1230,10 @@
     // LÓGICA CANAL 3: CORREO ELECTRÓNICO (INTEGRADO CON send-mail.php)
     // ========================================================================
 
-    mailForm.addEventListener('submit', async function (e) {
+    mailForm.addEventListener("submit", async function (e) {
       e.preventDefault();
-      mailAlert.className = 'relax-alert';
-      mailAlert.textContent = '';
+      mailAlert.className = "relax-alert";
+      mailAlert.textContent = "";
 
       const nameVal = mailName.value.trim();
       const emailVal = mailEmail.value.trim();
@@ -1195,37 +1241,41 @@
       const msgVal = mailMessage.value.trim();
 
       if (!nameVal || !isValidEmail(emailVal) || !phoneVal || !msgVal) {
-        mailAlert.textContent = 'Por favor completá todos los campos con datos válidos.';
-        mailAlert.className = 'relax-alert relax-alert--error is-visible';
+        mailAlert.textContent =
+          "Por favor completá todos los campos con datos válidos.";
+        mailAlert.className = "relax-alert relax-alert--error is-visible";
         return;
       }
 
       const originalBtnText = mailSubmitBtn.textContent;
       mailSubmitBtn.disabled = true;
-      mailSubmitBtn.textContent = 'Enviando...';
+      mailSubmitBtn.textContent = "Enviando...";
 
       try {
         const formData = new FormData(mailForm);
-        const response = await fetch(basePath + 'send-mail.php', {
-          method: 'POST',
-          body: formData
+        const response = await fetch(basePath + "send-mail.php", {
+          method: "POST",
+          body: formData,
         });
 
         const result = await response.json();
 
-        if (result && (result.ok === true || result.status === 'success')) {
+        if (result && (result.ok === true || result.status === "success")) {
           mailAlert.textContent =
-            result.message || '¡Tu consulta fue enviada con éxito! Te responderemos a la brevedad.';
-          mailAlert.className = 'relax-alert relax-alert--success is-visible';
-          mailMessage.value = '';
+            result.message ||
+            "¡Tu consulta fue enviada con éxito! Te responderemos a la brevedad.";
+          mailAlert.className = "relax-alert relax-alert--success is-visible";
+          mailMessage.value = "";
         } else {
           mailAlert.textContent =
-            (result && result.message) || 'No se pudo enviar el correo. Intentá nuevamente o escribinos por WhatsApp.';
-          mailAlert.className = 'relax-alert relax-alert--error is-visible';
+            (result && result.message) ||
+            "No se pudo enviar el correo. Intentá nuevamente o escribinos por WhatsApp.";
+          mailAlert.className = "relax-alert relax-alert--error is-visible";
         }
       } catch (err) {
-        mailAlert.textContent = 'Error de conexión al enviar el mensaje. Intentá nuevamente.';
-        mailAlert.className = 'relax-alert relax-alert--error is-visible';
+        mailAlert.textContent =
+          "Error de conexión al enviar el mensaje. Intentá nuevamente.";
+        mailAlert.className = "relax-alert relax-alert--error is-visible";
       } finally {
         mailSubmitBtn.disabled = false;
         mailSubmitBtn.textContent = originalBtnText;
@@ -1243,12 +1293,12 @@
       },
       normalizePhoneToE164: normalizePhoneToE164,
       estaEnHorarioComercialArgentina: estaEnHorarioComercialArgentina,
-      esDispositivoMovil: esDispositivoMovil
+      esDispositivoMovil: esDispositivoMovil,
     };
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initRelaxOmnichannelWidget);
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initRelaxOmnichannelWidget);
   } else {
     initRelaxOmnichannelWidget();
   }
