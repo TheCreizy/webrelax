@@ -964,7 +964,7 @@
       prechatSubmitBtn.textContent = 'Conectando...';
 
       try {
-        const res = await fetch(basePath + 'api/lead.php', {
+        const res = await fetch(basePath + 'api/lead', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -1096,7 +1096,7 @@
       chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
 
       try {
-        const response = await fetch(basePath + 'api/chat.php', {
+        const response = await fetch(basePath + 'api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

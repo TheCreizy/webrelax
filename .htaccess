@@ -17,7 +17,8 @@ Options -Indexes
     RewriteRule ^contact/?$ /#contacto [NE,L,R=301]
     # ------------------------------------------------------
 
-    # 1. Quitar la barra final (Trailing slash) de manera segura para Local y Web
+    # 1. Quitar la barra final (Trailing slash) de manera segura para Local y Web (solo GET / HEAD)
+    RewriteCond %{REQUEST_METHOD} ^(GET|HEAD)$ [NC]
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteRule ^(.*)/$ /$1 [L,R=301]
 
@@ -27,7 +28,12 @@ Options -Indexes
     RewriteCond %{HTTP_HOST} !^127\.0\.0\.1
     RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
-    # 3. Limpieza de extensiones (.php y .html)
+    # 3. Limpieza de extensiones (.php y .html) SOLO para navegación web pública (GET / HEAD)
+    # Excluir peticiones POST/PUT/DELETE, endpoints de API (/api/), envío de correos y panel admin
+    RewriteCond %{REQUEST_METHOD} ^(GET|HEAD)$ [NC]
+    RewriteCond %{REQUEST_URI} !(/api/|api/) [NC]
+    RewriteCond %{REQUEST_URI} !send-mail\.php [NC]
+    RewriteCond %{REQUEST_URI} !admin/ [NC]
     RewriteCond %{THE_REQUEST} ^[A-Z]{3,}\s([^.]+)\.(php|html) [NC]
     RewriteRule ^ %1 [L,R=301]
 

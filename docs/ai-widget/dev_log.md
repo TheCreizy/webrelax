@@ -88,3 +88,25 @@
   3. Se actualizaron `admin/.env`, `admin/.env.example` y `api/GeminiClient.php` para utilizar `gemini-3.5-flash-lite` (primario — 1.5s de latencia), `gemini-flash-lite-latest` (fallback) y `gemini-embedding-001` (embeddings 768d).
   4. Prueba en vivo de `GeminiClient::generateChatResponse()` preguntando por paquetes a Mendoza e Iguazú: **ÉXITO en 1510ms**, devolviendo los precios exactos de `data/content.json` ($445.453 y $477.640 ARS), hoteles incluidos y la aclaración legal obligatoria.
   5. Prueba en vivo de `GeminiClient::generateEmbedding()`: **ÉXITO**, devolviendo el vector de 768 dimensiones listo para `public.knowledge_base` en Supabase.
+
+---
+
+## [2026-10-30 01:40 -03:00] — Resolución de Error 405 en `/api/lead`
+**Agente**: Orquestador Principal
+
+- **Causa Raíz Diagnosticada**:
+  1. En `.htaccess`, la regla 3 de limpieza de extensiones (`RewriteCond %{THE_REQUEST} ^[A-Z]{3,}\s([^.]+)\.(php|html)` -> `RewriteRule ^ %1 [L,R=301]`) interceptaba todas las solicitudes con extensión `.php` sin discriminar método HTTP ni ruta.
+  2. Cuando el widget enviaba `POST /api/lead.php`, Apache devolvía un `HTTP 301 Moved Permanently` hacia `/api/lead`.
+  3. Los navegadores web (Chrome, Edge, Safari, Firefox), por estándar HTTP ante un código 301, reconvierten la petición a `GET` y descartan el cuerpo (body) de la solicitud.
+  4. Al llegar `GET /api/lead`, Apache lo mapeaba internamente a `api/lead.php`, donde la guarda `$_SERVER['REQUEST_METHOD'] !== 'POST'` respondía legítimamente `405 Method Not Allowed` con el mensaje `Método no permitido. Usá POST.`.
+- **Acciones Correctivas Implementadas**:
+  1. En [`.htaccess`](file:///e:/Herny/2025/Trabajo/Relax%20Tours/New%20Web/Actual/.htaccess):
+     - Se añadió `RewriteCond %{REQUEST_METHOD} ^(GET|HEAD)$ [NC]` a la regla 1 (quitar trailing slash) y a la regla 3 (quitar extensiones).
+     - Se añadieron excepciones explícitas a la regla 3 para rutas internas y APIs: `RewriteCond %{REQUEST_URI} !(/api/|api/) [NC]`, `RewriteCond %{REQUEST_URI} !send-mail\.php [NC]` y `RewriteCond %{REQUEST_URI} !admin/ [NC]`.
+  2. En [`js/relax-widget.js`](file:///e:/Herny/2025/Trabajo/Relax%20Tours/New%20Web/Actual/js/relax-widget.js):
+     - Se actualizaron los endpoints a `basePath + 'api/lead'` y `basePath + 'api/chat'`, evitando que navegadores con el 301 anterior en caché local intenten redirigirse.
+  3. En [`api/lead.php`](file:///e:/Herny/2025/Trabajo/Relax%20Tours/New%20Web/Actual/api/lead.php) y [`api/chat.php`](file:///e:/Herny/2025/Trabajo/Relax%20Tours/New%20Web/Actual/api/chat.php):
+     - Se añadió limpieza defensiva de BOM UTF-8 (`\xEF\xBB\xBF`) en la lectura del input JSON crudo.
+- **Verificación**:
+  - `POST` a `/api/lead` validado exitosamente (inserción en Supabase, normalización a `+549...`, firma HMAC y respuesta JSON 200).
+  - `POST` a `/api/chat` validado exitosamente en vivo con respuesta RAG de Gemini y Supabase.

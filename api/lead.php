@@ -104,6 +104,10 @@ function generateUuidV4(): string
 
 // Leer body JSON o fallback a $_POST
 $rawBody = file_get_contents('php://input');
+if ($rawBody !== false) {
+    // Quitar BOM UTF-8 (\xEF\xBB\xBF) si está presente
+    $rawBody = preg_replace('/^\xEF\xBB\xBF/', '', $rawBody);
+}
 $input = json_decode($rawBody ?: '', true);
 if (!is_array($input)) {
     $input = $_POST;
