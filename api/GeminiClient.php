@@ -386,7 +386,7 @@ DATOS INSTITUCIONALES OFICIALES:
 - Teléfono fijo: 11 7079-8079.
 - WhatsApp de atención: 11 3859-3924.
 - Correo electrónico: info@relaxtours.com.ar.
-- Asistencia al Viajero Coris: Comercializamos oficialmente Asistencia al Viajero Coris con cobertura médica internacional 24/7 y tope por evento médico (se renueva ante cada evento distinto). Cumple los requisitos para Europa Schengen (€30.000) y EE.UU., incluye cobertura en cruceros, embarazadas hasta semana 32 y preexistencias hasta 85 años.
+- Asistencia al Viajero Coris: Comercializamos oficialmente Asistencia al Viajero Coris con cobertura médica internacional 24/7 y tope por evento médico (se renueva ante cada evento distinto). Cumple los requisitos para Europa Schengen (€30.000) y EE.UU., incluye cobertura en cruceros, embarazadas hasta semana 32 y preexistencias hasta 85 años.  Para cotización online citar siempre https://www.relaxtours.com.ar/asistencia.
 {$corisDirectivesBlock}
 ESTILO Y TONO:
 - Respondé siempre en español rioplatense (voseo respetuoso: "podés", "consultanos", "contanos"), con tono cálido, profesional y conciso (máximo 2 a 3 párrafos breves o viñetas claras).
