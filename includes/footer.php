@@ -218,7 +218,7 @@ $base_url = isset($base_url) ? $base_url : './';
 
 <!-- MODAL ARREPENTIMIENTO -->
 <div id="arrepentimiento-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="arrepentimiento-modal-title">
-    <div class="modal-content">
+    <div class="modal-content" data-lenis-prevent>
         <div class="modal-header">
             <h3 id="arrepentimiento-modal-title">Botón de Arrepentimiento</h3>
             <button onclick="closeArrepentimientoModal()" class="modal-close" aria-label="Cerrar">&times;</button>
@@ -281,7 +281,7 @@ $base_url = isset($base_url) ? $base_url : './';
 
 <!-- MODAL BLOG -->
 <div id="blog-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="blog-modal-title">
-    <div class="modal-content blog-modal-content">
+    <div class="modal-content blog-modal-content" data-lenis-prevent>
         <div class="modal-header">
             <h3 id="blog-modal-title">Tips de Viaje</h3>
             <button onclick="closeBlogModal()" class="modal-close" aria-label="Cerrar">&times;</button>
@@ -320,8 +320,9 @@ $base_url = isset($base_url) ? $base_url : './';
     </div>
 </div>
 
+<script src="<?php echo $base_url; ?>js/lenis.min.js?v=1.1.20"></script>
 <script src="<?php echo $base_url; ?>js/cookies.js?v=2.1"></script>
-<script src="<?php echo $base_url; ?>js/main.js?v=2.4"></script>
+<script src="<?php echo $base_url; ?>js/main.js?v=2.5"></script>
 <script>document.getElementById('current-year').textContent = new Date().getFullYear();</script>
 </body>
 

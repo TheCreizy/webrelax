@@ -68,6 +68,7 @@ $globalConfig = $contentData['config'] ?? [];
     <link rel="apple-touch-icon" href="<?php echo $base_url; ?>images/apple-touch-icon.png">
     <link rel="manifest" href="<?php echo $base_url; ?>images/site.webmanifest">
     <meta name="theme-color" content="#F97316">
+    <link rel="stylesheet" href="<?php echo $base_url; ?>css/lenis.css?v=1.1.20">
     <link rel="stylesheet" href="<?php echo $base_url; ?>css/style.css">
     <link rel="stylesheet" href="<?php echo $base_url; ?>css/cookies.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -136,7 +137,7 @@ $globalConfig = $contentData['config'] ?? [];
         </div>
     </nav>
 
-    <div class="navbar-mobile-menu" id="mobile-menu">
+    <div class="navbar-mobile-menu" id="mobile-menu" data-lenis-prevent>
         <a href="<?php echo $base_url; ?>#inicio"
             class="<?php echo ($active_page === 'inicio') ? 'active' : ''; ?>">Inicio</a>
         <a href="<?php echo $base_url; ?>nosotros"

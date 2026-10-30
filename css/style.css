@@ -50,8 +50,11 @@
 }
 
 html {
-  scroll-behavior: smooth;
   overflow-x: hidden;
+}
+
+html:not(.lenis) {
+  scroll-behavior: smooth;
 }
 
 body {

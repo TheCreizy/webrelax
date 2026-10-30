@@ -371,7 +371,7 @@
     root.className = "relax-widget-root";
     root.innerHTML = `
       <!-- Panel Principal Omnicanal -->
-      <section class="relax-widget-panel" id="relax-widget-panel" role="dialog" aria-modal="false" aria-label="Centro de Atención Omnicanal de Relax Tours">
+      <section class="relax-widget-panel" id="relax-widget-panel" data-lenis-prevent role="dialog" aria-modal="false" aria-label="Centro de Atención Omnicanal de Relax Tours">
         <!-- Header -->
         <header class="relax-widget-header">
           <div class="relax-widget-header-top">

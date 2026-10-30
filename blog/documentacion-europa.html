@@ -39,6 +39,7 @@
     <link rel="apple-touch-icon" href="../images/apple-touch-icon.png">
     <link rel="manifest" href="../images/site.webmanifest">
     <meta name="theme-color" content="#F97316">
+    <link rel="stylesheet" href="../css/lenis.css?v=1.1.20">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/cookies.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -505,7 +506,7 @@ No. Su implementación fue postergada y se espera recién para finales de 2026.<
 
 <!-- MODAL ARREPENTIMIENTO -->
 <div id="arrepentimiento-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="arrepentimiento-modal-title">
-    <div class="modal-content">
+    <div class="modal-content" data-lenis-prevent>
         <div class="modal-header">
             <h3 id="arrepentimiento-modal-title">Botón de Arrepentimiento</h3>
             <button onclick="closeArrepentimientoModal()" class="modal-close" aria-label="Cerrar">&times;</button>
@@ -568,7 +569,7 @@ No. Su implementación fue postergada y se espera recién para finales de 2026.<
 
 <!-- MODAL BLOG -->
 <div id="blog-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="blog-modal-title">
-    <div class="modal-content blog-modal-content">
+    <div class="modal-content blog-modal-content" data-lenis-prevent>
         <div class="modal-header">
             <h3 id="blog-modal-title">Tips de Viaje</h3>
             <button onclick="closeBlogModal()" class="modal-close" aria-label="Cerrar">&times;</button>
@@ -607,6 +608,7 @@ No. Su implementación fue postergada y se espera recién para finales de 2026.<
     </div>
 </div>
 
+<script src="../js/lenis.min.js?v=1.1.20"></script>
 <script src="../js/cookies.js?v=2.1"></script>
 <script src="../js/main.js?v=2.1"></script>
 <script>document.getElementById('current-year').textContent = new Date().getFullYear();</script>

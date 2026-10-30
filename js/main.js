@@ -6,7 +6,43 @@
 var siteData = siteData || null;
 const WHATSAPP_NUMBER = '5491138593924';
 
+// Instancia global de Lenis Smooth Scroll
+window.lenis = null;
+
+function initLenis() {
+  if (typeof Lenis === 'undefined') return null;
+
+  // Respetar preferencias de accesibilidad si el usuario prefiere no tener movimiento
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (prefersReducedMotion) return null;
+
+  const lenis = new Lenis({
+    duration: 1.2, // Estándar premium de fluidez
+    easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // Curva exponencial orgánica
+    orientation: 'vertical',
+    gestureOrientation: 'vertical',
+    smoothWheel: true,
+    wheelMultiplier: 1.0,
+    touchMultiplier: 1.5,
+    infinite: false,
+    autoRaf: true
+  });
+
+  window.lenis = lenis;
+
+  // Sincronización instantánea de la navbar con cada tick de scroll de Lenis
+  lenis.on('scroll', ({ scroll }) => {
+    const navbar = document.querySelector('.navbar');
+    if (navbar) {
+      navbar.classList.toggle('scrolled', scroll > 50);
+    }
+  });
+
+  return lenis;
+}
+
 document.addEventListener('DOMContentLoaded', async function() {
+  initLenis();
   await loadSiteData();
   initNavbar();
   initScrollAnimations();
@@ -285,10 +321,11 @@ function initNavbar() {
       
       if (target) {
         e.preventDefault();
-        // Mantener URL limpia sin #
-        // window.history.pushState(null, null, ' '); // Opcional, si queremos borrar el hash
-        
-        target.scrollIntoView({ behavior: 'smooth' });
+        if (window.lenis) {
+          window.lenis.scrollTo(target, { offset: -80, duration: 1.2 });
+        } else {
+          target.scrollIntoView({ behavior: 'smooth' });
+        }
       }
     });
   });
@@ -302,7 +339,13 @@ function initNavbar() {
       toggle.classList.toggle('active');
       mobileMenu.classList.toggle('active');
       navbar.classList.toggle('menu-open');
-      document.body.style.overflow = mobileMenu.classList.contains('active') ? 'hidden' : '';
+      const isOpen = mobileMenu.classList.contains('active');
+      document.body.style.overflow = isOpen ? 'hidden' : '';
+      if (isOpen) {
+        window.lenis?.stop();
+      } else {
+        window.lenis?.start();
+      }
     });
 
     // Close menu when a link is clicked
@@ -312,6 +355,7 @@ function initNavbar() {
         mobileMenu.classList.remove('active');
         navbar.classList.remove('menu-open');
         document.body.style.overflow = '';
+        window.lenis?.start();
       });
     });
   }
@@ -721,6 +765,7 @@ function openBlogModal(slug) {
     
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
+    window.lenis?.stop();
     
     // Update hash for deep link
     window.history.pushState(null, null, `#blog-${slug}`);
@@ -732,6 +777,7 @@ function closeBlogModal() {
   if (modal) {
     modal.classList.remove('active');
     document.body.style.overflow = '';
+    window.lenis?.start();
     // Clean up hash
     if (window.location.hash.includes('#blog-')) {
       window.history.pushState(null, null, window.location.pathname + window.location.search);
@@ -744,6 +790,7 @@ function openArrepentimientoModal() {
   if (modal) {
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
+    window.lenis?.stop();
   }
 }
 
@@ -752,6 +799,7 @@ function closeArrepentimientoModal() {
   if (modal) {
     modal.classList.remove('active');
     document.body.style.overflow = '';
+    window.lenis?.start();
   }
 }
 
@@ -762,6 +810,7 @@ document.addEventListener('keydown', (e) => {
     if (activeModal) {
       activeModal.classList.remove('active');
       document.body.style.overflow = '';
+      window.lenis?.start();
       // Clean up blog hash if needed
       if (window.location.hash.includes('#blog-')) {
         window.history.pushState(null, null, window.location.pathname + window.location.search);
@@ -805,7 +854,11 @@ document.addEventListener('click', () => {
 function scrollToContact() {
   const contactSection = document.getElementById('contacto');
   if (contactSection) {
-    contactSection.scrollIntoView({ behavior: 'smooth' });
+    if (window.lenis) {
+      window.lenis.scrollTo(contactSection, { offset: -80, duration: 1.2 });
+    } else {
+      contactSection.scrollIntoView({ behavior: 'smooth' });
+    }
   }
 }
 
