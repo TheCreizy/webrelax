@@ -93,7 +93,7 @@ $evalCases = [
         'id'          => 1,
         'title'       => 'Viaje a España e Italia (Europa Schengen)',
         'prompt'      => 'Hola, viajo a España e Italia por 20 dias, que seguro de Coris me recomendas?',
-        'golden'      => '¡Excelente viaje a España e Italia! Para ingresar a Europa debés cumplir con el Tratado Schengen, que exige un seguro médico obligatorio con cobertura mínima de €30.000. En Coris te recomendamos el plan Global (USD 100k) o Global Plus (USD 150k), ambos con tope por evento (no acumulativo por viaje). ¿Cuántos pasajeros viajan y qué edades tienen, y cuáles son las fechas exactas?',
+        'golden'      => 'Para viajar a Europa debés cumplir con el Tratado Schengen obligatorio (€30.000). En Coris te recomendamos el plan Global (USD 100k) o Global Plus (USD 150k), ambos con tope por evento médico renovable. Podés cotizar y emitir tu asistencia online directamente en https://www.relaxtours.com.ar/asistencia. ¿Qué edades tienen los pasajeros y en qué fechas exactas viajan para armarte la cotización?',
         'assertions'  => [
             [
                 'name' => 'Tratado Schengen',
@@ -125,12 +125,13 @@ $evalCases = [
                 }
             ],
             [
-                'name' => 'Regla UX: No abrumar con links/contacto cuando hay follow-up',
-                'desc' => 'Si la respuesta incluye una pregunta de seguimiento, omite enlaces repetitivos y llamados de salida',
+                'name' => 'Estructura Primer Mensaje: Link online + Follow-up',
+                'desc' => 'En el primer mensaje incluye el link /asistencia y el follow-up sin botones de salida',
                 'test' => function (string $raw, string $norm): bool {
-                    $hasFollowUp = preg_match('/\?/u', $raw) === 1;
-                    $hasLinkOrContact = preg_match('/(relaxtours\.com\.ar\/asistencia|whatsapp|pestaña)/i', $norm) === 1;
-                    return $hasFollowUp ? !$hasLinkOrContact : $hasLinkOrContact;
+                    $hasLink = preg_match('/relaxtours\.com\.ar\/asistencia/i', $norm) === 1;
+                    $hasQuestion = preg_match('/\?/u', $raw) === 1;
+                    $hasExcessiveExit = preg_match('/(whatsapp|pestaña)/i', $norm) === 1;
+                    return $hasLink && $hasQuestion && !$hasExcessiveExit;
                 }
             ],
         ],

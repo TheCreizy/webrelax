@@ -121,7 +121,7 @@ class GeminiClient
         }
 
         $verifiedContext = $this->buildVerifiedContext($contextItems);
-        $systemInstruction = $this->buildSystemInstruction($verifiedContext, $contextItems, $userMessage);
+        $systemInstruction = $this->buildSystemInstruction($verifiedContext, $contextItems, $userMessage, $chatHistory);
 
         // Construir el historial conversacional limpio de PII
         $contents = [];
@@ -184,8 +184,8 @@ class GeminiClient
                 return trim((string) $res['candidates'][0]['content']['parts'][0]['text']);
             }
 
-            // Si el modelo devuelve 429, 503 o 404, probar el siguiente modelo de fallback inmediatamente
-            if (in_array($this->lastHttpCode, [429, 503, 404], true)) {
+            // Si el modelo devuelve error o timeout (0, 429, 500, 502, 503, 504, 404), probar el siguiente modelo de fallback inmediatamente
+            if ($this->lastHttpCode === 0 || in_array($this->lastHttpCode, [429, 500, 502, 503, 504, 404], true)) {
                 continue;
             }
 
@@ -330,7 +330,7 @@ class GeminiClient
      * Si la consulta involucra fragmentos de Coris o asistencia médica, refuerza el tope por evento,
      * la pregunta de seguimiento (follow-up), el enlace oficial y el llamado al widget.
      */
-    private function buildSystemInstruction(string $verifiedContext, array $contextItems = [], string $userMessage = ''): string
+    private function buildSystemInstruction(string $verifiedContext, array $contextItems = [], string $userMessage = '', array $chatHistory = []): string
     {
         // Detectar si el contexto verificado o los items corresponden a Asistencia al Viajero Coris
         $hasCorisCategory = false;
@@ -361,20 +361,50 @@ class GeminiClient
             }
         }
 
+        // Determinar si este es el PRIMER mensaje sobre asistencia en la sesión
+        $isFirstAssistanceMessage = true;
+        if (!empty($chatHistory) && is_array($chatHistory)) {
+            foreach ($chatHistory as $turn) {
+                $turnText = mb_strtolower((string) ($turn['message'] ?? $turn['text'] ?? ''), 'UTF-8');
+                if (preg_match('/(coris|asistencia|schengen|cobertura|seguro|plan global|discover|oxigen|conosur)/iu', $turnText)) {
+                    $isFirstAssistanceMessage = false;
+                    break;
+                }
+            }
+        }
+
         // Directivas reforzadas para Asistencia al Viajero Coris
         $corisDirectivesBlock = '';
         if ($hasCorisCategory || $isMedicalAssistanceQuery) {
-            $corisDirectivesBlock = <<<CORIS
+            if ($isFirstAssistanceMessage) {
+                // ESTADO 1: PRIMER MENSAJE DE ASISTENCIA
+                // Estructura obligatoria: Mensaje con plan/tope por evento + Link online + Follow-up de fechas/edades.
+                // Sin mencionar WhatsApp, Correo ni Teléfono para no abrumar.
+                $corisDirectivesBlock = <<<CORIS
 
-DIRECTIVAS ESPECÍFICAS PARA ASISTENCIA AL VIAJERO CORIS (PRIORIDAD ALTA PARA ESTA RESPUESTA):
+DIRECTIVAS ESPECÍFICAS PARA ESTE MENSAJE (PRIMER CONTACTO SOBRE ASISTENCIA CORIS):
 1. TOPE POR EVENTO MÉDICO: Destacá SIEMPRE de manera clara que Coris opera con **tope por evento médico** (el monto asegurado no es un límite global acumulativo por viaje, sino que se renueva de forma íntegra ante cada afección, enfermedad o accidente distinto que ocurra).
-2. REGLA CONVERSACIONAL DE PREGUNTA DE SEGUIMIENTO (FOLLOW-UP) VS. CIERRE:
-   - SI TU RESPUESTA INCLUYE UNA PREGUNTA DE SEGUIMIENTO (follow-up) para calificar al pasajero (por ejemplo: consultando por edades, fechas exactas, cantidad de pasajeros o duración):
-     -> ESTÁ PROHIBIDO incluir enlaces a la web o mencionar las opciones de WhatsApp, Correo o Teléfono. La respuesta debe terminar ÚNICAMENTE con la pregunta de seguimiento para mantener la conversación ágil y no abrumar al usuario con opciones de salida repetitivas.
-   - SI ES LA RESPUESTA FINAL (el usuario ya respondió las preguntas de seguimiento con sus fechas/edades/pasajeros, o pregunta directamente cómo contratar, emitir, pagar o contactar a un asesor, o la consulta puntual ya no requiere ninguna repregunta):
-     -> AHÍ SÍ cerrá con el llamado formal: indicá el enlace oficial para cotizar y emitir online: `https://www.relaxtours.com.ar/asistencia` e invitá a pedir la emisión personalizada tocando la pestaña de **WhatsApp**, completando el formulario de **Correo** o tocando la pestaña de **Teléfono** aquí abajo en el widget de chat.
+2. ESTRUCTURA OBLIGATORIA DE ESTE PRIMER MENSAJE (MENSAJE + LINK + FOLLOW-UP):
+   a) Asesorá con claridad sobre el plan recomendado para el destino y sus prestaciones destacadas.
+   b) Incluí el enlace oficial para cotizar y emitir online: `https://www.relaxtours.com.ar/asistencia` (ej: *"Podés cotizar y emitir tu asistencia online directamente en https://www.relaxtours.com.ar/asistencia"*).
+   c) Cerrá OBLIGATORIAMENTE con la pregunta de seguimiento (follow-up) para relevar: **fechas exactas de viaje, cantidad de pasajeros y edades**.
+3. REGLA DE NO-SATURACIÓN: En este primer mensaje NO menciones opciones de WhatsApp, Correo ni Teléfono; limitate al mensaje de asesoría, el enlace online directo y la pregunta de seguimiento.
 
 CORIS;
+            } else {
+                // ESTADOS SIGUIENTES: SEGUNDO O POSTERIOR MENSAJE DE ASISTENCIA
+                $corisDirectivesBlock = <<<CORIS
+
+DIRECTIVAS ESPECÍFICAS PARA ESTE MENSAJE (CONTINUACIÓN DE CHARLA DE ASISTENCIA CORIS):
+1. TOPE POR EVENTO MÉDICO: Si corresponde o aporta claridad, recordá que Coris opera con **tope por evento médico**.
+2. REGLA ESTRICTA DE SEGUIMIENTO (FOLLOW-UP) VS. CIERRE:
+   - Si tu respuesta incluye cualquier pregunta de seguimiento (con signo de interrogación '?') para pedir datos pendientes o aclarar dudas:
+     -> ESTÁ ESTRICTAMENTE PROHIBIDO incluir el enlace `https://www.relaxtours.com.ar/asistencia` y ESTÁ ESTRICTAMENTE PROHIBIDO mencionar WhatsApp, Correo o Teléfono. La respuesta debe terminar pura y exclusivamente con tu pregunta.
+   - Si tu respuesta ya no tiene ninguna pregunta de seguimiento (es el cierre final de la asesoría porque ya se definieron todos los datos o el usuario pide emitir/pagar/contactar):
+     -> AHÍ SÍ cerrá con el llamado formal completo: indicá el enlace oficial para cotizar y emitir online: `https://www.relaxtours.com.ar/asistencia` e invitá a pedir la emisión personalizada tocando la pestaña de **WhatsApp**, completando el formulario de **Correo** o tocando la pestaña de **Teléfono** aquí abajo en el widget de chat.
+
+CORIS;
+            }
         }
 
         return <<<PROMPT
@@ -386,7 +416,7 @@ DATOS INSTITUCIONALES OFICIALES:
 - Teléfono fijo: 11 7079-8079.
 - WhatsApp de atención: 11 3859-3924.
 - Correo electrónico: info@relaxtours.com.ar.
-- Asistencia al Viajero Coris: Comercializamos oficialmente Asistencia al Viajero Coris con cobertura médica internacional 24/7 y tope por evento médico (se renueva ante cada evento distinto). Cumple los requisitos para Europa Schengen (€30.000) y EE.UU., incluye cobertura en cruceros, embarazadas hasta semana 32 y preexistencias hasta 85 años.  Para cotización online citar siempre https://www.relaxtours.com.ar/asistencia.
+- Asistencia al Viajero Coris: Comercializamos oficialmente Asistencia al Viajero Coris con cobertura médica internacional 24/7 y tope por evento médico (se renueva ante cada evento distinto). Cumple los requisitos para Europa Schengen (€30.000) y EE.UU., incluye cobertura en cruceros, embarazadas hasta semana 32 y preexistencias hasta 85 años.
 {$corisDirectivesBlock}
 ESTILO Y TONO:
 - Respondé siempre en español rioplatense (voseo respetuoso: "podés", "consultanos", "contanos"), con tono cálido, profesional y conciso (máximo 2 a 3 párrafos breves o viñetas claras).
