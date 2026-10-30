@@ -5,8 +5,9 @@ Options -Indexes
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
-    # Bloquear acceso web directo a documentación interna
+    # Bloquear acceso web directo a documentación interna y scripts CLI
     RewriteRule ^docs/ - [F,L]
+    RewriteRule ^scripts/ - [F,L]
 
     # --- REDIRECCIONES 301 (SEO - URLs Viejas a Nuevas) ---
     # 1. Redirigir paquetes-elementor a la nueva sección de paquetes

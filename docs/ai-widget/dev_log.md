@@ -145,3 +145,29 @@
   2. `curl.exe -I "https://relaxtours.com.ar/"`: **HTTP/1.1 200 OK**, frontend operativo con widget omnicanal y carga asíncrona resiliente.
   3. `curl.exe -I "https://relaxtours.com.ar/admin/"`: **HTTP/1.1 200 OK**, backoffice operativo con botones de backup y sincronización en la nube.
 - La arquitectura desacoplada está 100% activa: los despliegues de Git ya no interferirán jamás con las ediciones ni cargas de contenido en producción.
+
+---
+
+## [2026-10-30 05:40 -03:00] — Fase 7: Pipeline RAG Especializado para Asistencia Coris & Golden Benchmark Evals
+**Agentes**: `backend-ia-engineer`, `admin-sync-engineer`, `frontend-widget-engineer` y Orquestador Principal
+
+- **Ingesta de Conocimiento Coris (`scripts/ingest_coris_knowledge.php`)**:
+  - Procesados los 10 casos canónicos de Coris (Schengen, EE.UU., Brasil Conosur, Argentina Oxygen, Caribe VIP, Adultos Mayores +75, Embarazadas y Cruceros, Anual Multiviajes, Upgrades Mascotas/Psicología/Ellas, y Emisión en Viaje con Carencia).
+  - Normalización de marcadores de UI: se sustituyeron `(boton de whatsapp)`, `(formulario)` y `(telefono)` por el llamado claro y directo a las pestañas y formularios nativos del widget omnicanal de Relax Tours.
+  - Generados 10 embeddings vectoriales de 768 dimensiones con `gemini-embedding-001` (`RETRIEVAL_DOCUMENT`).
+  - Almacenados en `public.knowledge_base` en Supabase con `category = 'coris'` y restricción única `external_id`.
+- **Alineación de System Prompting (`api/GeminiClient.php`)**:
+  - Detección inteligente de consultas y fragmentos `coris`.
+  - Inyección de directivas específicas:
+    1. Resaltar enfáticamente la regla de **tope médico por evento**.
+    2. Cierre obligatorio con **pregunta de seguimiento (follow-up)** orientada a relevar destino, fechas, cantidad de viajeros y edades para calificar el lead.
+    3. Cita obligatoria de `https://www.relaxtours.com.ar/asistencia` y derivación fluida a las pestañas de **WhatsApp**, **Correo** y **Teléfono** del widget.
+- **Backoffice Sync (`admin/index.php`)**:
+  - Integrada la función `syncCorisKnowledgeToSupabase()` en el botón **"🔄 Sincronizar Todo con Supabase (Generar Vectores IA)"** para permitir re-vectorización bajo demanda desde la web.
+- **Suite de Evaluación Automatizada (Evals) (`scripts/eval_coris_rag.php`)**:
+  - Diseñada con 26 aserciones léxico-semánticas.
+  - `php scripts/eval_coris_rag.php --dry-run`: **10/10 PASS (100%)**, 26/26 aserciones.
+  - Pruebas en vivo con RAG real (`--case=1` y `--case=6`): **100% PASS** con similitud semántica $> 0.77$.
+  - Prueba de control negativo: consultas de paquetes turísticos (Mendoza) tienen 0% de contaminación con Coris.
+- **Seguridad**:
+  - Directorio `scripts/` protegido de acceso web en `.htaccess` (`RewriteRule ^scripts/ - [F,L]`).

@@ -80,3 +80,23 @@
   - [x] Desvincular `data/content.json` del índice de Git sin borrarlo del disco (`git rm --cached`).
   - [x] Commit y Push a `origin/main` (`5bd2ce3`).
   - [x] Verificación en vivo en producción Hostinger (`https://relaxtours.com.ar/api/content` → HTTP 200 OK y admin funcional).
+
+## Fase 7: Pipeline RAG Especializado para Asistencia al Viajero Coris & Evals (Multi-Agente)
+- [x] **Ingesta Vectorial de Coris (`backend-ia-engineer`)**:
+  - [x] Crear script `scripts/ingest_coris_knowledge.php` para normalizar los 10 casos canónicos del dataset reemplazando `(boton de whatsapp)`, `(formulario)` y `(telefono)` por el llamado contextual al widget.
+  - [x] Generar embeddings de 768 dimensiones con `gemini-embedding-001` y almacenarlos en `public.knowledge_base` en Supabase con `category = 'coris'`.
+- [x] **Alineación de Prompting y Calificación de Leads (`backend-ia-engineer`)**:
+  - [x] Actualizar `api/GeminiClient.php` para detectar `category === 'coris'` e instruir el modelo a:
+    - Destacar que Coris opera con tope médico por evento.
+    - Realizar siempre la pregunta de seguimiento (*follow-up*) para relevar destino, fechas, edades y duración.
+    - Citar la URL oficial `https://www.relaxtours.com.ar/asistencia` y guiar a las pestañas de WhatsApp, Correo y Teléfono del widget.
+- [x] **Verificación Vectorial y Segmentación (`supabase-architect`)**:
+  - [x] Verificar los 10 registros en `public.knowledge_base` con índice HNSW y similitud coseno.
+  - [x] Comprobar aislamiento: preguntas turísticas no activan Coris, preguntas de salud/seguros activan Coris con similitud $> 0.65$.
+- [x] **Sincronización en Backoffice (`admin-sync-engineer`)**:
+  - [x] Conectar la ingesta de Coris con la función de sincronización global en `admin/index.php`.
+- [x] **Golden Benchmark Automatizado & QA (`frontend-widget-engineer` + Orquestador)**:
+  - [x] Crear y ejecutar `scripts/eval_coris_rag.php` testeando los 10 prompts del dataset.
+  - [x] Verificar métricas de acierto (10/10 planes correctos, follow-ups presentes, URLs válidas).
+  - [x] Proteger `scripts/` en `.htaccess`.
+  - [x] Git commit, push a GitHub y verificación final.

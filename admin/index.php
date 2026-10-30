@@ -11,6 +11,9 @@ require_once __DIR__ . '/../includes/env-loader.php';
 require_once __DIR__ . '/../api/SupabaseClient.php';
 require_once __DIR__ . '/../api/GeminiClient.php';
 require_once __DIR__ . '/../api/ContentRepository.php';
+if (file_exists(__DIR__ . '/../scripts/ingest_coris_knowledge.php')) {
+    require_once __DIR__ . '/../scripts/ingest_coris_knowledge.php';
+}
 
 // Configuración
 define('DATA_FILE', __DIR__ . '/../data/content.json');
@@ -737,7 +740,18 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
 
-            // 2. Paquetes Destacados activos
+            // 2. Asistencia al Viajero Coris (10 casos canónicos estructurados con embeddings 768d)
+            if (function_exists('syncCorisKnowledgeToSupabase')) {
+                $corisRes = syncCorisKnowledgeToSupabase($supabase, $gemini);
+                $syncedCount += ($corisRes['synced'] ?? 0);
+                if (!empty($corisRes['errors'])) {
+                    foreach ($corisRes['errors'] as $cErr) {
+                        $errorsList[] = 'Coris: ' . $cErr;
+                    }
+                }
+            }
+
+            // 3. Paquetes Destacados activos
             if (!empty($data['paquetes']) && is_array($data['paquetes'])) {
                 foreach ($data['paquetes'] as $p) {
                     if (empty($p['activo'])) {
@@ -765,7 +779,7 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
 
-            // 3. Ofertas Flash activas
+            // 4. Ofertas Flash activas
             if (!empty($data['ofertas']) && is_array($data['ofertas'])) {
                 foreach ($data['ofertas'] as $o) {
                     if (empty($o['activa'])) {
@@ -792,7 +806,7 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
 
-            // 4. Artículos del Blog publicados
+            // 5. Artículos del Blog publicados
             if (!empty($data['blog']) && is_array($data['blog'])) {
                 foreach ($data['blog'] as $b) {
                     if (empty($b['activo'])) {
@@ -2597,7 +2611,7 @@ if (isset($_GET['edit'])) {
                         <div>
                             <h2 style="font-size: 18px; color: #9a3412; margin-bottom: 6px;">🚀 Base de Conocimiento Vectorial (RAG)</h2>
                             <p style="font-size: 14px; color: #555; max-width: 760px;">
-                                Generá y actualizá en un clic los vectores de IA (768 dimensiones) de la <strong>Información General + Coris</strong>, todos los <strong>Paquetes activos</strong>, las <strong>Ofertas Flash activas</strong> y los <strong>Posts publicados del Blog</strong> en Supabase.
+                                Generá y actualizá en un clic los vectores de IA (768 dimensiones) de la <strong>Información General de la Agencia</strong>, los <strong>10 Casos Canónicos de Asistencia Coris</strong>, todos los <strong>Paquetes activos</strong>, las <strong>Ofertas Flash activas</strong> y los <strong>Posts publicados del Blog</strong> en Supabase.
                             </p>
                         </div>
                         <form method="POST" onsubmit="const btn = this.querySelector('button[type=submit]'); btn.innerHTML='⏳ Generando vectores IA y sincronizando...'; btn.disabled=true;">
