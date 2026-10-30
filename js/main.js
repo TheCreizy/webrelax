@@ -72,39 +72,50 @@ function initHeroBackgroundSequence() {
 
   const TOTAL_FRAMES = 120;
   const frames = new Array(TOTAL_FRAMES);
-  let currentFrameIndex = -1;
+  let currentRenderedIndex = -1;
+  let targetIndex = 0;
   let rafId = null;
+  let preloadingStarted = false;
 
   function getFrameSrc(index) {
     const pad = String(index).padStart(3, '0');
     return `images/hero-sequence/frame_${pad}.webp`;
   }
 
-  function getNearestLoadedFrame(targetIdx) {
-    if (frames[targetIdx] && frames[targetIdx].complete && frames[targetIdx].naturalWidth > 0) {
-      return frames[targetIdx];
+  function getNearestLoadedFrame(idx) {
+    if (frames[idx] && frames[idx].complete && frames[idx].naturalWidth > 0) {
+      return { img: frames[idx], index: idx };
     }
     for (let offset = 1; offset < TOTAL_FRAMES; offset++) {
-      const prev = targetIdx - offset;
+      const prev = idx - offset;
       if (prev >= 0 && frames[prev] && frames[prev].complete && frames[prev].naturalWidth > 0) {
-        return frames[prev];
+        return { img: frames[prev], index: prev };
       }
-      const next = targetIdx + offset;
+      const next = idx + offset;
       if (next < TOTAL_FRAMES && frames[next] && frames[next].complete && frames[next].naturalWidth > 0) {
-        return frames[next];
+        return { img: frames[next], index: next };
       }
     }
     return null;
   }
 
-  function drawFrame(index) {
-    const img = getNearestLoadedFrame(index);
-    if (!img) return;
+  function drawFrame(idx) {
+    const found = getNearestLoadedFrame(idx);
+    if (!found) return;
 
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    currentFrameIndex = index;
+    ctx.drawImage(found.img, 0, 0, canvas.width, canvas.height);
+    currentRenderedIndex = found.index;
     if (!canvas.classList.contains('is-ready')) {
       canvas.classList.add('is-ready');
+    }
+  }
+
+  function scheduleRender() {
+    if (!rafId) {
+      rafId = requestAnimationFrame(() => {
+        drawFrame(targetIndex);
+        rafId = null;
+      });
     }
   }
 
@@ -114,32 +125,11 @@ function initHeroBackgroundSequence() {
 
     // Sincronizado: avanza cuando se hace scroll hacia abajo, retrocede hacia arriba (ambos sentidos)
     const progress = Math.min(1, Math.max(0, scrolled / heroHeight));
-    const targetIndex = Math.min(TOTAL_FRAMES - 1, Math.floor(progress * (TOTAL_FRAMES - 1)));
+    targetIndex = Math.min(TOTAL_FRAMES - 1, Math.floor(progress * (TOTAL_FRAMES - 1)));
 
-    if (targetIndex !== currentFrameIndex) {
-      if (!rafId) {
-        rafId = requestAnimationFrame(() => {
-          drawFrame(targetIndex);
-          rafId = null;
-        });
-      }
-    }
+    scheduleRender();
   }
 
-  // Cargar frame 0 de inmediato
-  const firstFrame = new Image();
-  firstFrame.src = getFrameSrc(0);
-  frames[0] = firstFrame;
-  firstFrame.onload = () => {
-    drawFrame(0);
-    preloadRemainingFrames();
-  };
-  if (firstFrame.complete && firstFrame.naturalWidth > 0) {
-    drawFrame(0);
-    preloadRemainingFrames();
-  }
-
-  let preloadingStarted = false;
   function preloadRemainingFrames() {
     if (preloadingStarted) return;
     preloadingStarted = true;
@@ -154,6 +144,11 @@ function initHeroBackgroundSequence() {
         if (!frames[i]) {
           const img = new Image();
           img.src = getFrameSrc(i);
+          img.onload = () => {
+            if (targetIndex === i && currentRenderedIndex !== i) {
+              scheduleRender();
+            }
+          };
           frames[i] = img;
         }
       }
@@ -162,7 +157,7 @@ function initHeroBackgroundSequence() {
         if ('requestIdleCallback' in window) {
           requestIdleCallback(() => loadNextBatch(), { timeout: 200 });
         } else {
-          setTimeout(loadNextBatch, 60);
+          setTimeout(loadNextBatch, 50);
         }
       }
     }
@@ -170,8 +165,21 @@ function initHeroBackgroundSequence() {
     if ('requestIdleCallback' in window) {
       requestIdleCallback(() => loadNextBatch(), { timeout: 150 });
     } else {
-      setTimeout(loadNextBatch, 100);
+      setTimeout(loadNextBatch, 50);
     }
+  }
+
+  // Cargar frame 0 de inmediato
+  const firstFrame = new Image();
+  firstFrame.src = getFrameSrc(0);
+  frames[0] = firstFrame;
+  firstFrame.onload = () => {
+    drawFrame(0);
+    preloadRemainingFrames();
+  };
+  if (firstFrame.complete && firstFrame.naturalWidth > 0) {
+    drawFrame(0);
+    preloadRemainingFrames();
   }
 
   window.addEventListener('scroll', updateOnScroll, { passive: true });
