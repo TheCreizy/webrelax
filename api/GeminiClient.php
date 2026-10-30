@@ -231,21 +231,12 @@ class GeminiClient
     }
 
     /**
-     * Lee paquetes activos, ofertas vigentes y configuración de data/content.json como respaldo local.
+     * Lee paquetes activos, ofertas vigentes y configuración de ContentRepository como respaldo local.
      */
     private function loadLocalContentFallback(): array
     {
-        $jsonPath = __DIR__ . '/../data/content.json';
-        if (!is_file($jsonPath) || !is_readable($jsonPath)) {
-            return [];
-        }
-
-        $raw = @file_get_contents($jsonPath);
-        if ($raw === false) {
-            return [];
-        }
-
-        $data = json_decode($raw, true);
+        require_once __DIR__ . '/ContentRepository.php';
+        $data = ContentRepository::getInstance()->getAllData();
         if (!is_array($data)) {
             return [];
         }
@@ -253,11 +244,22 @@ class GeminiClient
         $blocks = [];
         $today = date('Y-m-d');
 
+        if (!empty($data['chatbot_general_info']) && is_string($data['chatbot_general_info'])) {
+            $genInfo = trim($data['chatbot_general_info']);
+            if ($genInfo !== '') {
+                $blocks[] = "### [info_general] Información General y Condiciones de Relax Tours\n" . $genInfo;
+            }
+        }
+
         // Paquetes activos
         if (!empty($data['paquetes']) && is_array($data['paquetes'])) {
             foreach ($data['paquetes'] as $pkg) {
                 $activo = isset($pkg['activo']) ? (bool) $pkg['activo'] : true;
                 if (!$activo) {
+                    continue;
+                }
+                $vigencia = trim((string) ($pkg['vigencia_hasta'] ?? ''));
+                if ($vigencia !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $vigencia) && $vigencia < $today) {
                     continue;
                 }
                 $nombre   = $pkg['nombre'] ?? 'Paquete';
@@ -268,36 +270,55 @@ class GeminiClient
                 $incluye  = (!empty($pkg['incluye']) && is_array($pkg['incluye']))
                     ? implode(', ', $pkg['incluye'])
                     : 'Consultar servicios incluidos';
+                $infoBot  = trim((string) ($pkg['info_bot'] ?? ''));
 
-                $blocks[] = "### [paquete] {$nombre} ({$destino})\n"
+                $block = "### [paquete] {$nombre} ({$destino})\n"
                     . "- Destino: {$destino}\n"
                     . "- Duración: {$duracion}\n"
                     . "- Incluye: {$incluye}\n"
                     . "- Precio referencial: {$moneda} \${$precio} por persona (sujeto a disponibilidad al momento de reservar).";
+                if ($vigencia !== '') {
+                    $block .= "\n- Vigencia hasta: {$vigencia}";
+                }
+                if ($infoBot !== '') {
+                    $block .= "\n- Detalles adicionales: {$infoBot}";
+                }
+                $blocks[] = $block;
             }
         }
 
         // Ofertas activas y vigentes
         if (!empty($data['ofertas']) && is_array($data['ofertas'])) {
             foreach ($data['ofertas'] as $of) {
-                $activo = isset($of['activo']) ? (bool) $of['activo'] : true;
-                if (!$activo) {
+                $activa = isset($of['activa']) ? (bool) $of['activa'] : (isset($of['activo']) ? (bool) $of['activo'] : true);
+                if (!$activa) {
                     continue;
                 }
-                $validez = trim((string) ($of['validez'] ?? ''));
+                $validez = trim((string) ($of['vigencia_hasta'] ?? $of['validez'] ?? ''));
                 if ($validez !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $validez) && $validez < $today) {
                     continue;
                 }
-                $titulo    = $of['titulo'] ?? 'Oferta Especial';
-                $desc      = $of['descripcion'] ?? '';
-                $moneda    = $of['moneda'] ?? 'ARS';
-                $precioOf  = isset($of['precio_oferta']) ? number_format((float) $of['precio_oferta'], 0, ',', '.') : 'Consultar';
-                $descuento = isset($of['descuento']) ? (int) $of['descuento'] : 0;
+                $titulo  = $of['titulo'] ?? 'Oferta Especial';
+                $desc    = $of['descripcion'] ?? '';
+                $badge   = $of['badge'] ?? '';
+                $tiempo  = $of['tiempo'] ?? '';
+                $infoBot = trim((string) ($of['info_bot'] ?? ''));
 
-                $blocks[] = "### [oferta] {$titulo}\n"
-                    . "- Descripción: {$desc}\n"
-                    . "- Descuento: {$descuento}% OFF\n"
-                    . "- Precio promocional referencial: {$moneda} \${$precioOf} (válido hasta {$validez}, sujeto a disponibilidad).";
+                $block = "### [oferta] {$titulo}\n"
+                    . "- Descripción: {$desc}";
+                if ($badge !== '') {
+                    $block .= "\n- Promoción: {$badge}";
+                }
+                if ($tiempo !== '') {
+                    $block .= "\n- Plazo / Salida: {$tiempo}";
+                }
+                if ($validez !== '') {
+                    $block .= "\n- Vigencia hasta: {$validez}";
+                }
+                if ($infoBot !== '') {
+                    $block .= "\n- Detalles adicionales: {$infoBot}";
+                }
+                $blocks[] = $block;
             }
         }
 
@@ -385,7 +406,9 @@ PROMPT;
         $rawBody = curl_exec($ch);
         $curlErr = curl_error($ch);
         $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
+        if (PHP_VERSION_ID < 80000) {
+            curl_close($ch);
+        }
 
         $this->lastHttpCode = $httpCode;
 

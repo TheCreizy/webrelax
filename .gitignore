@@ -14,3 +14,18 @@ admin/.env
 admin/.env.*
 !.env.example
 !admin/.env.example
+
+# CMS Data & Caché dinámica (Fuente Única de Verdad en Supabase PostgreSQL)
+data/content.json
+data/*.lock
+data/*.tmp.*
+!data/content.example.json
+
+# Imágenes mutables cargadas desde el Admin (Respaldadas en Supabase Storage relax-media)
+images/paquetes-images/*
+!images/paquetes-images/.gitkeep
+images/ofertas-images/*
+!images/ofertas-images/.gitkeep
+images/blog-content/*
+!images/blog-content/.gitkeep
+

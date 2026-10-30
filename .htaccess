@@ -74,7 +74,7 @@ Options -Indexes
 </IfModule>
 
 # 5. SEGURIDAD EXTRA (Protección de archivos y cabeceras)
-<FilesMatch "(^\.|\.env|\.env\.example|SupabaseClient\.php|GeminiClient\.php|env-loader\.php)$">
+<FilesMatch "(^\.|\.env|\.env\.example|SupabaseClient\.php|GeminiClient\.php|ContentRepository\.php|env-loader\.php|\.lock|\.tmp\.)">
     # Proteger .env, .htaccess, .git y clases internas de backend
     <IfModule mod_authz_core.c>
         Require all denied

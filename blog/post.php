@@ -74,7 +74,16 @@ include '../includes/header.php';
         }
 
         try {
-            const response = await fetch('../data/content.json');
+            let response;
+            try {
+                response = await fetch('../data/content.json?v=' + Date.now());
+                if (!response.ok) throw new Error('Status ' + response.status);
+            } catch (e) {
+                response = await fetch('../api/content?v=' + Date.now());
+                if (!response.ok) {
+                    response = await fetch('../api/content.php?v=' + Date.now());
+                }
+            }
             const data = await response.json();
             const post = data.blog.find(p => p.slug === slug);
 
@@ -82,8 +91,10 @@ include '../includes/header.php';
                 document.title = post.titulo + ' - Relax Tours Blog';
                 document.getElementById('post-title').textContent = post.titulo;
                 document.getElementById('post-meta').innerHTML = `<span style="display: flex; align-items: center; justify-content: center; gap: 6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> ${post.fecha}</span>`;
-                document.getElementById('post-image').src = '../' + post.imagen;
-                document.getElementById('post-body').innerHTML = post.contenido;
+                const imgPath = (post.imagen || '').startsWith('../') ? post.imagen.substring(3) : (post.imagen || '');
+                document.getElementById('post-image').src = '../' + imgPath;
+                const normalizedBody = (post.contenido || '').replace(/src=(["'])(?:\.\/)?images\//gi, 'src=$1../images/');
+                document.getElementById('post-body').innerHTML = normalizedBody;
 
                 // SEO tags dynamic (basic)
                 let meta = document.createElement('meta');

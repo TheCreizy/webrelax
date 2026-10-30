@@ -19,13 +19,10 @@ if (empty($forzar_base_url)) {
     }
 }
 
-// Load Global Config
-$dataFile = __DIR__ . '/../data/content.json';
-$globalConfig = [];
-if (file_exists($dataFile)) {
-    $contentData = json_decode(file_get_contents($dataFile), true);
-    $globalConfig = $contentData['config'] ?? [];
-}
+// Load Global Config (via ContentRepository con auto-hidratación desde Supabase)
+require_once __DIR__ . '/../api/ContentRepository.php';
+$contentData = ContentRepository::getInstance()->getAllData();
+$globalConfig = $contentData['config'] ?? [];
 ?>
 <!DOCTYPE html>
 <html lang="es-AR">

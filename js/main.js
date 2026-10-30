@@ -64,8 +64,20 @@ function initHeroParallax() {
 async function loadSiteData() {
   try {
     const basePath = window.location.pathname.includes('/blog/') ? '../' : '';
-    const response = await fetch(basePath + 'data/content.json?v=' + Date.now());
-    siteData = await response.json();
+    let response;
+    try {
+      response = await fetch(basePath + 'data/content.json?v=' + Date.now());
+      if (!response.ok) throw new Error('Status ' + response.status);
+      siteData = await response.json();
+    } catch (e) {
+      // Fallback a endpoint de auto-hidratación si content.json no existiera
+      response = await fetch(basePath + 'api/content?v=' + Date.now());
+      if (!response.ok) {
+        response = await fetch(basePath + 'api/content.php?v=' + Date.now());
+      }
+      if (!response.ok) throw new Error('Status ' + response.status);
+      siteData = await response.json();
+    }
   } catch (error) {
     console.error('Error cargando datos:', error);
     siteData = getFallbackData();
@@ -77,7 +89,15 @@ function getFallbackData() {
     paquetes: [],
     ofertas: [],
     blog: [],
-    config: { whatsapp: '54938593924', email: 'info@relaxtours.com.ar' }
+    config: {
+      whatsapp: '5491138593924',
+      email: 'info@relaxtours.com.ar',
+      telefono: '+54 11 7079-8079',
+      direccion: 'Av. Francisco Beiró 4219, Villa Devoto, CABA',
+      instagram: 'relax.tours',
+      facebook: 'relaxtours.ar',
+      legajo: '15.548'
+    }
   };
 }
 
@@ -227,11 +247,11 @@ function renderConfig() {
   updateEl('email', c.email);
   
   const footerLegajo = document.querySelector('.footer-legajo');
-  if (footerLegajo) footerLegajo.textContent = `Leg. ${c.legajo}`;
+  if (footerLegajo && c.legajo) footerLegajo.textContent = `Leg. ${c.legajo}`;
   
   // Update social links
-  const igHandle = c.instagram.replace('@', '');
-  const fbHandle = c.facebook;
+  const igHandle = (c.instagram || 'relax.tours').replace('@', '');
+  const fbHandle = c.facebook || 'relaxtours.ar';
 
   document.querySelectorAll('a[href*="instagram.com"]').forEach(link => {
     link.href = `https://instagram.com/${igHandle}`;
@@ -408,9 +428,26 @@ window.moveCarousel = moveCarousel;
 
 function renderOfertas() {
   const container = document.getElementById('ofertas-grid');
+  const timerEl = document.getElementById('countdown-timer');
   if (!container || !siteData?.ofertas) return;
   
   const ofertasActivas = siteData.ofertas.filter(o => o.activa);
+
+  if (timerEl) {
+    timerEl.textContent = ofertasActivas.length > 0
+      ? '🔥 ¡Cupos limitados por tiempo reducido!'
+      : '⚡ Consultá por nuestras promociones vigentes';
+  }
+
+  if (ofertasActivas.length === 0) {
+    container.innerHTML = `
+      <div style="grid-column: 1 / -1; text-align: center; padding: 36px 24px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; color: rgba(255,255,255,0.88);">
+        <p style="font-size: 1.05rem; margin-bottom: 16px;">Estamos actualizando nuestras Ofertas Flash de la semana. Consultanos por WhatsApp para recibir las promociones del día.</p>
+        <a href="#" class="btn-primary" onclick="openWhatsApp('Hola! Quiero consultar por las Ofertas Flash disponibles hoy.'); return false;">Consultar Promociones</a>
+      </div>
+    `;
+    return;
+  }
   
   container.innerHTML = ofertasActivas.map(oferta => `
     <div class="oferta-card fade-in">

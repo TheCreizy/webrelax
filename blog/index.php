@@ -36,8 +36,18 @@ include '../includes/header.php';
 <script>
     async function loadData() {
         try {
-            const response = await fetch('<?php echo $base_url; ?>data/content.json');
-            siteData = await response.json();
+            let response;
+            try {
+                response = await fetch('<?php echo $base_url; ?>data/content.json?v=' + Date.now());
+                if (!response.ok) throw new Error('Status ' + response.status);
+                siteData = await response.json();
+            } catch (e) {
+                response = await fetch('<?php echo $base_url; ?>api/content?v=' + Date.now());
+                if (!response.ok) {
+                    response = await fetch('<?php echo $base_url; ?>api/content.php?v=' + Date.now());
+                }
+                siteData = await response.json();
+            }
             renderBlogIndex();
         } catch (error) {
             console.error('Error cargando blog:', error);

@@ -6,10 +6,11 @@
 
 session_start();
 
-// --- CARGAR VARIABLES DE ENTORNO Y CLIENTES IA / SUPABASE ---
+// --- CARGAR VARIABLES DE ENTORNO Y CLIENTES IA / SUPABASE / REPOSITORY ---
 require_once __DIR__ . '/../includes/env-loader.php';
 require_once __DIR__ . '/../api/SupabaseClient.php';
 require_once __DIR__ . '/../api/GeminiClient.php';
+require_once __DIR__ . '/../api/ContentRepository.php';
 
 // Configuración
 define('DATA_FILE', __DIR__ . '/../data/content.json');
@@ -27,15 +28,12 @@ require __DIR__ . '/../PHPMailer/PHPMailer-master/src/SMTP.php';
 
 function loadData()
 {
-    if (!file_exists(DATA_FILE)) {
-        return ['paquetes' => [], 'ofertas' => [], 'blog' => [], 'config' => [], 'chatbot_general_info' => ''];
-    }
-    return json_decode(file_get_contents(DATA_FILE), true);
+    return ContentRepository::getInstance()->getAllData();
 }
 
 function saveData($data)
 {
-    return file_put_contents(DATA_FILE, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+    return ContentRepository::getInstance()->saveLocalSnapshot($data);
 }
 
 function generateId()
@@ -335,6 +333,29 @@ if (isset($_GET['logout'])) {
 
 $isLoggedIn = isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'];
 
+// Acciones GET (Exportar Backup / Reconstruir Caché)
+if ($isLoggedIn && isset($_GET['action'])) {
+    if ($_GET['action'] === 'export_backup') {
+        $data = loadData();
+        $filename = 'relaxtours-backup-' . date('Y-m-d-His') . '.json';
+        header('Content-Type: application/json; charset=utf-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        echo json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    if ($_GET['action'] === 'rebuild_cache') {
+        $data = ContentRepository::getInstance()->rebuildLocalCacheFromSupabase();
+        foreach ($data['blog'] as $b) {
+            if (!empty($b['slug'])) {
+                generateBlogPage($b, $data['config'] ?? [], $data['blog']);
+            }
+        }
+        updateSitemap($data);
+        header('Location: index.php?msg=cache_rebuilt');
+        exit;
+    }
+}
+
 // AJAX: Upload blog content image
 if ($isLoggedIn && isset($_GET['ajax']) && $_GET['ajax'] === 'upload_blog_image' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Content-Type: application/json');
@@ -346,7 +367,9 @@ if ($isLoggedIn && isset($_GET['ajax']) && $_GET['ajax'] === 'upload_blog_image'
         $targetPath = $uploadDir . $filename;
         $result = processAndConvertWebP($_FILES['image']['tmp_name'], $targetPath, 1000);
         if ($result === true) {
-            echo json_encode(['success' => true, 'url' => 'images/blog-content/' . $filename]);
+            $relUrl = 'images/blog-content/' . $filename;
+            ContentRepository::getInstance()->syncImageToStorage($relUrl);
+            echo json_encode(['success' => true, 'url' => $relUrl]);
         } else {
             echo json_encode(['success' => false, 'error' => $result]);
         }
@@ -363,6 +386,7 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
     switch ($action) {
         case 'save_paquete':
+            $oldImage = !empty($_POST['id']) ? ($_POST['imagen'] ?? null) : null;
             $paquete = [
                 'id' => $_POST['id'] ?: generateId(),
                 'nombre' => $_POST['nombre'],
@@ -394,19 +418,11 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
                     $imgErr = 'Error al subir el archivo (código ' . $_FILES['imagen_file']['error'] . ')';
                 }
             }
-            $found = false;
-            foreach ($data['paquetes'] as &$p) {
-                if ($p['id'] === $paquete['id']) {
-                    $p = $paquete;
-                    $found = true;
-                    break;
-                }
-            }
-            if (!$found)
-                array_unshift($data['paquetes'], $paquete); // Add to beginning (Newest First)
-            saveData($data);
 
-            // Sincronización automática en segundo plano con Supabase (si está configurado)
+            // Persistir en ContentRepository (Supabase SSOT + Storage + Caché Local)
+            ContentRepository::getInstance()->savePackage($paquete, $oldImage);
+
+            // Sincronización automática de embeddings en segundo plano con Supabase pgvector
             syncSingleItemToSupabase(
                 'paquete_' . $paquete['id'],
                 'paquete',
@@ -430,18 +446,8 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
 
         case 'delete_paquete':
-            foreach ($data['paquetes'] as $p) {
-                if ($p['id'] === $_POST['id'] && !empty($p['imagen'])) {
-                    $imgFile = __DIR__ . '/../' . $p['imagen'];
-                    if (file_exists($imgFile) && strpos($p['imagen'], 'paquetes-images/') !== false) {
-                        unlink($imgFile);
-                    }
-                    break;
-                }
-            }
-            $data['paquetes'] = array_values(array_filter($data['paquetes'], fn($p) => $p['id'] !== $_POST['id']));
-            saveData($data);
             if (!empty($_POST['id'])) {
+                ContentRepository::getInstance()->deletePackage($_POST['id']);
                 deleteSingleItemFromSupabase('paquete_' . $_POST['id']);
             }
             header('Location: index.php?tab=paquetes&msg=eliminado');
@@ -449,6 +455,7 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
         case 'save_oferta':
             $isNew = empty($_POST['id']);
+            $oldImage = !empty($_POST['id']) ? ($_POST['imagen'] ?? null) : null;
             $oferta = [
                 'id' => $_POST['id'] ?: generateId(),
                 'titulo' => $_POST['titulo'],
@@ -478,17 +485,9 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
                     $imgErr = 'Error al subir el archivo (código ' . $_FILES['imagen_file']['error'] . ')';
                 }
             }
-            $found = false;
-            foreach ($data['ofertas'] as &$o) {
-                if ($o['id'] === $oferta['id']) {
-                    $o = $oferta;
-                    $found = true;
-                    break;
-                }
-            }
-            if (!$found)
-                array_unshift($data['ofertas'], $oferta); // Add to beginning (Newest First)
-            saveData($data);
+
+            // Persistir en ContentRepository (Supabase SSOT + Storage + Caché Local)
+            ContentRepository::getInstance()->saveOffer($oferta, $oldImage);
 
             // Sincronización automática en segundo plano con Supabase (si está configurado)
             syncSingleItemToSupabase(
@@ -559,24 +558,15 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
 
         case 'delete_oferta':
-            foreach ($data['ofertas'] as $o) {
-                if ($o['id'] === $_POST['id'] && !empty($o['imagen'])) {
-                    $imgFile = __DIR__ . '/../' . $o['imagen'];
-                    if (file_exists($imgFile) && strpos($o['imagen'], 'ofertas-images/') !== false) {
-                        unlink($imgFile);
-                    }
-                    break;
-                }
-            }
-            $data['ofertas'] = array_values(array_filter($data['ofertas'], fn($o) => $o['id'] !== $_POST['id']));
-            saveData($data);
             if (!empty($_POST['id'])) {
+                ContentRepository::getInstance()->deleteOffer($_POST['id']);
                 deleteSingleItemFromSupabase('oferta_' . $_POST['id']);
             }
             header('Location: index.php?tab=ofertas&msg=eliminado');
             exit;
 
         case 'save_blog':
+            $oldImage = !empty($_POST['id']) ? ($_POST['imagen'] ?? null) : null;
             $blog = [
                 'id' => $_POST['id'] ?: generateId(),
                 'titulo' => $_POST['titulo'],
@@ -605,21 +595,13 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
                     $imgErr = 'Error al subir el archivo (código ' . $_FILES['imagen_file']['error'] . ')';
                 }
             }
-            $found = false;
-            foreach ($data['blog'] as &$b) {
-                if ($b['id'] === $blog['id']) {
-                    $b = $blog;
-                    $found = true;
-                    break;
-                }
-            }
-            if (!$found)
-                array_unshift($data['blog'], $blog); // Add to beginning (Newest First)
-            saveData($data);
-            // Reload data to get the updated blog list (in case a new post was added)
+
+            // Persistir en ContentRepository (Supabase SSOT + Storage + Caché Local)
+            ContentRepository::getInstance()->saveBlogPost($blog, $oldImage);
+
+            // Generar página HTML estática y adyacentes para SEO e indexación en Google
             $data = loadData();
             generateBlogPage($blog, $data['config'], $data['blog']);
-            // Regenerate adjacent posts so their prev/next links stay in sync
             $activePosts = array_values(array_filter($data['blog'], fn($p) => !empty($p['activo'])));
             $currentIdx = -1;
             foreach ($activePosts as $idx => $p) {
@@ -636,7 +618,7 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             updateSitemap($data);
 
-            // Sincronización automática en segundo plano con Supabase
+            // Sincronización automática de embeddings con Supabase pgvector
             syncSingleItemToSupabase(
                 'blog_' . $blog['id'],
                 'blog',
@@ -669,26 +651,22 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
 
         case 'delete_blog':
-            foreach ($data['blog'] as $b) {
-                if ($b['id'] === $_POST['id'] && !empty($b['imagen'])) {
-                    $imgFile = __DIR__ . '/../' . $b['imagen'];
-                    if (file_exists($imgFile) && strpos($b['imagen'], 'blog-images/') !== false) {
-                        unlink($imgFile);
-                    }
-                    break;
-                }
-            }
-            $data['blog'] = array_values(array_filter($data['blog'], fn($b) => $b['id'] !== $_POST['id']));
-            saveData($data);
-            updateSitemap($data);
             if (!empty($_POST['id'])) {
+                ContentRepository::getInstance()->deleteBlogPost($_POST['id']);
                 deleteSingleItemFromSupabase('blog_' . $_POST['id']);
             }
+            $data = loadData();
+            foreach ($data['blog'] as $b) {
+                if (!empty($b['slug'])) {
+                    generateBlogPage($b, $data['config'] ?? [], $data['blog']);
+                }
+            }
+            updateSitemap($data);
             header('Location: index.php?tab=blog&msg=eliminado');
             exit;
 
         case 'save_config':
-            $data['config'] = [
+            $config = [
                 'whatsapp' => $_POST['whatsapp'],
                 'email' => $_POST['email'],
                 'telefono' => $_POST['telefono'],
@@ -701,20 +679,20 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 'meta_keywords' => $_POST['meta_keywords'],
                 'meta_description' => $_POST['meta_description']
             ];
-            saveData($data);
+            ContentRepository::getInstance()->saveConfig($config);
             header('Location: index.php?tab=config&msg=guardado');
             exit;
 
         case 'save_chatbot_info':
-            $data['chatbot_general_info'] = trim((string) ($_POST['chatbot_general_info'] ?? ''));
-            saveData($data);
+            $chatbotGeneralInfo = trim((string) ($_POST['chatbot_general_info'] ?? ''));
+            ContentRepository::getInstance()->saveChatbotInfo($chatbotGeneralInfo);
 
-            if ($data['chatbot_general_info'] !== '') {
+            if ($chatbotGeneralInfo !== '') {
                 syncSingleItemToSupabase(
                     'agency_general_coris',
                     'agencia',
                     'Información General de Relax Tours y Asistencia Coris',
-                    $data['chatbot_general_info'],
+                    $chatbotGeneralInfo,
                     null,
                     ['type' => 'general_info'],
                     true
@@ -854,48 +832,22 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'move_up' || $action === 'move_down') {
         $id = $_POST['id'];
         $type = $_GET['tab'] ?? 'paquetes';
-        // Allow override if sent via POST, though usually we use the tab
-        if (isset($_POST['type']))
+        if (isset($_POST['type'])) {
             $type = $_POST['type'];
-
-        // Map tab names to data keys if they differ (they match in this app: paquetes, ofertas, blog)
-        // But let's be safe
-        $dataKey = $type;
-
-        if (isset($data[$dataKey]) && is_array($data[$dataKey])) {
-            $list = &$data[$dataKey];
-            $index = -1;
-
-            // Find index
-            foreach ($list as $key => $item) {
-                if ($item['id'] === $id) {
-                    $index = $key;
-                    break;
-                }
-            }
-
-            if ($index !== -1) {
-                if ($action === 'move_up' && $index > 0) {
-                    // Swap with previous
-                    $temp = $list[$index];
-                    $list[$index] = $list[$index - 1];
-                    $list[$index - 1] = $temp;
-
-                    saveData($data);
-                    header("Location: index.php?tab={$type}&msg=ordenado");
-                    exit;
-                } elseif ($action === 'move_down' && $index < count($list) - 1) {
-                    // Swap with next
-                    $temp = $list[$index];
-                    $list[$index] = $list[$index + 1];
-                    $list[$index + 1] = $temp;
-
-                    saveData($data);
-                    header("Location: index.php?tab={$type}&msg=ordenado");
-                    exit;
-                }
-            }
         }
+
+        ContentRepository::getInstance()->reorder($type, $id, $action);
+        if ($type === 'blog') {
+            $data = loadData();
+            foreach ($data['blog'] as $b) {
+                if (!empty($b['slug'])) {
+                    generateBlogPage($b, $data['config'] ?? [], $data['blog']);
+                }
+            }
+            updateSitemap($data);
+        }
+        header("Location: index.php?tab={$type}&msg=ordenado");
+        exit;
     }
 }
 
@@ -1052,7 +1004,11 @@ HTML;
         </article>
         {$footerHtml}
     HTML;
-    file_put_contents(__DIR__ . '/../blog/' . $post['slug'] . '.html', $html);
+    $blogDir = __DIR__ . '/../blog';
+    if (!is_dir($blogDir)) {
+        @mkdir($blogDir, 0755, true);
+    }
+    file_put_contents($blogDir . '/' . $post['slug'] . '.html', $html);
 }
 
 function updateSitemap($data)
@@ -1972,7 +1928,11 @@ if (isset($_GET['edit'])) {
                 <div class="logo-small">✈️</div>Relax Tours - Panel de Administración - <a
                     href="https://www.relaxtours.com.ar" target="_blank"> relaxtours.com.ar </a>
             </h1>
-            <a href="?logout=1" class="btn btn-secondary">Salir</a>
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                <a href="?action=export_backup" class="btn btn-secondary" style="font-size: 13px;" title="Descargar copia de seguridad completa en JSON">💾 Descargar Backup</a>
+                <a href="?action=rebuild_cache" class="btn btn-secondary" style="font-size: 13px;" title="Regenerar la caché local y sitemap desde la base de datos Supabase" onclick="return confirm('¿Regenerar la caché local desde Supabase?')">🔄 Restaurar Caché</a>
+                <a href="?logout=1" class="btn btn-secondary">Salir</a>
+            </div>
         </header>
         <nav class="admin-nav">
             <ul>
@@ -2006,6 +1966,8 @@ if (isset($_GET['edit'])) {
             <?php elseif ($message === 'sync_error'): ?>
                 <div class="alert alert-error">❌ No se pudo sincronizar con Supabase:
                     <?php echo htmlspecialchars($_GET['err'] ?? ''); ?></div>
+            <?php elseif ($message === 'cache_rebuilt'): ?>
+                <div class="alert alert-success">✅ Caché local (`data/content.json`), páginas del blog y sitemap regenerados con éxito desde Supabase.</div>
             <?php endif; ?>
             <?php if (!empty($_GET['img_err'])): ?>
                 <div class="alert alert-error">⚠️ Atención con la imagen: <?php echo htmlspecialchars($_GET['img_err']); ?></div>

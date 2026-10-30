@@ -110,3 +110,25 @@
 - **Verificación**:
   - `POST` a `/api/lead` validado exitosamente (inserción en Supabase, normalización a `+549...`, firma HMAC y respuesta JSON 200).
   - `POST` a `/api/chat` validado exitosamente en vivo con respuesta RAG de Gemini y Supabase.
+
+---
+
+## [2026-10-30 04:00 -03:00] — Migración de Contenido a Supabase PostgreSQL + Storage con Caché Write-Through Auto-Regenerable
+**Agente**: Orquestador Principal
+
+- **Base de Datos & Storage (Supabase)**:
+  - Creadas tablas `public.cms_packages`, `public.cms_offers`, `public.cms_blog_posts` y `public.cms_settings` con RLS habilitado y políticas de acceso para `service_role` y lectura pública.
+  - Creado bucket público `relax-media` en Supabase Storage con políticas selectivas para lectura pública y subida/borrado seguro desde backend.
+  - Se migraron (seed) el 100% de los datos: 4 paquetes, 10 artículos de blog, configuración global y chatbot context.
+  - Se sincronizaron las imágenes de paquetes y blogs hacia el bucket `relax-media`.
+- **Capa de Persistencia y Caché**:
+  - Creado [`api/ContentRepository.php`](file:///e:/Herny/2025/Trabajo/Relax%20Tours/New%20Web/Actual/api/ContentRepository.php) que implementa el patrón Write-Through con snapshot local atómico (`LOCK_EX` + archivo temporal `.tmp` renombrado) y auto-hidratación instantánea si `data/content.json` falta en disco.
+  - Creado endpoint [`api/content.php`](file:///e:/Herny/2025/Trabajo/Relax%20Tours/New%20Web/Actual/api/content.php) para servir y auto-hidratar la data en clientes web.
+  - Actualizados [`admin/index.php`](file:///e:/Herny/2025/Trabajo/Relax%20Tours/New%20Web/Actual/admin/index.php), [`includes/header.php`](file:///e:/Herny/2025/Trabajo/Relax%20Tours/New%20Web/Actual/includes/header.php), [`api/GeminiClient.php`](file:///e:/Herny/2025/Trabajo/Relax%20Tours/New%20Web/Actual/api/GeminiClient.php), [`js/main.js`](file:///e:/Herny/2025/Trabajo/Relax%20Tours/New%20Web/Actual/js/main.js), [`blog/index.php`](file:///e:/Herny/2025/Trabajo/Relax%20Tours/New%20Web/Actual/blog/index.php) y [`blog/post.php`](file:///e:/Herny/2025/Trabajo/Relax%20Tours/New%20Web/Actual/blog/post.php).
+  - Agregado en Backoffice botón para **Descargar Backup JSON** y **Restaurar Caché desde Supabase**.
+  - Ciclo de vida completo de imágenes: al subir, reemplazar o eliminar un paquete/oferta/blog desde el Admin, la imagen se actualiza/elimina tanto del disco local como del bucket `relax-media` de Supabase Storage.
+- **Higiene de Git**:
+  - `data/content.json` y carpetas mutables de uploads ignorados en [`.gitignore`](file:///e:/Herny/2025/Trabajo/Relax%20Tours/New%20Web/Actual/.gitignore).
+  - `data/content.json` desindexado de Git (`git rm --cached`).
+  - Creado [`data/content.example.json`](file:///e:/Herny/2025/Trabajo/Relax%20Tours/New%20Web/Actual/data/content.example.json) como plantilla base rastreada.
+  - Las páginas `blog/*.html` y `sitemap.xml` se mantienen generadas y versionadas para máxima velocidad e indexación en Google.
