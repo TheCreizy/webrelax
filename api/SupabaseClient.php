@@ -192,7 +192,7 @@ class SupabaseClient
     /**
      * Obtiene los leads más recientes capturados para visualización en el panel Admin.
      */
-    public function getRecentLeads(int $limit = 30): array
+    public function getRecentLeads(int $limit = 50): array
     {
         if (!$this->isConfigured()) {
             $this->lastError = 'Supabase no está configurado.';
@@ -205,6 +205,65 @@ class SupabaseClient
         $response = $this->request('GET', $endpoint);
 
         return is_array($response) ? $response : [];
+    }
+
+    /**
+     * Obtiene los mensajes de chat para un lead específico ordenados cronológicamente por turnos.
+     *
+     * @param string $leadId UUID del lead
+     * @return array
+     */
+    public function getLeadChatMessages(string $leadId): array
+    {
+        $leadId = trim($leadId);
+        if (!$this->isConfigured() || empty($leadId)) {
+            $this->lastError = 'Supabase no está configurado o leadId vacío.';
+            return [];
+        }
+
+        if (!preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $leadId)) {
+            $this->lastError = 'ID de lead inválido (no es un UUID).';
+            return [];
+        }
+
+        $cleanId = rawurlencode($leadId);
+        $endpoint = '/rest/v1/chat_messages?lead_id=eq.' . $cleanId . '&order=created_at.asc';
+
+        $response = $this->request('GET', $endpoint);
+
+        return is_array($response) ? $response : [];
+    }
+
+    /**
+     * Elimina completamente un lead de public.leads y sus mensajes en public.chat_messages.
+     *
+     * @param string $leadId UUID del lead
+     * @return bool
+     */
+    public function deleteLead(string $leadId): bool
+    {
+        $leadId = trim($leadId);
+        if (!$this->isConfigured() || empty($leadId)) {
+            $this->lastError = 'Supabase no está configurado o leadId vacío.';
+            return false;
+        }
+
+        if (!preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $leadId)) {
+            $this->lastError = 'ID de lead inválido (no es un UUID).';
+            return false;
+        }
+
+        $cleanId = rawurlencode($leadId);
+
+        // 1. Eliminar explícitamente los mensajes asociados en public.chat_messages
+        $this->request('DELETE', '/rest/v1/chat_messages?lead_id=eq.' . $cleanId);
+        $msgsCode = $this->lastHttpCode;
+
+        // 2. Eliminar el registro del lead en public.leads
+        $this->request('DELETE', '/rest/v1/leads?id=eq.' . $cleanId);
+        $leadCode = $this->lastHttpCode;
+
+        return ($msgsCode >= 200 && $msgsCode < 300) && ($leadCode >= 200 && $leadCode < 300);
     }
 
     /**

@@ -215,7 +215,11 @@ Inyectado globalmente en [`includes/footer.php`](file:///e:/Herny/2025/Trabajo/R
     * Diagnóstico de conexión en tiempo real con Gemini y Supabase.
     * Editor Markdown del Conocimiento General de la Agencia (`public.cms_settings` -> `chatbot_general_info`).
     * Botón **"🔄 Sincronizar Todo con Supabase (Generar Vectores IA)"**: re-vectoriza automáticamente paquetes, ofertas, blogs y los 10 casos canónicos de Coris.
-    * Visor de prospectos capturados en el pre-chat con botón de WhatsApp directo.
+  * Solapa `👥 Leads & Conversaciones` (`?tab=leads`):
+    * Visor centralizado e independiente de prospectos capturados en el pre-chat con buscador en tiempo real.
+    * Acordeón interactivo bajo demanda (lazy-loading vía AJAX `?ajax=get_lead_chat`): solo consulta `public.chat_messages` a la base de datos cuando el usuario despliega la flecha.
+    * Visualización por turnos de la conversación en orden cronológico (Usuario vs Asistente Relax IA) con marcas de tiempo y avatares.
+    * Eliminación global y segura del lead (`deleteLeadGlobally`): borra definitivamente de `public.chat_messages`, `public.leads`, memoria y cualquier archivo JSON local.
 
 ---
 

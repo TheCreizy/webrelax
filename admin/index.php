@@ -4,7 +4,9 @@
  * Panel de administración en PHP
  */
 
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // --- CARGAR VARIABLES DE ENTORNO Y CLIENTES IA / SUPABASE / REPOSITORY ---
 require_once __DIR__ . '/../includes/env-loader.php';
@@ -247,6 +249,93 @@ function deleteSingleItemFromSupabase(string $externalId): bool
     }
 }
 
+/**
+ * Elimina completamente un lead y todo su historial de conversación de Supabase y de cualquier archivo JSON o sesión.
+ */
+function deleteLeadGlobally(string $leadId): bool
+{
+    $leadId = trim($leadId);
+    if ($leadId === '') {
+        return false;
+    }
+
+    $supabaseSuccess = true;
+    try {
+        $supabase = new SupabaseClient();
+        if ($supabase->isConfigured()) {
+            if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $leadId)) {
+                $supabaseSuccess = $supabase->deleteLead($leadId);
+            }
+        }
+    } catch (\Throwable $e) {
+        $supabaseSuccess = false;
+    }
+
+    // 1. Limpieza exhaustiva en todos los archivos JSON del directorio data/ (content.json, leads.json, etc.)
+    $dataDir = __DIR__ . '/../data';
+    if (is_dir($dataDir)) {
+        $jsonFiles = glob($dataDir . '/*.json');
+        if (is_array($jsonFiles)) {
+            foreach ($jsonFiles as $jsonPath) {
+                if (!is_file($jsonPath) || !is_readable($jsonPath) || !is_writable($jsonPath)) {
+                    continue;
+                }
+                $raw = @file_get_contents($jsonPath);
+                if ($raw === false || strpos($raw, $leadId) === false) {
+                    continue;
+                }
+                $jsonData = json_decode($raw, true);
+                if (!is_array($jsonData)) {
+                    continue;
+                }
+
+                $dirty = false;
+                // Si es un arreglo simple de registros
+                if (isset($jsonData[0]) && is_array($jsonData[0])) {
+                    $origCount = count($jsonData);
+                    $jsonData = array_values(array_filter($jsonData, function ($item) use ($leadId) {
+                        return is_array($item) && ($item['id'] ?? '') !== $leadId && ($item['lead_id'] ?? '') !== $leadId;
+                    }));
+                    if (count($jsonData) !== $origCount) {
+                        $dirty = true;
+                    }
+                } else {
+                    // Si es un objeto asociativo con colecciones
+                    foreach ($jsonData as $key => $collection) {
+                        if (is_array($collection) && !empty($collection) && isset($collection[0]) && is_array($collection[0])) {
+                            $origCount = count($collection);
+                            $jsonData[$key] = array_values(array_filter($collection, function ($item) use ($leadId) {
+                                return is_array($item) && ($item['id'] ?? '') !== $leadId && ($item['lead_id'] ?? '') !== $leadId;
+                            }));
+                            if (count($jsonData[$key]) !== $origCount) {
+                                $dirty = true;
+                            }
+                        }
+                    }
+                }
+
+                if ($dirty) {
+                    @file_put_contents($jsonPath, json_encode($jsonData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), LOCK_EX);
+                }
+            }
+        }
+    }
+
+    // 2. Limpieza de sesión si corresponde al lead activo
+    if (isset($_SESSION) && isset($_SESSION['relax_lead_id']) && $_SESSION['relax_lead_id'] === $leadId) {
+        unset(
+            $_SESSION['relax_lead_id'],
+            $_SESSION['relax_lead_persisted'],
+            $_SESSION['relax_lead_name'],
+            $_SESSION['relax_lead_email'],
+            $_SESSION['relax_lead_phone'],
+            $_SESSION['relax_chat_history']
+        );
+    }
+
+    return $supabaseSuccess;
+}
+
 function processAndConvertWebP($sourcePath, $destinationPath, $maxWidth = 1200, $quality = 80)
 {
     // Validar si la librería GD está instalada
@@ -382,12 +471,86 @@ if ($isLoggedIn && isset($_GET['ajax']) && $_GET['ajax'] === 'upload_blog_image'
     exit;
 }
 
+// AJAX: Obtener mensajes de chat para un lead específico (por turnos)
+if (isset($_GET['ajax']) && $_GET['ajax'] === 'get_lead_chat') {
+    header('Content-Type: application/json; charset=utf-8');
+    if (!$isLoggedIn) {
+        http_response_code(401);
+        echo json_encode(['ok' => false, 'error' => 'No autorizado. Iniciá sesión en el panel.']);
+        exit;
+    }
+    $leadId = trim((string) ($_GET['lead_id'] ?? ''));
+    if ($leadId === '') {
+        http_response_code(400);
+        echo json_encode(['ok' => false, 'error' => 'Parámetro lead_id requerido.']);
+        exit;
+    }
+
+    $supabase = new SupabaseClient();
+    if (!$supabase->isConfigured()) {
+        http_response_code(503);
+        echo json_encode(['ok' => false, 'error' => 'Supabase no está configurado (revisá SUPABASE_SECRET_KEY en admin/.env).']);
+        exit;
+    }
+
+    $messages = $supabase->getLeadChatMessages($leadId);
+    echo json_encode([
+        'ok'       => true,
+        'lead_id'  => $leadId,
+        'count'    => count($messages),
+        'messages' => $messages,
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+// AJAX: Eliminar lead completo y su conversación de la base de datos y cualquier JSON
+if (isset($_GET['ajax']) && $_GET['ajax'] === 'delete_lead' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    header('Content-Type: application/json; charset=utf-8');
+    if (!$isLoggedIn) {
+        http_response_code(401);
+        echo json_encode(['ok' => false, 'error' => 'No autorizado. Iniciá sesión en el panel.']);
+        exit;
+    }
+    $rawInput = file_get_contents('php://input');
+    $inputData = json_decode($rawInput ?: '', true);
+    if (!is_array($inputData)) {
+        $inputData = $_POST;
+    }
+    $leadId = trim((string) ($inputData['lead_id'] ?? ''));
+    if ($leadId === '') {
+        http_response_code(400);
+        echo json_encode(['ok' => false, 'error' => 'lead_id no especificado.']);
+        exit;
+    }
+
+    $deleted = deleteLeadGlobally($leadId);
+    echo json_encode([
+        'ok'      => $deleted,
+        'lead_id' => $leadId,
+        'message' => $deleted ? 'Lead y conversación eliminados con éxito.' : 'No se pudo eliminar el lead de Supabase.',
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
 // Procesar acciones
 if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $data = loadData();
     $action = $_POST['action'] ?? '';
 
     switch ($action) {
+        case 'delete_lead':
+            $leadId = trim((string) ($_POST['lead_id'] ?? ''));
+            if (!empty($leadId)) {
+                $deleted = deleteLeadGlobally($leadId);
+                if ($deleted) {
+                    header('Location: index.php?tab=leads&msg=lead_eliminado');
+                } else {
+                    header('Location: index.php?tab=leads&msg=lead_error&err=' . urlencode('No se pudo eliminar el registro de la base de datos.'));
+                }
+            } else {
+                header('Location: index.php?tab=leads');
+            }
+            exit;
         case 'save_paquete':
             $oldImage = !empty($_POST['id']) ? ($_POST['imagen'] ?? null) : null;
             $paquete = [
@@ -1913,6 +2076,212 @@ if (isset($_GET['edit'])) {
                 font-size: 12px;
             }
         }
+
+        /* ===== LEADS & CONVERSATION ACCORDION ===== */
+        .lead-row {
+            transition: background-color 0.15s ease;
+        }
+
+        .lead-row:hover {
+            background: #fafafa;
+        }
+
+        .lead-row.is-open {
+            background: #f1f5f9;
+        }
+
+        .btn-toggle-chat {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            color: #1e293b;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-toggle-chat:hover {
+            background: #f8fafc;
+            border-color: #94a3b8;
+            color: #0f172a;
+        }
+
+        .btn-toggle-chat .arrow {
+            display: inline-block;
+            transition: transform 0.25s ease;
+            font-size: 10px;
+            color: #64748b;
+        }
+
+        .lead-row.is-open .btn-toggle-chat {
+            background: #f97316;
+            color: #ffffff;
+            border-color: #f97316;
+        }
+
+        .lead-row.is-open .btn-toggle-chat .arrow {
+            transform: rotate(90deg);
+            color: #ffffff;
+        }
+
+        .chat-drawer-cell {
+            padding: 0 !important;
+            background: #f8fafc;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .chat-drawer-container {
+            padding: 20px 24px;
+            background: #ffffff;
+            border-top: 1px dashed #cbd5e1;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.03);
+        }
+
+        .chat-drawer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #e2e8f0;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .chat-turns-stream {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            max-height: 480px;
+            overflow-y: auto;
+            padding: 16px 20px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+        }
+
+        .chat-turn {
+            display: flex;
+            flex-direction: column;
+            max-width: 82%;
+            animation: fadeInTurn 0.2s ease-out;
+        }
+
+        @keyframes fadeInTurn {
+            from {
+                opacity: 0;
+                transform: translateY(4px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .chat-turn.turn-user {
+            align-self: flex-start;
+        }
+
+        .chat-turn.turn-model {
+            align-self: flex-end;
+        }
+
+        .turn-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .turn-user .turn-header {
+            color: #2563eb;
+        }
+
+        .turn-model .turn-header {
+            color: #c2410c;
+            justify-content: flex-end;
+        }
+
+        .turn-time {
+            font-size: 11px;
+            color: #94a3b8;
+            font-weight: normal;
+        }
+
+        .turn-bubble {
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 14px;
+            line-height: 1.55;
+            word-break: break-word;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .turn-user .turn-bubble {
+            background: #ffffff;
+            color: #1e293b;
+            border: 1px solid #cbd5e1;
+            border-top-left-radius: 2px;
+        }
+
+        .turn-model .turn-bubble {
+            background: #fff7ed;
+            color: #7c2d12;
+            border: 1px solid #fed7aa;
+            border-top-right-radius: 2px;
+        }
+
+        .turn-bubble p {
+            margin-bottom: 8px;
+        }
+
+        .turn-bubble p:last-child {
+            margin-bottom: 0;
+        }
+
+        .turn-bubble ul, .turn-bubble ol {
+            padding-left: 20px;
+            margin: 6px 0;
+        }
+
+        .turn-bubble a {
+            color: #ea580c;
+            text-decoration: underline;
+        }
+
+        .chat-drawer-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 16px;
+            padding-top: 12px;
+            border-top: 1px solid #e2e8f0;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .leads-filter-input {
+            width: 100%;
+            max-width: 320px;
+            padding: 9px 14px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .leads-filter-input:focus {
+            border-color: #f97316;
+            box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
+        }
     </style>
 </head>
 
@@ -1959,6 +2328,8 @@ if (isset($_GET['edit'])) {
                 </li>
                 <li><a href="?tab=chatbot" class="<?php echo $activeTab === 'chatbot' ? 'active' : ''; ?>">🤖 Chatbot IA</a>
                 </li>
+                <li><a href="?tab=leads" class="<?php echo $activeTab === 'leads' ? 'active' : ''; ?>">👥 Leads & Conversaciones</a>
+                </li>
             </ul>
         </nav>
         <main class="admin-content">
@@ -1971,6 +2342,10 @@ if (isset($_GET['edit'])) {
                     <?php echo htmlspecialchars($_GET['err'] ?? ''); ?></div>
             <?php elseif ($message === 'eliminado'): ?>
                 <div class="alert alert-success">✅ Eliminado correctamente</div>
+            <?php elseif ($message === 'lead_eliminado'): ?>
+                <div class="alert alert-success">✅ Lead y conversación completa eliminados correctamente de la base de datos y registros.</div>
+            <?php elseif ($message === 'lead_error'): ?>
+                <div class="alert alert-error">⚠️ Error al eliminar el lead: <?php echo htmlspecialchars($_GET['err'] ?? ''); ?></div>
             <?php elseif ($message === 'sync_ok'): ?>
                 <div class="alert alert-success">✅ Sincronización completada con éxito: se vectorizaron y actualizaron
                     <strong><?php echo (int) ($_GET['synced'] ?? 0); ?></strong> documentos en Supabase (pgvector).</div>
@@ -2547,15 +2922,6 @@ if (isset($_GET['edit'])) {
                 $supaSecretRaw     = trim((string) (env('SUPABASE_SECRET_KEY', '') ?: env('SUPABASE_SERVICE_ROLE_KEY', '')));
                 $supaConfigured    = ($supaUrlRaw !== '' && $supaSecretRaw !== '');
 
-                $supabaseClientInstance = new SupabaseClient();
-                $recentLeads = [];
-                $leadsError  = '';
-                if ($supabaseClientInstance->isConfigured()) {
-                    $recentLeads = $supabaseClientInstance->getRecentLeads(30);
-                    if (empty($recentLeads) && $supabaseClientInstance->getLastError() !== '') {
-                        $leadsError = $supabaseClientInstance->getLastError();
-                    }
-                }
                 ?>
 
                 <!-- 1. Tarjetas de Estado de Conexión -->
@@ -2595,7 +2961,7 @@ if (isset($_GET['edit'])) {
                         </p>
                         <?php if (!$supaConfigured): ?>
                             <div style="margin-top: 10px; padding: 10px 12px; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px; font-size: 13px; color: #9a3412;">
-                                ⚠️ <strong>Acción requerida:</strong> Pegá tu clave secreta (<code>sb_secret_...</code> o <code>service_role</code>) en la variable <code>SUPABASE_SECRET_KEY=</code> dentro del archivo <code>admin/.env</code> para habilitar la sincronización vectorial y el listado de Leads.
+                                ⚠️ <strong>Acción requerida:</strong> Pegá tu clave secreta (<code>sb_secret_...</code> o <code>service_role</code>) en la variable <code>SUPABASE_SECRET_KEY=</code> dentro del archivo <code>admin/.env</code> para habilitar la sincronización vectorial y la gestión de Leads.
                             </div>
                         <?php else: ?>
                             <p style="font-size: 13px; color: #16a34a; margin-top: 6px;">
@@ -2624,7 +2990,7 @@ if (isset($_GET['edit'])) {
                 </div>
 
                 <!-- 3. Formulario de Conocimiento General de la Agencia y Asistencia Coris -->
-                <div class="card" style="margin-bottom: 24px;">
+                <div class="card">
                     <div class="card-header">
                         <h2>📘 Conocimiento General de la Agencia y Asistencia Coris</h2>
                     </div>
@@ -2645,16 +3011,42 @@ if (isset($_GET['edit'])) {
                     </div>
                 </div>
 
-                <!-- 4. Tabla de Últimos Leads Capturados (Pre-Chat) -->
-                <div class="card">
-                    <div class="card-header">
-                        <h2>👥 Últimos Leads Capturados (Pre-Chat)</h2>
-                        <span class="badge badge-orange">Últimos 30 registros</span>
+            <?php elseif ($activeTab === 'leads'): ?>
+                <?php
+                $supabaseClientInstance = new SupabaseClient();
+                $supaConfigured = $supabaseClientInstance->isConfigured();
+                $recentLeads = [];
+                $leadsError  = '';
+                if ($supaConfigured) {
+                    $recentLeads = $supabaseClientInstance->getRecentLeads(100);
+                    if (empty($recentLeads) && $supabaseClientInstance->getLastError() !== '') {
+                        $leadsError = $supabaseClientInstance->getLastError();
+                    }
+                }
+                ?>
+                <div class="card" style="margin-bottom: 24px;">
+                    <div class="card-header" style="flex-wrap: wrap; gap: 12px;">
+                        <div>
+                            <h2>👥 Leads y Conversaciones del Chatbot</h2>
+                            <p style="font-size: 13px; color: #6b7280; margin-top: 4px;">
+                                Consultá los prospectos capturados en el pre-chat. Tocá <strong>"Ver Chat"</strong> en cualquier fila para desplegar bajo demanda todos los turnos que tuvo el usuario con el Asistente IA. Podés eliminar registros completos tanto de la base de datos como de archivos locales.
+                            </p>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                            <input type="text"
+                                id="leadsFilterInput"
+                                class="leads-filter-input"
+                                placeholder="🔍 Buscar por nombre, email o teléfono..."
+                                onkeyup="filterLeads(this.value)">
+                            <span id="leads-count-badge" class="badge badge-orange"><?php echo count($recentLeads); ?> registros</span>
+                            <a href="?tab=leads" class="btn btn-secondary btn-small" title="Recargar lista completa">🔄 Actualizar</a>
+                        </div>
                     </div>
+
                     <?php if (!$supaConfigured): ?>
                         <div style="padding: 24px;">
                             <div class="alert alert-error" style="margin-bottom: 0;">
-                                ⚠️ Para visualizar los Leads capturados por el Chatbot, abrí el archivo <code>admin/.env</code> y completá la variable <code>SUPABASE_SECRET_KEY=tu_clave_secreta_de_supabase</code> (disponible en el panel de Supabase &rarr; Project Settings &rarr; API).
+                                ⚠️ Para visualizar los Leads y sus conversaciones, completá la variable <code>SUPABASE_SECRET_KEY=tu_clave_secreta</code> en el archivo <code>admin/.env</code> (disponible en Supabase &rarr; Project Settings &rarr; API).
                             </div>
                         </div>
                     <?php elseif ($leadsError !== ''): ?>
@@ -2664,73 +3056,193 @@ if (isset($_GET['edit'])) {
                             </div>
                         </div>
                     <?php elseif (empty($recentLeads)): ?>
-                        <div style="padding: 32px 24px; text-align: center; color: #6b7280;">
-                            Todavía no hay leads registrados en el Chatbot. Cuando un visitante complete sus datos para iniciar el chat, aparecerá aquí automáticamente.
+                        <div style="padding: 40px 24px; text-align: center; color: #6b7280;">
+                            <div style="font-size: 32px; margin-bottom: 10px;">💬</div>
+                            <strong style="color: #374151; font-size: 16px;">Todavía no hay leads registrados en el Chatbot.</strong>
+                            <p style="font-size: 14px; margin-top: 6px;">Cuando un visitante complete sus datos para iniciar el chat en la web, aparecerá aquí automáticamente con su historial.</p>
                         </div>
                     <?php else: ?>
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Fecha</th>
-                                    <th>Nombre Completo</th>
-                                    <th>Email</th>
-                                    <th>Teléfono / WhatsApp</th>
-                                    <th>Origen</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($recentLeads as $lead): ?>
-                                    <?php
-                                    $rawDate = $lead['created_at'] ?? '';
-                                    $formattedDate = $rawDate;
-                                    if (!empty($rawDate)) {
-                                        try {
-                                            $dt = new DateTime($rawDate);
-                                            $dt->setTimezone(new DateTimeZone('America/Argentina/Buenos_Aires'));
-                                            $formattedDate = $dt->format('d/m/Y H:i');
-                                        } catch (\Throwable $e) {
-                                            $formattedDate = $rawDate;
-                                        }
-                                    }
-                                    $leadName  = (string) ($lead['full_name'] ?? 'Sin nombre');
-                                    $leadEmail = (string) ($lead['email'] ?? '');
-                                    $leadPhone = (string) ($lead['phone_e164'] ?? '');
-                                    $leadSrc   = (string) ($lead['source'] ?? 'chatbot_web');
-                                    $waDigits  = preg_replace('/\D+/', '', $leadPhone);
-                                    $waText    = urlencode("Hola {$leadName}! Te escribimos de Relax Tours por tu consulta en nuestro asistente web.");
-                                    ?>
+                        <div style="overflow-x: auto;">
+                            <table id="leadsTable">
+                                <thead>
                                     <tr>
-                                        <td style="white-space: nowrap; font-size: 14px; color: #555;"><?php echo htmlspecialchars($formattedDate); ?></td>
-                                        <td><strong><?php echo htmlspecialchars($leadName); ?></strong></td>
-                                        <td>
-                                            <?php if ($leadEmail !== ''): ?>
-                                                <a href="mailto:<?php echo htmlspecialchars($leadEmail); ?>" style="color: #F97316; text-decoration: none;">
-                                                    <?php echo htmlspecialchars($leadEmail); ?>
-                                                </a>
-                                            <?php else: ?>
-                                                -
-                                            <?php endif; ?>
-                                        </td>
-                                        <td>
-                                            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                                                <span><?php echo htmlspecialchars($leadPhone); ?></span>
-                                                <?php if ($waDigits !== ''): ?>
-                                                    <a href="https://wa.me/<?php echo htmlspecialchars($waDigits); ?>?text=<?php echo $waText; ?>"
-                                                        target="_blank"
-                                                        class="btn btn-success btn-small"
-                                                        style="padding: 4px 10px; font-size: 12px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
-                                                        💬 Abrir WhatsApp
-                                                    </a>
-                                                <?php endif; ?>
-                                            </div>
-                                        </td>
-                                        <td><span class="badge badge-gray"><?php echo htmlspecialchars($leadSrc); ?></span></td>
+                                        <th style="width: 140px; text-align: center;">Conversación</th>
+                                        <th>Fecha / Hora</th>
+                                        <th>Nombre Completo</th>
+                                        <th>Email</th>
+                                        <th>Teléfono / WhatsApp</th>
+                                        <th>Origen</th>
+                                        <th style="width: 100px; text-align: center;">Acción</th>
                                     </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($recentLeads as $lead): ?>
+                                        <?php
+                                        $leadId    = (string) ($lead['id'] ?? '');
+                                        $rawDate   = (string) ($lead['created_at'] ?? '');
+                                        $formattedDate = $rawDate;
+                                        if (!empty($rawDate)) {
+                                            try {
+                                                $dt = new DateTime($rawDate);
+                                                $dt->setTimezone(new DateTimeZone('America/Argentina/Buenos_Aires'));
+                                                $formattedDate = $dt->format('d/m/Y H:i') . ' hs';
+                                            } catch (\Throwable $e) {
+                                                $formattedDate = $rawDate;
+                                            }
+                                        }
+                                        $leadName  = (string) ($lead['full_name'] ?? 'Sin nombre');
+                                        $leadEmail = (string) ($lead['email'] ?? '');
+                                        $leadPhone = (string) ($lead['phone_e164'] ?? '');
+                                        $leadSrc   = (string) ($lead['source'] ?? 'chatbot_web');
+                                        $leadMeta  = (is_array($lead['metadata'] ?? null)) ? $lead['metadata'] : [];
+                                        $pageUrl   = (string) ($leadMeta['page_url'] ?? '');
+                                        $waDigits  = preg_replace('/\D+/', '', $leadPhone);
+                                        $waText    = urlencode("Hola {$leadName}! Te escribimos de Relax Tours por tu consulta en nuestro asistente web.");
+                                        ?>
+                                        <!-- Fila Principal del Lead -->
+                                        <tr id="lead-row-<?php echo htmlspecialchars($leadId); ?>"
+                                            class="lead-row"
+                                            data-lead-name="<?php echo htmlspecialchars(mb_strtolower($leadName, 'UTF-8')); ?>"
+                                            data-lead-display-name="<?php echo htmlspecialchars($leadName, ENT_QUOTES, 'UTF-8'); ?>"
+                                            data-lead-email="<?php echo htmlspecialchars(mb_strtolower($leadEmail, 'UTF-8')); ?>"
+                                            data-lead-phone="<?php echo htmlspecialchars($leadPhone); ?>"
+                                            data-lead-source="<?php echo htmlspecialchars(mb_strtolower($leadSrc, 'UTF-8')); ?>">
+                                            <td style="text-align: center;">
+                                                <button type="button"
+                                                    class="btn-toggle-chat"
+                                                    id="btn-toggle-<?php echo htmlspecialchars($leadId); ?>"
+                                                    onclick="toggleLeadChat('<?php echo htmlspecialchars($leadId); ?>')"
+                                                    title="Ver conversación completa por turnos">
+                                                    <span class="arrow">▶</span>
+                                                    <span class="txt">Ver Chat</span>
+                                                </button>
+                                            </td>
+                                            <td style="white-space: nowrap; font-size: 13px; color: #555;">
+                                                <?php echo htmlspecialchars($formattedDate); ?>
+                                            </td>
+                                            <td>
+                                                <strong style="color: #111827;"><?php echo htmlspecialchars($leadName); ?></strong>
+                                            </td>
+                                            <td>
+                                                <?php if ($leadEmail !== ''): ?>
+                                                    <a href="mailto:<?php echo htmlspecialchars($leadEmail); ?>" style="color: #F97316; text-decoration: none; font-size: 14px;">
+                                                        <?php echo htmlspecialchars($leadEmail); ?>
+                                                    </a>
+                                                <?php else: ?>
+                                                    <span style="color: #9ca3af;">-</span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td>
+                                                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                                    <span style="font-size: 14px;"><?php echo htmlspecialchars($leadPhone); ?></span>
+                                                    <?php if ($waDigits !== ''): ?>
+                                                        <a href="https://wa.me/<?php echo htmlspecialchars($waDigits); ?>?text=<?php echo $waText; ?>"
+                                                            target="_blank"
+                                                            class="btn btn-success btn-small"
+                                                            style="padding: 4px 10px; font-size: 12px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;"
+                                                            title="Abrir WhatsApp oficial con mensaje predefinido">
+                                                            💬 WhatsApp
+                                                        </a>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="badge badge-gray"><?php echo htmlspecialchars($leadSrc); ?></span>
+                                            </td>
+                                            <td style="text-align: center;">
+                                                <button type="button"
+                                                    class="btn btn-danger btn-small"
+                                                    onclick="confirmDeleteLead('<?php echo htmlspecialchars($leadId); ?>')"
+                                                    style="padding: 6px 12px; font-size: 12px;"
+                                                    title="Eliminar usuario, datos y conversación entera de la base de datos y de cualquier archivo">
+                                                    🗑️ Borrar
+                                                </button>
+                                            </td>
+                                        </tr>
+
+                                        <!-- Fila Desplegable del Chat (Acordeón Lazy Load) -->
+                                        <tr id="chat-drawer-<?php echo htmlspecialchars($leadId); ?>"
+                                            class="chat-drawer-row"
+                                            style="display: none;"
+                                            data-loaded="false">
+                                            <td colspan="7" class="chat-drawer-cell">
+                                                <div class="chat-drawer-container">
+                                                    <div class="chat-drawer-header">
+                                                        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                                                            <strong style="color: #0f172a; font-size: 15px;">💬 Historial de Conversación — <?php echo htmlspecialchars($leadName); ?></strong>
+                                                            <span style="font-size: 12px; color: #64748b; background: #e2e8f0; padding: 2px 8px; border-radius: 4px;">ID: <?php echo htmlspecialchars($leadId); ?></span>
+                                                            <?php if (!empty($pageUrl)): ?>
+                                                                <span style="font-size: 12px; color: #475569; background: #f1f5f9; padding: 2px 8px; border-radius: 4px;" title="<?php echo htmlspecialchars($pageUrl); ?>">
+                                                                    📍 Origen: <?php echo htmlspecialchars(strlen($pageUrl) > 42 ? substr($pageUrl, 0, 39) . '...' : $pageUrl); ?>
+                                                                </span>
+                                                            <?php endif; ?>
+                                                        </div>
+                                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                                            <button type="button"
+                                                                class="btn btn-secondary btn-small"
+                                                                onclick="refreshLeadChat('<?php echo htmlspecialchars($leadId); ?>')"
+                                                                style="font-size: 12px; padding: 5px 10px;">
+                                                                🔄 Recargar mensajes
+                                                            </button>
+                                                            <button type="button"
+                                                                class="btn btn-secondary btn-small"
+                                                                onclick="toggleLeadChat('<?php echo htmlspecialchars($leadId); ?>')"
+                                                                style="font-size: 12px; padding: 5px 10px;">
+                                                                ✖ Cerrar
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Contenedor dinámico de turnos -->
+                                                    <div id="chat-stream-<?php echo htmlspecialchars($leadId); ?>" class="chat-turns-stream">
+                                                        <div style="text-align: center; padding: 24px; color: #64748b;">
+                                                             ⏳ Cargando mensajes desde la base de datos...
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="chat-drawer-footer">
+                                                        <div id="chat-count-<?php echo htmlspecialchars($leadId); ?>" style="font-size: 13px; color: #64748b; font-weight: 500;">
+                                                            Consultando turnos...
+                                                        </div>
+                                                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                                            <?php if ($waDigits !== ''): ?>
+                                                                <a href="https://wa.me/<?php echo htmlspecialchars($waDigits); ?>?text=<?php echo $waText; ?>"
+                                                                    target="_blank"
+                                                                    class="btn btn-success btn-small"
+                                                                    style="font-size: 12px;">
+                                                                    💬 Continuar por WhatsApp
+                                                                </a>
+                                                            <?php endif; ?>
+                                                            <?php if ($leadEmail !== ''): ?>
+                                                                <a href="mailto:<?php echo htmlspecialchars($leadEmail); ?>"
+                                                                    class="btn btn-secondary btn-small"
+                                                                    style="font-size: 12px;">
+                                                                    ✉️ Enviar Correo
+                                                                </a>
+                                                            <?php endif; ?>
+                                                            <button type="button"
+                                                                class="btn btn-danger btn-small"
+                                                                onclick="confirmDeleteLead('<?php echo htmlspecialchars($leadId); ?>')"
+                                                                style="font-size: 12px;">
+                                                                🗑️ Borrar Registro Completo
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
                     <?php endif; ?>
                 </div>
+
+                <!-- Formulario Oculto de Respaldo para Eliminación sin JS -->
+                <form id="fallbackDeleteLeadForm" method="POST" style="display: none;">
+                    <input type="hidden" name="action" value="delete_lead">
+                    <input type="hidden" name="lead_id" id="fallbackDeleteLeadId" value="">
+                </form>
             <?php endif; ?>
         </main>
     <?php endif; ?>
@@ -3109,6 +3621,253 @@ if (isset($_GET['edit'])) {
                     }
                 }
             });
+        // ===== LEADS & CONVERSATION ACCORDION JS =====
+        function toggleLeadChat(leadId) {
+            const row = document.getElementById('lead-row-' + leadId);
+            const drawer = document.getElementById('chat-drawer-' + leadId);
+            const btn = document.getElementById('btn-toggle-' + leadId);
+            if (!row || !drawer) return;
+
+            const isOpen = (drawer.style.display !== 'none');
+            if (isOpen) {
+                drawer.style.display = 'none';
+                row.classList.remove('is-open');
+                if (btn) {
+                    btn.querySelector('.txt').textContent = 'Ver Chat';
+                }
+            } else {
+                drawer.style.display = '';
+                row.classList.add('is-open');
+                if (btn) {
+                    btn.querySelector('.txt').textContent = 'Ocultar';
+                }
+                if (drawer.dataset.loaded !== 'true') {
+                    loadLeadChat(leadId);
+                }
+            }
+        }
+
+        function refreshLeadChat(leadId) {
+            const drawer = document.getElementById('chat-drawer-' + leadId);
+            if (drawer) {
+                drawer.dataset.loaded = 'false';
+                loadLeadChat(leadId);
+            }
+        }
+
+        function loadLeadChat(leadId) {
+            const row = document.getElementById('lead-row-' + leadId);
+            const stream = document.getElementById('chat-stream-' + leadId);
+            const countInfo = document.getElementById('chat-count-' + leadId);
+            const drawer = document.getElementById('chat-drawer-' + leadId);
+            if (!stream || !drawer) return;
+
+            if (drawer.dataset.loading === 'true') {
+                return;
+            }
+            drawer.dataset.loading = 'true';
+
+            const leadName = row?.dataset?.leadDisplayName || 'Usuario';
+
+            stream.innerHTML = '<div style="text-align: center; padding: 24px; color: #64748b;">⏳ Consultando historial de mensajes en Supabase...</div>';
+            if (countInfo) countInfo.textContent = 'Cargando conversación...';
+
+            fetch('index.php?ajax=get_lead_chat&lead_id=' + encodeURIComponent(leadId))
+                .then(r => {
+                    if (!r.ok) {
+                        return r.json().then(
+                            errData => Promise.reject(new Error(errData.error || ('Error HTTP ' + r.status))),
+                            () => Promise.reject(new Error('Error del servidor (HTTP ' + r.status + ')'))
+                        );
+                    }
+                    return r.json();
+                })
+                .then(data => {
+                    drawer.dataset.loading = 'false';
+                    if (!data.ok) {
+                        stream.innerHTML = '<div style="padding: 16px; background: #fee2e2; color: #b91c1c; border-radius: 8px;">⚠️ ' + escapeHtmlChat(data.error || 'Error al obtener mensajes') + '</div>';
+                        if (countInfo) countInfo.textContent = 'Error al cargar';
+                        return;
+                    }
+
+                    drawer.dataset.loaded = 'true';
+                    const messages = data.messages || [];
+
+                    if (countInfo) {
+                        countInfo.textContent = messages.length === 0
+                            ? '0 mensajes registrados'
+                            : (messages.length + (messages.length === 1 ? ' mensaje registrado' : ' mensajes registrados en orden cronológico'));
+                    }
+
+                    if (messages.length === 0) {
+                        stream.innerHTML = '<div style="text-align: center; padding: 32px 16px; color: #64748b;">💬 Este usuario completó el pre-chat pero todavía no envió mensajes en la conversación.</div>';
+                        return;
+                    }
+
+                    let html = '';
+                    messages.forEach((msg) => {
+                        const isUser = (msg.role === 'user');
+                        const roleName = isUser ? leadName : 'Relax IA';
+                        const avatarIcon = isUser ? '👤' : '🤖';
+                        const timeStr = formatChatTimestamp(msg.created_at);
+
+                        html += '<div class="chat-turn ' + (isUser ? 'turn-user' : 'turn-model') + '">';
+                        html += '  <div class="turn-header">';
+                        html += '    <span>' + avatarIcon + ' ' + escapeHtmlChat(roleName) + '</span>';
+                        if (timeStr) {
+                            html += '    <span class="turn-time" title="' + escapeHtmlChat(msg.created_at || '') + '">' + escapeHtmlChat(timeStr) + '</span>';
+                        }
+                        html += '  </div>';
+                        html += '  <div class="turn-bubble">';
+                        html += renderChatMessageContent(msg.message || '');
+                        html += '  </div>';
+                        html += '</div>';
+                    });
+
+                    stream.innerHTML = html;
+                    stream.scrollTop = stream.scrollHeight;
+                })
+                .catch(err => {
+                    drawer.dataset.loading = 'false';
+                    stream.innerHTML = '<div style="padding: 16px; background: #fee2e2; color: #b91c1c; border-radius: 8px;">⚠️ Error al cargar conversación: ' + escapeHtmlChat(err.message) + '</div>';
+                    if (countInfo) countInfo.textContent = 'Error de conexión';
+                });
+        }
+
+        function formatChatTimestamp(isoDate) {
+            if (!isoDate) return '';
+            try {
+                const d = new Date(isoDate);
+                if (isNaN(d.getTime())) return isoDate;
+                return d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false }) + ' hs (' + d.toLocaleDateString('es-AR') + ')';
+            } catch (e) {
+                return isoDate;
+            }
+        }
+
+        function escapeHtmlChat(str) {
+            const p = document.createElement('p');
+            p.textContent = str || '';
+            return p.innerHTML;
+        }
+
+        function renderChatMessageContent(rawText) {
+            let escaped = escapeHtmlChat(rawText);
+            // Formatear viñetas limpias
+            escaped = escaped.replace(/(?:^|\n)\s*[\-\*]\s+(.*?)(?=(?:\n|$))/g, '\n• $1');
+            // Formatear negritas
+            escaped = escaped.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            // Formatear enlaces sanitizados
+            escaped = escaped.replace(/\[(.*?)\]\((https?:\/\/[^\s\)\"\']+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+            // Saltos de línea
+            escaped = escaped.replace(/\n/g, '<br>');
+            return escaped;
+        }
+
+        function confirmDeleteLead(leadId) {
+            const row = document.getElementById('lead-row-' + leadId);
+            const leadName = row?.dataset?.leadDisplayName || 'este usuario';
+            const msg = '¿Estás seguro de que deseás eliminar a "' + leadName + '"?\n\nEsta acción borrará definitivamente:\n• Los datos personales del usuario\n• La conversación completa de la base de datos (Supabase)\n• Cualquier registro en archivos JSON o memoria\n\nEsta acción es irreversible.';
+            if (!confirm(msg)) {
+                return;
+            }
+
+            fetch('index.php?ajax=delete_lead', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ lead_id: leadId })
+            })
+            .then(r => {
+                if (!r.ok) {
+                    return r.json().catch(() => ({ ok: false, message: 'Error del servidor (HTTP ' + r.status + ')' }));
+                }
+                return r.json();
+            })
+            .then(data => {
+                if (data.ok) {
+                    const drawer = document.getElementById('chat-drawer-' + leadId);
+                    if (row) {
+                        row.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                        row.style.opacity = '0';
+                        row.style.transform = 'scale(0.98)';
+                        setTimeout(() => row.remove(), 300);
+                    }
+                    if (drawer) {
+                        drawer.remove();
+                    }
+                    setTimeout(() => {
+                        const filterInput = document.getElementById('leadsFilterInput');
+                        const q = (filterInput?.value || '').trim();
+                        if (q) {
+                            filterLeads(q);
+                        } else {
+                            const badge = document.getElementById('leads-count-badge');
+                            if (badge) {
+                                const remaining = document.querySelectorAll('.lead-row:not([style*="display: none"])').length;
+                                badge.textContent = remaining + ' registros';
+                            }
+                        }
+                    }, 350);
+                } else {
+                    const fbForm = document.getElementById('fallbackDeleteLeadForm');
+                    const fbInput = document.getElementById('fallbackDeleteLeadId');
+                    if (fbForm && fbInput) {
+                        fbInput.value = leadId;
+                        fbForm.submit();
+                    } else {
+                        alert('⚠️ ' + (data.message || 'No se pudo eliminar el lead.'));
+                    }
+                }
+            })
+            .catch(() => {
+                const fbForm = document.getElementById('fallbackDeleteLeadForm');
+                const fbInput = document.getElementById('fallbackDeleteLeadId');
+                if (fbForm && fbInput) {
+                    fbInput.value = leadId;
+                    fbForm.submit();
+                }
+            });
+        }
+
+        function filterLeads(query) {
+            const q = (query || '').toLowerCase().trim();
+            const rows = document.querySelectorAll('.lead-row');
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                const name = row.dataset.leadName || '';
+                const email = row.dataset.leadEmail || '';
+                const phone = row.dataset.leadPhone || '';
+                const src = row.dataset.leadSource || '';
+                const leadId = row.id.replace('lead-row-', '');
+                const drawer = document.getElementById('chat-drawer-' + leadId);
+                const btn = document.getElementById('btn-toggle-' + leadId);
+
+                const matches = !q || name.includes(q) || email.includes(q) || phone.includes(q) || src.includes(q);
+
+                if (matches) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                    if (drawer) {
+                        drawer.style.display = 'none';
+                        row.classList.remove('is-open');
+                        if (btn) {
+                            btn.querySelector('.txt').textContent = 'Ver Chat';
+                        }
+                    }
+                }
+            });
+
+            const badge = document.getElementById('leads-count-badge');
+            if (badge) {
+                if (q) {
+                    badge.textContent = visibleCount + ' coincidentes';
+                } else {
+                    badge.textContent = visibleCount + ' registros';
+                }
+            }
         }
 
         // Init
