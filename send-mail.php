@@ -141,11 +141,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
     } catch (Exception $e) {
-        // Si PHPMailer falla, devuelve el error específico
+        // Security: Log detailed error server-side and avoid leaking internal SMTP/system details ($mail->ErrorInfo) to clients
+        error_log("PHPMailer error in send-mail.php: " . $mail->ErrorInfo);
         echo json_encode([
             'ok' => false,
             'status' => 'error',
-            'message' => "Hubo un error al enviar: {$mail->ErrorInfo}"
+            'message' => "Hubo un error al enviar el mensaje. Por favor intenta nuevamente o contáctanos por WhatsApp."
         ]);
     }
 } else {
