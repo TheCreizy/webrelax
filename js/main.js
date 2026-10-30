@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     renderBlog();
   }
   initHeroParallax();
+  initHeroBackgroundSequence();
 });
 
 function initHeroParallax() {
@@ -59,6 +60,123 @@ function initHeroParallax() {
       buttons.forEach(btn => btn.classList.remove('reveal-visible'));
     }
   }, { passive: true });
+}
+
+function initHeroBackgroundSequence() {
+  const canvas = document.getElementById('hero-bg-canvas');
+  const hero = document.querySelector('.hero');
+  if (!canvas || !hero) return;
+
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  const TOTAL_FRAMES = 120;
+  const frames = new Array(TOTAL_FRAMES);
+  let currentFrameIndex = -1;
+  let rafId = null;
+
+  function getFrameSrc(index) {
+    const pad = String(index).padStart(3, '0');
+    return `images/hero-sequence/frame_${pad}.webp`;
+  }
+
+  function getNearestLoadedFrame(targetIdx) {
+    if (frames[targetIdx] && frames[targetIdx].complete && frames[targetIdx].naturalWidth > 0) {
+      return frames[targetIdx];
+    }
+    for (let offset = 1; offset < TOTAL_FRAMES; offset++) {
+      const prev = targetIdx - offset;
+      if (prev >= 0 && frames[prev] && frames[prev].complete && frames[prev].naturalWidth > 0) {
+        return frames[prev];
+      }
+      const next = targetIdx + offset;
+      if (next < TOTAL_FRAMES && frames[next] && frames[next].complete && frames[next].naturalWidth > 0) {
+        return frames[next];
+      }
+    }
+    return null;
+  }
+
+  function drawFrame(index) {
+    const img = getNearestLoadedFrame(index);
+    if (!img) return;
+
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    currentFrameIndex = index;
+    if (!canvas.classList.contains('is-ready')) {
+      canvas.classList.add('is-ready');
+    }
+  }
+
+  function updateOnScroll() {
+    const scrolled = window.scrollY;
+    const heroHeight = hero.offsetHeight || window.innerHeight;
+
+    // Sincronizado: avanza cuando se hace scroll hacia abajo, retrocede hacia arriba (ambos sentidos)
+    const progress = Math.min(1, Math.max(0, scrolled / heroHeight));
+    const targetIndex = Math.min(TOTAL_FRAMES - 1, Math.floor(progress * (TOTAL_FRAMES - 1)));
+
+    if (targetIndex !== currentFrameIndex) {
+      if (!rafId) {
+        rafId = requestAnimationFrame(() => {
+          drawFrame(targetIndex);
+          rafId = null;
+        });
+      }
+    }
+  }
+
+  // Cargar frame 0 de inmediato
+  const firstFrame = new Image();
+  firstFrame.src = getFrameSrc(0);
+  frames[0] = firstFrame;
+  firstFrame.onload = () => {
+    drawFrame(0);
+    preloadRemainingFrames();
+  };
+  if (firstFrame.complete && firstFrame.naturalWidth > 0) {
+    drawFrame(0);
+    preloadRemainingFrames();
+  }
+
+  let preloadingStarted = false;
+  function preloadRemainingFrames() {
+    if (preloadingStarted) return;
+    preloadingStarted = true;
+
+    let nextIndex = 1;
+    const batchSize = 6;
+
+    function loadNextBatch() {
+      if (nextIndex >= TOTAL_FRAMES) return;
+      const end = Math.min(TOTAL_FRAMES, nextIndex + batchSize);
+      for (let i = nextIndex; i < end; i++) {
+        if (!frames[i]) {
+          const img = new Image();
+          img.src = getFrameSrc(i);
+          frames[i] = img;
+        }
+      }
+      nextIndex = end;
+      if (nextIndex < TOTAL_FRAMES) {
+        if ('requestIdleCallback' in window) {
+          requestIdleCallback(() => loadNextBatch(), { timeout: 200 });
+        } else {
+          setTimeout(loadNextBatch, 60);
+        }
+      }
+    }
+
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(() => loadNextBatch(), { timeout: 150 });
+    } else {
+      setTimeout(loadNextBatch, 100);
+    }
+  }
+
+  window.addEventListener('scroll', updateOnScroll, { passive: true });
+  window.addEventListener('resize', updateOnScroll, { passive: true });
+  updateOnScroll();
 }
 
 async function loadSiteData() {

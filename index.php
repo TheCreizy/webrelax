@@ -9,7 +9,8 @@ include 'includes/header.php';
 <!-- HERO -->
 <section id="inicio" class="hero">
     <div class="hero-bg">
-        <img src="images/backround.webp" class="hero-bg-image" alt="Nubes de fondo" fetchpriority="high">
+        <canvas id="hero-bg-canvas" class="hero-bg-canvas" width="1280" height="720" aria-hidden="true"></canvas>
+        <img src="images/hero-sequence/frame_000.webp" class="hero-bg-image" alt="Nubes de fondo" fetchpriority="high">
         <img src="images/plane.webp" class="hero-plane-image" alt="Avión">
         <div class="hero-gradient"></div>
     </div>
