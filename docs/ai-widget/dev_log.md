@@ -171,3 +171,17 @@
   - Prueba de control negativo: consultas de paquetes turísticos (Mendoza) tienen 0% de contaminación con Coris.
 - **Seguridad**:
   - Directorio `scripts/` protegido de acceso web en `.htaccess` (`RewriteRule ^scripts/ - [F,L]`).
+
+---
+
+## [2026-10-30 06:33 -03:00] — Optimización Conversacional UX: Enlaces y Opciones de Contacto Condicionados
+**Agente**: Orquestador Principal
+
+- **Mejora de UX Implementada**:
+  - Se ajustó el *System Prompt* en [`api/GeminiClient.php`](file:///e:/Herny/2025/Trabajo/Relax%20Tours/New%20Web/Actual/api/GeminiClient.php) para evitar llamadas a la acción repetitivas en cada turno intermedio de diálogo.
+  - **Turnos con pregunta de seguimiento (Follow-up):** La respuesta se enfoca exclusivamente en asesorar sobre el plan, destacar el tope por evento y cerrar con la pregunta de calificación de fechas/edades. Se prohíbe incluir prematuramente el enlace web o las opciones de WhatsApp/Correo/Teléfono.
+  - **Turno final (cuando no hay follow-ups o el usuario ya brindó sus datos):** Se incluye la conclusión formal con el enlace `https://www.relaxtours.com.ar/asistencia` y la invitación a las solapas del widget.
+- **Validación Automatizada**:
+  - Actualizado [`scripts/eval_coris_rag.php`](file:///e:/Herny/2025/Trabajo/Relax%20Tours/New%20Web/Actual/scripts/eval_coris_rag.php) con la aserción de no-repetición de links ante preguntas de seguimiento.
+  - Test en vivo ejecutado con éxito: respuesta inicial limpia con follow-up y respuesta de cierre con enlace y widget.
+  - Commit `a378e68` subido a GitHub `origin/main`.
