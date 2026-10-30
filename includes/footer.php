@@ -321,7 +321,7 @@ $base_url = isset($base_url) ? $base_url : './';
 </div>
 
 <script src="<?php echo $base_url; ?>js/cookies.js?v=2.1"></script>
-<script src="<?php echo $base_url; ?>js/main.js?v=2.3"></script>
+<script src="<?php echo $base_url; ?>js/main.js?v=2.4"></script>
 <script>document.getElementById('current-year').textContent = new Date().getFullYear();</script>
 </body>
 

@@ -29,22 +29,46 @@ function initHeroParallax() {
   
   if (!hero || !plane) return;
 
+  let targetOffset = 0;
+  let currentOffset = 0;
+  let isPlaneAnimating = false;
+
+  // Bucle con LERP e inercia suave idéntico al fondo de nubes
+  function renderPlaneLoop() {
+    const diff = targetOffset - currentOffset;
+    if (Math.abs(diff) > 0.1) {
+      // Factor 0.08: desaceleración orgánica y fluida en armonía con las nubes
+      currentOffset += diff * 0.08;
+      plane.style.transform = `translate(-50%, calc(-50% + ${currentOffset.toFixed(2)}px))`;
+      requestAnimationFrame(renderPlaneLoop);
+    } else {
+      currentOffset = targetOffset;
+      plane.style.transform = `translate(-50%, calc(-50% + ${currentOffset.toFixed(2)}px))`;
+      isPlaneAnimating = false;
+    }
+  }
+
+  function startPlaneAnimation() {
+    if (!isPlaneAnimating) {
+      isPlaneAnimating = true;
+      requestAnimationFrame(renderPlaneLoop);
+    }
+  }
+
   window.addEventListener('scroll', () => {
     // Mobile check - disable parallax/reveals
     if (window.innerWidth < 769) return;
 
     const scrolled = window.scrollY;
     const viewportHeight = window.innerHeight;
-    
-    // Only animate while the hero is visible (scroll within 0 to viewportHeight)
-    if (scrolled > viewportHeight) return;
 
-    // Progress: 0 at top, 1 when hero is fully scrolled out
-    const progress = scrolled / viewportHeight;
+    // Calculamos el desplazamiento acotado a la visibilidad del hero
+    const clampedScrolled = Math.min(viewportHeight, Math.max(0, scrolled));
+    const progress = clampedScrolled / viewportHeight;
 
-    // 1. Plane Animation: Move down as user scrolls
-    const planeOffset = scrolled * 0.4;
-    plane.style.transform = `translate(-50%, calc(-50% + ${planeOffset}px))`;
+    // 1. Plane Animation con inercia suave
+    targetOffset = clampedScrolled * 0.4;
+    startPlaneAnimation();
 
     // 2. Reveal Stats (at ~20% scroll through hero)
     if (progress > 0.2) {
