@@ -185,3 +185,18 @@
   - Actualizado [`scripts/eval_coris_rag.php`](file:///e:/Herny/2025/Trabajo/Relax%20Tours/New%20Web/Actual/scripts/eval_coris_rag.php) con la aserción de no-repetición de links ante preguntas de seguimiento.
   - Test en vivo ejecutado con éxito: respuesta inicial limpia con follow-up y respuesta de cierre con enlace y widget.
   - Commit `a378e68` subido a GitHub `origin/main`.
+
+---
+
+## [2026-10-30 06:55 -03:00] — Flujo Conversacional Asistencia: Link Online en Primer Mensaje + Supresión en Turnos Intermedios
+**Agente**: Orquestador Principal
+
+- **Ajuste Fino de UX Conversacional**:
+  - **1er Mensaje de Asistencia:** Se entrega la asesoría técnica (tope por evento médico y plan sugerido) + el enlace oficial de cotización online (`https://www.relaxtours.com.ar/asistencia`) + la pregunta de seguimiento (*follow-up*) para relevar fechas y edades. No se incluyen botones de salida (WhatsApp, Correo, Teléfono) para mantener la simpleza y no abrumar.
+  - **Mensajes Intermedios:** Si la conversación continúa y el bot aún debe realizar otra repregunta, no se vuelve a repetir el enlace ni los botones de contacto, manteniendo el foco 100% en el diálogo.
+  - **Mensaje de Cierre Final:** Cuando ya no hay más *follow-ups* o el usuario confirma sus datos y pide emitir, se entrega el llamado a la acción completo con el link online y las solapas del widget.
+- **Resiliencia en GeminiClient**:
+  - Se extendió el fallback de modelos ante errores de timeout o códigos HTTP 0, 500, 502, 503 y 504.
+- **Validación**:
+  - Test de 3 etapas ejecutado con éxito total en consola y suite de evaluación automatizada (`eval_coris_rag.php`) 10/10 PASS (100%).
+  - Commit `41c8815` enviado a `origin/main`.
