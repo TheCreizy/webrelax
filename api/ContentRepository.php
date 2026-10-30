@@ -799,7 +799,7 @@ class ContentRepository
 
         $raw = curl_exec($ch);
         $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
+        unset($ch);
 
         if ($httpCode >= 200 && $httpCode < 300 && is_string($raw) && strlen($raw) > 0) {
             $dir = dirname($localFile);

@@ -430,8 +430,12 @@ class SupabaseClient
 
     /**
      * Guarda o actualiza un setting en public.cms_settings.
+     *
+     * @param string $key
+     * @param mixed  $value
+     * @return bool
      */
-    public function saveCmsSettings(string $key, $value): bool
+    public function saveCmsSettings(string $key, mixed $value): bool
     {
         $payload = [
             'key'        => $key,
@@ -483,9 +487,7 @@ class SupabaseClient
         $rawBody = curl_exec($ch);
         $curlErr = curl_error($ch);
         $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        if (PHP_VERSION_ID < 80000) {
-            curl_close($ch);
-        }
+        unset($ch);
 
         $this->lastHttpCode = $httpCode;
 
@@ -552,9 +554,7 @@ class SupabaseClient
         $rawBody = curl_exec($ch);
         $curlErr = curl_error($ch);
         $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        if (PHP_VERSION_ID < 80000) {
-            curl_close($ch);
-        }
+        unset($ch);
 
         $this->lastHttpCode = $httpCode;
 

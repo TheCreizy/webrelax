@@ -483,9 +483,7 @@ PROMPT;
         $rawBody = curl_exec($ch);
         $curlErr = curl_error($ch);
         $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        if (PHP_VERSION_ID < 80000) {
-            curl_close($ch);
-        }
+        unset($ch);
 
         $this->lastHttpCode = $httpCode;
 
