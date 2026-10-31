@@ -2499,7 +2499,11 @@ if (isset($_GET['edit'])) {
                         loadingBox.style.display = 'block';
                     }
 
-                    const redirectUrl = window.location.origin + window.location.pathname;
+                    let redirectUrl = window.location.origin + window.location.pathname;
+                    if (window.location.hostname === 'relaxtours.com.ar' || window.location.hostname === 'www.relaxtours.com.ar') {
+                        redirectUrl = 'https://www.relaxtours.com.ar/admin/';
+                    }
+
                     const { data, error } = await supaClient.auth.signInWithOAuth({
                         provider: 'google',
                         options: {
@@ -2571,7 +2575,22 @@ if (isset($_GET['edit'])) {
                 }
             }
 
+            function getHashParam(name) {
+                if (!window.location.hash) return null;
+                const cleanHash = window.location.hash.startsWith('#')
+                    ? window.location.hash.substring(1)
+                    : window.location.hash;
+                const params = new URLSearchParams(cleanHash);
+                return params.get(name);
+            }
+
             window.addEventListener('DOMContentLoaded', async () => {
+                const directToken = getHashParam('access_token');
+                if (directToken) {
+                    await verifyTokenWithPhp(directToken);
+                    return;
+                }
+
                 if (!supaClient) return;
 
                 const hasHashToken = window.location.hash && window.location.hash.includes('access_token=');
