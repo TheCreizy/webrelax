@@ -3621,6 +3621,8 @@ if (isset($_GET['edit'])) {
                     }
                 }
             });
+        }
+
         // ===== LEADS & CONVERSATION ACCORDION JS =====
         function toggleLeadChat(leadId) {
             const row = document.getElementById('lead-row-' + leadId);

@@ -57,6 +57,29 @@ assertTest(strpos($adminFile, '?tab=leads') !== false, 'admin/index.php incluye 
 assertTest(strpos($adminFile, '$activeTab === \'leads\'') !== false, 'admin/index.php renderiza bloque para tab=leads');
 assertTest(strpos($adminFile, 'data-lead-display-name=') !== false, 'admin/index.php incluye data-lead-display-name seguro en el DOM');
 
+// Verificar sintaxis del script del cliente (funciones de leads definidas fuera de if (editorArea))
+$scriptStart = strrpos($adminFile, '<script>');
+$scriptEnd = strrpos($adminFile, '</script>');
+if ($scriptStart !== false && $scriptEnd !== false) {
+    $scriptBody = substr($adminFile, $scriptStart, $scriptEnd - $scriptStart);
+    $hasToggleFn = strpos($scriptBody, 'function toggleLeadChat(') !== false;
+    $hasLoadFn = strpos($scriptBody, 'function loadLeadChat(') !== false;
+    $hasDeleteFn = strpos($scriptBody, 'function confirmDeleteLead(') !== false;
+    // Verificar que if (editorArea) { está cerrado antes del bloque de leads
+    $editorAreaPos = strpos($scriptBody, 'if (editorArea) {');
+    $leadsJsPos = strpos($scriptBody, '// ===== LEADS & CONVERSATION ACCORDION JS =====');
+    $properlyClosed = false;
+    if ($editorAreaPos !== false && $leadsJsPos !== false) {
+        $between = substr($scriptBody, $editorAreaPos, $leadsJsPos - $editorAreaPos);
+        $openBraces = substr_count($between, '{');
+        $closeBraces = substr_count($between, '}');
+        $properlyClosed = ($openBraces === $closeBraces);
+    }
+    assertTest($hasToggleFn && $hasLoadFn && $hasDeleteFn && $properlyClosed, 'JavaScript cliente: sintaxis y bloques de control balanceados y funciones de leads accesibles globalmente');
+} else {
+    assertTest(false, 'No se encontró el bloque <script> final en admin/index.php');
+}
+
 // Verificar que se eliminó la tabla de leads del tab chatbot
 $chatbotTabPos = strpos($adminFile, "\$activeTab === 'chatbot'");
 $leadsTabPos = strpos($adminFile, "\$activeTab === 'leads'");
