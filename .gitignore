@@ -5,6 +5,7 @@
 .agents/
 .agents/skills
 .vscode
+.jules
 
 # Archivos de entorno y logs
 .env

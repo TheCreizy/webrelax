@@ -47,6 +47,68 @@ class SupabaseClient
     }
 
     /**
+     * Valida un access_token emitido por Supabase Auth (GoTrue) consultando /auth/v1/user.
+     * Devuelve el array asociativo del usuario si el token es válido o null si es inválido/expirado.
+     *
+     * @param string $accessToken
+     * @return array|null
+     */
+    public function verifyAccessToken(string $accessToken): ?array
+    {
+        $accessToken = trim($accessToken);
+        if ($accessToken === '' || !$this->isConfigured()) {
+            $this->lastError = 'Token vacío o Supabase no configurado.';
+            return null;
+        }
+
+        $url = $this->url . '/auth/v1/user';
+        $ch = curl_init($url);
+        if ($ch === false) {
+            $this->lastError = 'No se pudo inicializar cURL para Auth.';
+            return null;
+        }
+
+        $headers = [
+            'apikey: ' . $this->key,
+            'Authorization: Bearer ' . $accessToken,
+            'Accept: application/json',
+        ];
+
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CUSTOMREQUEST  => 'GET',
+            CURLOPT_HTTPHEADER     => $headers,
+            CURLOPT_TIMEOUT        => 10,
+            CURLOPT_CONNECTTIMEOUT => 5,
+            CURLOPT_SSL_VERIFYPEER => true,
+        ]);
+
+        $rawBody = curl_exec($ch);
+        $curlErr = curl_error($ch);
+        $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        unset($ch);
+
+        $this->lastHttpCode = $httpCode;
+
+        if ($rawBody === false || !empty($curlErr)) {
+            $this->lastError = 'Error cURL Supabase Auth: ' . $curlErr;
+            return null;
+        }
+
+        $decoded = ($rawBody !== '') ? json_decode($rawBody, true) : null;
+
+        if ($httpCode !== 200 || !is_array($decoded) || empty($decoded['id'])) {
+            $errMsg = is_array($decoded)
+                ? ($decoded['message'] ?? $decoded['error_description'] ?? $decoded['msg'] ?? 'Token inválido o expirado')
+                : 'Respuesta inválida de Auth';
+            $this->lastError = "Supabase Auth HTTP {$httpCode}: " . (string) $errMsg;
+            return null;
+        }
+
+        return $decoded;
+    }
+
+    /**
      * Inserta un nuevo lead en public.leads y devuelve su UUID (o null si falla).
      */
     public function insertLead(

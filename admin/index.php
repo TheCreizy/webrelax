@@ -405,10 +405,96 @@ function processAndConvertWebP($sourcePath, $destinationPath, $maxWidth = 1200, 
     return $success ? true : "Error al convertir a WebP.";
 }
 
-// Login
+/**
+ * Obtiene la lista normalizada de correos de administradores autorizados.
+ */
+function getAllowedAdminEmails(): array
+{
+    $raw = trim((string) env('ALLOWED_ADMIN_EMAILS', ''));
+    if ($raw === '') {
+        return [];
+    }
+    $parts = explode(',', $raw);
+    $emails = [];
+    foreach ($parts as $p) {
+        $clean = trim(mb_strtolower($p, 'UTF-8'));
+        if ($clean !== '') {
+            $emails[] = $clean;
+        }
+    }
+    return $emails;
+}
+
+// AJAX: Verificación de sesión con Google OAuth (Supabase)
+if (isset($_GET['ajax']) && $_GET['ajax'] === 'google_auth_verify' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    header('Content-Type: application/json; charset=utf-8');
+    $rawInput = file_get_contents('php://input');
+    $inputData = json_decode($rawInput, true);
+    $token = trim((string) ($inputData['access_token'] ?? ''));
+
+    if ($token === '') {
+        http_response_code(400);
+        echo json_encode(['ok' => false, 'error' => 'Falta el token de acceso.']);
+        exit;
+    }
+
+    $supabase = new SupabaseClient();
+    $user = $supabase->verifyAccessToken($token);
+
+    if (!$user || empty($user['email'])) {
+        http_response_code(401);
+        echo json_encode(['ok' => false, 'error' => 'Token de Supabase inválido, expirado o sin correo asociado.']);
+        exit;
+    }
+
+    $userEmail = trim(mb_strtolower((string) $user['email'], 'UTF-8'));
+    $allowedEmails = getAllowedAdminEmails();
+
+    if (empty($allowedEmails)) {
+        http_response_code(500);
+        echo json_encode([
+            'ok' => false,
+            'error' => 'No hay correos configurados en ALLOWED_ADMIN_EMAILS en el archivo admin/.env.'
+        ]);
+        exit;
+    }
+
+    if (!in_array($userEmail, $allowedEmails, true)) {
+        http_response_code(403);
+        echo json_encode([
+            'ok' => false,
+            'error' => 'Acceso denegado: el correo (' . $userEmail . ') no está en la lista de administradores autorizados.'
+        ]);
+        exit;
+    }
+
+    // Autorizado con éxito: regenerar ID de sesión para prevenir Session Fixation
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_regenerate_id(true);
+    }
+    $_SESSION['admin_logged_in'] = true;
+    $_SESSION['admin_email']     = $userEmail;
+    $_SESSION['admin_user_id']   = (string) ($user['id'] ?? '');
+    $_SESSION['admin_name']      = (string) ($user['user_metadata']['full_name'] ?? $user['user_metadata']['name'] ?? $userEmail);
+    $_SESSION['admin_avatar']    = (string) ($user['user_metadata']['avatar_url'] ?? $user['user_metadata']['picture'] ?? '');
+
+    echo json_encode([
+        'ok' => true,
+        'email' => $userEmail,
+        'name' => $_SESSION['admin_name']
+    ]);
+    exit;
+}
+
+// Login tradicional (fallback / acceso de respaldo)
 if (isset($_POST['action']) && $_POST['action'] === 'login') {
     if ($_POST['username'] === ADMIN_USER && $_POST['password'] === ADMIN_PASS) {
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_regenerate_id(true);
+        }
         $_SESSION['admin_logged_in'] = true;
+        $_SESSION['admin_email'] = ADMIN_USER;
+        $_SESSION['admin_name'] = 'Administrador Principal';
         header('Location: index.php');
         exit;
     } else {
@@ -416,14 +502,24 @@ if (isset($_POST['action']) && $_POST['action'] === 'login') {
     }
 }
 
-// Logout
+// Logout seguro
 if (isset($_GET['logout'])) {
+    $_SESSION = [];
+    if (ini_get("session.use_cookies")) {
+        $params = session_get_cookie_params();
+        setcookie(session_name(), '', time() - 42000,
+            $params["path"], $params["domain"],
+            $params["secure"], $params["httponly"]
+        );
+    }
     session_destroy();
-    header('Location: index.php');
+    header('Location: index.php?msg=logged_out');
     exit;
 }
 
 $isLoggedIn = isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'];
+$supabaseUrl = trim((string) env('SUPABASE_URL', ''));
+$supabaseAnonKey = trim((string) env('SUPABASE_ANON_KEY', ''));
 
 // Acciones GET (Exportar Backup / Reconstruir Caché)
 if ($isLoggedIn && isset($_GET['action'])) {
@@ -1280,6 +1376,7 @@ if (isset($_GET['edit'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Backoffice - Relax Tours - <a href="https://www.relaxtours.com.ar" target="_blank"> relaxtours.com.ar </a>
     </title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
             margin: 0;
@@ -1307,6 +1404,40 @@ if (isset($_GET['edit'])) {
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
             width: 100%;
             max-width: 400px;
+        }
+
+        .btn-google-auth {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
+            padding: 12px 18px;
+            background: #ffffff;
+            border: 1px solid #dadce0;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 500;
+            color: #3c4043;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            font-family: inherit;
+        }
+
+        .btn-google-auth:hover {
+            background: #f8fafc;
+            border-color: #c2c7d0;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+        }
+
+        .btn-google-auth:active {
+            background: #f1f5f9;
+        }
+
+        .btn-google-auth:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
         }
 
         .login-box h1 {
@@ -2291,30 +2422,209 @@ if (isset($_GET['edit'])) {
             <div class="login-box">
                 <div class="logo">✈️</div>
                 <h1>Backoffice Relax Tours</h1>
-                <?php if (isset($loginError)): ?>
-                    <div class="alert alert-error"><?php echo $loginError; ?></div><?php endif; ?>
+
+                <div id="googleAuthAlert" class="alert alert-error" style="<?php echo isset($loginError) ? '' : 'display: none;'; ?> margin-bottom: 16px;">
+                    <?php echo htmlspecialchars($loginError ?? ''); ?>
+                </div>
+
+                <div id="googleAuthLoading" style="display: none; text-align: center; padding: 12px; margin-bottom: 16px; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px; color: #ea580c; font-weight: 500; font-size: 14px;">
+                    ⏳ Conectando con Google...
+                </div>
+
+                <?php if (!empty($supabaseAnonKey) && !empty($supabaseUrl)): ?>
+                    <div style="margin-bottom: 20px;">
+                        <button type="button" id="btnGoogleSignIn" class="btn-google-auth" onclick="startGoogleSignIn()">
+                            <svg width="20" height="20" viewBox="0 0 24 24" style="flex-shrink: 0;">
+                                <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
+                                <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/>
+                                <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.98 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
+                                <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+                            </svg>
+                            <span>Continuar con Google</span>
+                        </button>
+                    </div>
+
+                    <div style="text-align: center; margin: 16px 0 12px; position: relative;">
+                        <span style="background: white; padding: 0 10px; font-size: 12px; color: #94a3b8; position: relative; z-index: 1;">o ingresá con credenciales maestras</span>
+                        <div style="position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: #e2e8f0; z-index: 0;"></div>
+                    </div>
+                <?php else: ?>
+                    <div class="alert alert-error" style="margin-bottom: 16px; font-size: 13px;">
+                        ⚠️ Para habilitar Google Auth, agregá <code>SUPABASE_ANON_KEY</code> a <code>admin/.env</code>.
+                    </div>
+                <?php endif; ?>
+
                 <form method="POST">
                     <input type="hidden" name="action" value="login">
-                    <div class="form-group"><label>Usuario</label><input type="text" name="username" placeholder="admin"
+                    <div class="form-group"><label style="font-size: 13px;">Usuario</label><input type="text" name="username" placeholder="admin"
                             required></div>
-                    <div class="form-group"><label>Contraseña</label><input type="password" name="password"
+                    <div class="form-group"><label style="font-size: 13px;">Contraseña</label><input type="password" name="password"
                             placeholder="••••••••" required></div>
-                    <button type="submit" class="btn btn-primary btn-block">Ingresar</button>
+                    <button type="submit" class="btn btn-secondary btn-block" style="font-size: 13px;">Ingresar con contraseña</button>
                 </form>
-                <a href="https://relaxtours.com.ar" target="_blank"
-                    style="text-align: center; margin-top: 20px; color: #e05d20ff; font-size: 14px;">Ir a la web</a>
+
+                <div style="text-align: center; margin-top: 24px;">
+                    <a href="https://relaxtours.com.ar" target="_blank"
+                        style="color: #ea580c; font-size: 13px; text-decoration: none;">&larr; Volver a la web</a>
+                </div>
             </div>
         </div>
+
+        <script>
+            const supaUrl = <?php echo json_encode($supabaseUrl); ?>;
+            const supaAnon = <?php echo json_encode($supabaseAnonKey); ?>;
+            let supaClient = null;
+            if (supaUrl && supaAnon && window.supabase) {
+                supaClient = window.supabase.createClient(supaUrl, supaAnon);
+            }
+
+            async function startGoogleSignIn() {
+                const alertBox = document.getElementById('googleAuthAlert');
+                const loadingBox = document.getElementById('googleAuthLoading');
+                const btn = document.getElementById('btnGoogleSignIn');
+                if (alertBox) alertBox.style.display = 'none';
+
+                if (!supaClient) {
+                    if (alertBox) {
+                        alertBox.textContent = 'Supabase no está configurado (falta SUPABASE_URL o SUPABASE_ANON_KEY en admin/.env).';
+                        alertBox.style.display = 'block';
+                    }
+                    return;
+                }
+
+                try {
+                    if (btn) btn.disabled = true;
+                    if (loadingBox) {
+                        loadingBox.textContent = '⏳ Redirigiendo a Google...';
+                        loadingBox.style.display = 'block';
+                    }
+
+                    const redirectUrl = window.location.origin + window.location.pathname;
+                    const { data, error } = await supaClient.auth.signInWithOAuth({
+                        provider: 'google',
+                        options: {
+                            redirectTo: redirectUrl
+                        }
+                    });
+                    if (error) throw error;
+                } catch (err) {
+                    if (btn) btn.disabled = false;
+                    if (loadingBox) loadingBox.style.display = 'none';
+                    if (alertBox) {
+                        alertBox.textContent = 'Error al iniciar Google Auth: ' + (err.message || err);
+                        alertBox.style.display = 'block';
+                    }
+                }
+            }
+
+            let isVerifyingToken = false;
+            async function verifyTokenWithPhp(token) {
+                if (isVerifyingToken) return;
+                isVerifyingToken = true;
+
+                const alertBox = document.getElementById('googleAuthAlert');
+                const loadingBox = document.getElementById('googleAuthLoading');
+                const btn = document.getElementById('btnGoogleSignIn');
+
+                if (loadingBox) {
+                    loadingBox.textContent = '⏳ Verificando permisos de administrador en Relax Tours...';
+                    loadingBox.style.display = 'block';
+                }
+                if (btn) btn.disabled = true;
+
+                try {
+                    const resp = await fetch('index.php?ajax=google_auth_verify', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ access_token: token })
+                    });
+                    const data = await resp.json();
+
+                    if (resp.ok && data.ok) {
+                        if (window.history.replaceState) {
+                            window.history.replaceState(null, '', window.location.pathname);
+                        }
+                        window.location.href = 'index.php';
+                    } else {
+                        if (supaClient) {
+                            await supaClient.auth.signOut().catch(() => {});
+                        }
+                        if (loadingBox) loadingBox.style.display = 'none';
+                        if (btn) btn.disabled = false;
+                        if (alertBox) {
+                            alertBox.textContent = data.error || 'Acceso denegado.';
+                            alertBox.style.display = 'block';
+                        }
+                        if (window.history.replaceState) {
+                            window.history.replaceState(null, '', window.location.pathname);
+                        }
+                    }
+                } catch (err) {
+                    if (loadingBox) loadingBox.style.display = 'none';
+                    if (btn) btn.disabled = false;
+                    if (alertBox) {
+                        alertBox.textContent = 'Error de conexión con el servidor: ' + err.message;
+                        alertBox.style.display = 'block';
+                    }
+                } finally {
+                    isVerifyingToken = false;
+                }
+            }
+
+            window.addEventListener('DOMContentLoaded', async () => {
+                if (!supaClient) return;
+
+                const hasHashToken = window.location.hash && window.location.hash.includes('access_token=');
+                const hasCodeParam = window.location.search && window.location.search.includes('code=');
+
+                if (hasHashToken || hasCodeParam) {
+                    const loadingBox = document.getElementById('googleAuthLoading');
+                    const btn = document.getElementById('btnGoogleSignIn');
+                    if (loadingBox) {
+                        loadingBox.textContent = '⏳ Procesando autorización de Google...';
+                        loadingBox.style.display = 'block';
+                    }
+                    if (btn) btn.disabled = true;
+
+                    try {
+                        const { data: { session }, error } = await supaClient.auth.getSession();
+                        if (error) throw error;
+                        if (session && session.access_token) {
+                            await verifyTokenWithPhp(session.access_token);
+                            return;
+                        }
+                    } catch (e) {
+                        console.warn('Esperando token de Supabase...', e);
+                    }
+                }
+
+                supaClient.auth.onAuthStateChange(async (event, session) => {
+                    if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session && session.access_token) {
+                        await verifyTokenWithPhp(session.access_token);
+                    }
+                });
+            });
+        </script>
     <?php else: ?>
         <header class="admin-header">
             <h1>
                 <div class="logo-small">✈️</div>Relax Tours - Panel de Administración - <a
                     href="https://www.relaxtours.com.ar" target="_blank"> relaxtours.com.ar </a>
             </h1>
-            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <?php if (!empty($_SESSION['admin_email'])): ?>
+                    <div style="display: flex; align-items: center; gap: 8px; padding: 4px 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 20px; font-size: 13px; color: #334155;">
+                        <?php if (!empty($_SESSION['admin_avatar'])): ?>
+                            <img src="<?php echo htmlspecialchars($_SESSION['admin_avatar']); ?>" alt="Avatar" style="width: 22px; height: 22px; border-radius: 50%; object-fit: cover;">
+                        <?php else: ?>
+                            <span style="font-size: 14px;">👤</span>
+                        <?php endif; ?>
+                        <span style="font-weight: 500;"><?php echo htmlspecialchars($_SESSION['admin_email']); ?></span>
+                    </div>
+                <?php endif; ?>
                 <a href="?action=export_backup" class="btn btn-secondary" style="font-size: 13px;" title="Descargar copia de seguridad completa en JSON">💾 Descargar Backup</a>
                 <a href="?action=rebuild_cache" class="btn btn-secondary" style="font-size: 13px;" title="Regenerar la caché local y sitemap desde la base de datos Supabase" onclick="return confirm('¿Regenerar la caché local desde Supabase?')">🔄 Restaurar Caché</a>
-                <a href="?logout=1" class="btn btn-secondary">Salir</a>
+                <a href="?logout=1" class="btn btn-secondary" onclick="handleAdminLogout(event)">Salir</a>
             </div>
         </header>
         <nav class="admin-nav">
@@ -3870,6 +4180,19 @@ if (isset($_GET['edit'])) {
                     badge.textContent = visibleCount + ' registros';
                 }
             }
+        }
+
+        async function handleAdminLogout(e) {
+            e.preventDefault();
+            const supaUrl = <?php echo json_encode($supabaseUrl); ?>;
+            const supaAnon = <?php echo json_encode($supabaseAnonKey); ?>;
+            try {
+                if (window.supabase && supaUrl && supaAnon) {
+                    const client = window.supabase.createClient(supaUrl, supaAnon);
+                    await client.auth.signOut();
+                }
+            } catch (_) {}
+            window.location.href = 'index.php?logout=1';
         }
 
         // Init
