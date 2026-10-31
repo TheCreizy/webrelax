@@ -425,6 +425,18 @@ function getAllowedAdminEmails(): array
     return $emails;
 }
 
+/**
+ * Determina si el inicio de sesión por usuario y contraseña tradicional está habilitado en la configuración.
+ */
+function isPasswordLoginAllowed(): bool
+{
+    $data = loadData();
+    if (isset($data['config']['allow_password_login'])) {
+        return (bool) $data['config']['allow_password_login'];
+    }
+    return true;
+}
+
 // AJAX: Verificación de sesión con Google OAuth (Supabase)
 if (isset($_GET['ajax']) && $_GET['ajax'] === 'google_auth_verify' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Content-Type: application/json; charset=utf-8');
@@ -488,7 +500,9 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === 'google_auth_verify' && $_SERVER['
 
 // Login tradicional (fallback / acceso de respaldo)
 if (isset($_POST['action']) && $_POST['action'] === 'login') {
-    if ($_POST['username'] === ADMIN_USER && $_POST['password'] === ADMIN_PASS) {
+    if (!isPasswordLoginAllowed()) {
+        $loginError = 'El acceso con usuario y contraseña está desactivado por políticas de seguridad. Iniciá sesión con Google.';
+    } elseif ($_POST['username'] === ADMIN_USER && $_POST['password'] === ADMIN_PASS) {
         if (session_status() === PHP_SESSION_ACTIVE) {
             session_regenerate_id(true);
         }
@@ -518,6 +532,7 @@ if (isset($_GET['logout'])) {
 }
 
 $isLoggedIn = isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'];
+$allowPasswordLogin = isPasswordLoginAllowed();
 $supabaseUrl = trim((string) env('SUPABASE_URL', ''));
 $supabaseAnonKey = trim((string) env('SUPABASE_ANON_KEY', ''));
 
@@ -939,7 +954,8 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 'legajo' => $_POST['legajo'],
                 'analytics_id' => $_POST['analytics_id'],
                 'meta_keywords' => $_POST['meta_keywords'],
-                'meta_description' => $_POST['meta_description']
+                'meta_description' => $_POST['meta_description'],
+                'allow_password_login' => !empty($_POST['allow_password_login'])
             ];
             ContentRepository::getInstance()->saveConfig($config);
             header('Location: index.php?tab=config&msg=guardado');
@@ -2454,14 +2470,25 @@ if (isset($_GET['edit'])) {
                     </div>
                 <?php endif; ?>
 
-                <form method="POST">
-                    <input type="hidden" name="action" value="login">
-                    <div class="form-group"><label style="font-size: 13px;">Usuario</label><input type="text" name="username" placeholder="admin"
-                            required></div>
-                    <div class="form-group"><label style="font-size: 13px;">Contraseña</label><input type="password" name="password"
-                            placeholder="••••••••" required></div>
-                    <button type="submit" class="btn btn-secondary btn-block" style="font-size: 13px;">Ingresar con contraseña</button>
-                </form>
+                <?php if ($allowPasswordLogin): ?>
+                    <div style="text-align: center; margin: 16px 0 12px; position: relative;">
+                        <span style="background: white; padding: 0 10px; font-size: 12px; color: #94a3b8; position: relative; z-index: 1;">o ingresá con credenciales maestras</span>
+                        <div style="position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: #e2e8f0; z-index: 0;"></div>
+                    </div>
+
+                    <form method="POST">
+                        <input type="hidden" name="action" value="login">
+                        <div class="form-group"><label style="font-size: 13px;">Usuario</label><input type="text" name="username" placeholder="admin"
+                                required></div>
+                        <div class="form-group"><label style="font-size: 13px;">Contraseña</label><input type="password" name="password"
+                                placeholder="••••••••" required></div>
+                        <button type="submit" class="btn btn-secondary btn-block" style="font-size: 13px;">Ingresar con contraseña</button>
+                    </form>
+                <?php else: ?>
+                    <div style="text-align: center; margin: 18px 0 10px; padding: 10px 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+                        <span style="font-size: 12px; color: #64748b;">🔒 Acceso restringido exclusivamente a <strong>Google OAuth</strong> por política de seguridad.</span>
+                    </div>
+                <?php endif; ?>
 
                 <div style="text-align: center; margin-top: 24px;">
                     <a href="https://relaxtours.com.ar" target="_blank"
@@ -3233,6 +3260,22 @@ if (isset($_GET['edit'])) {
                                     rows="2"
                                     placeholder="Agencia de viajes y turismo en Villa Devoto..."><?php echo $data['config']['meta_description'] ?? ''; ?></textarea>
                             </div>
+
+                            <hr style="margin: 24px 0; border: 0; border-top: 1px solid #e5e5e5;">
+                            <h3 style="margin-bottom: 16px; font-size: 16px; color: #333;">🛡️ Seguridad y Acceso al Panel</h3>
+
+                            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 18px; margin-bottom: 16px;">
+                                <label style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer; margin-bottom: 0;">
+                                    <input type="checkbox" name="allow_password_login" value="1" <?php echo (!isset($data['config']['allow_password_login']) || !empty($data['config']['allow_password_login'])) ? 'checked' : ''; ?> style="width: 18px; height: 18px; margin-top: 2px; accent-color: #ea580c;">
+                                    <div>
+                                        <strong style="color: #1e293b; font-size: 14px;">Permitir ingreso por usuario y contraseña (credenciales maestras)</strong>
+                                        <p style="font-size: 13px; color: #64748b; margin-top: 4px; line-height: 1.5;">
+                                            Si desactivás esta opción, la pantalla de inicio de sesión ocultará el formulario tradicional y <strong>bloqueará cualquier intento de ingreso por usuario y contraseña</strong>. El acceso quedará blindado exclusivamente mediante <strong>Google OAuth</strong> para los correos autorizados en la lista blanca (máxima seguridad).
+                                        </p>
+                                    </div>
+                                </label>
+                            </div>
+
                             <div style="margin-top: 24px;"><button type="submit" class="btn btn-primary">💾 Guardar
                                     Configuración</button></div>
                         </form>

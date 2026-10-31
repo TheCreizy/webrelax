@@ -3,6 +3,10 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
 $mode = $argv[1] ?? 'login';
+$tab = $argv[2] ?? '';
+if ($tab !== '') {
+    $_GET['tab'] = $tab;
+}
 if ($mode === 'admin') {
     $_SESSION['admin_logged_in'] = true;
     $_SESSION['admin_email'] = 'test.admin@relaxtours.com.ar';

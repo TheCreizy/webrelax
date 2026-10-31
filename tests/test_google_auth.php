@@ -57,15 +57,33 @@ $adminOutput = shell_exec('php ' . escapeshellarg(__DIR__ . '/render_helper.php'
 assertTest(strpos($adminOutput, 'test.admin@relaxtours.com.ar') !== false, 'Navbar renderiza el correo del administrador autenticado');
 assertTest(strpos($adminOutput, 'handleAdminLogout') !== false, 'Botón de salida llama a handleAdminLogout');
 
-// 5. Validar que la lista blanca esté configurada
+// 5. Validar que la lista blanca y función de password login estén configuradas
 ob_start();
 require_once __DIR__ . '/../admin/index.php';
 ob_end_clean();
 $allowedList = getAllowedAdminEmails();
 assertTest(is_array($allowedList) && !empty($allowedList), 'getAllowedAdminEmails lee correctamente los correos de admin/.env');
 assertTest(in_array('loco.lerner@gmail.com', $allowedList, true), 'loco.lerner@gmail.com está en la lista blanca');
+assertTest(function_exists('isPasswordLoginAllowed'), 'isPasswordLoginAllowed está definida');
 
-// 6. Validar sintaxis del script del cliente renderizado
+// 6. Validar presencia del toggle en tab=config
+$configTabOutput = shell_exec('php ' . escapeshellarg(__DIR__ . '/render_helper.php') . ' admin config 2>&1');
+assertTest(strpos($configTabOutput, 'name="allow_password_login"') !== false, 'Pestaña Configuración incluye checkbox allow_password_login');
+
+// 7. Simular login con contraseña desactivado
+$origContent = file_get_contents(__DIR__ . '/../data/content.json');
+$contentData = json_decode($origContent, true);
+$contentData['config']['allow_password_login'] = false;
+file_put_contents(__DIR__ . '/../data/content.json', json_encode($contentData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+
+$loginDisabledOutput = shell_exec('php ' . escapeshellarg(__DIR__ . '/render_helper.php') . ' login 2>&1');
+assertTest(strpos($loginDisabledOutput, 'Ingresar con contraseña') === false, 'Cuando está desactivado, el formulario de contraseña NO aparece en login');
+assertTest(strpos($loginDisabledOutput, 'Acceso restringido exclusivamente a') !== false, 'Cuando está desactivado, muestra aviso de seguridad exclusiva Google OAuth');
+
+// Restaurar contenido original
+file_put_contents(__DIR__ . '/../data/content.json', $origContent);
+
+// 8. Validar sintaxis del script del cliente renderizado
 $scriptStart = strrpos($adminOutput, '<script>');
 $scriptEnd = strrpos($adminOutput, '</script>');
 $clientScript = substr($adminOutput, $scriptStart + 8, $scriptEnd - ($scriptStart + 8));
